@@ -1,0 +1,6 @@
+*.iml
+.idea
+smartlogic-concordance-transformer*
+vendor/*/
+.project
+.vscode
