@@ -9,7 +9,7 @@ import (
 	"github.com/gorilla/mux"
 	"net"
 	"time"
-	"github.com/Financial-Times/smartlogic-concordance-transformer/service"
+	slc "github.com/Financial-Times/smartlogic-concordance-transformer/smartlogicconcordance"
 )
 
 const appDescription = "Service which listens to kafka for concordance updates, transforms smartlogic concordance json and sends updates to concordance-rw-dynamodb"
@@ -75,8 +75,8 @@ func main() {
 		}
 
 		router := mux.NewRouter()
-		transformer := service.NewTransformerService(consumer, *topic, *vulcanAddress, &httpClient)
-		handler := service.NewHandler(transformer)
+		transformer := slc.NewTransformerService(consumer, *topic, *vulcanAddress, &httpClient)
+		handler := slc.NewHandler(transformer)
 		handler.RegisterHandlers(router)
 		handler.RegisterAdminHandlers(router)
 

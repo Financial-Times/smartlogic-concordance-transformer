@@ -1,20 +1,22 @@
-package service
+package smartlogicconcordance
 
 import (
 	"github.com/golang/go/src/pkg/fmt"
 	"github.com/Shopify/sarama"
-	"github.com/Financial-Times/smartlogic-concordance-transformer/utils"
 	"encoding/json"
 	"errors"
 	"net/http"
 	"strconv"
 	"github.com/coreos/fleet/log"
 	"strings"
+	"regexp"
 )
 
 const (
 	writerRoute = "__concordance-rw-dynamodb/concordance/"
 )
+
+var uuidMatcher = regexp.MustCompile("^[0-9a-f]{8}/[0-9a-f]{4}/[0-9a-f]{4}/[0-9a-f]{4}/[0-9a-f]{12}$")
 
 type TransformerService struct {
 	consumer sarama.Consumer
@@ -46,24 +48,24 @@ func (ts *TransformerService) handleConcordanceEvent(msgBody string, tid string)
 }
 
 func convertToUppConcordance(msgBody string) (string, bool, []byte, error) {
-	smartLogicConcept := utils.SmartlogicConcept{}
+	smartLogicConcept := SmartlogicConcept{}
 	bodyAsBytes := []byte(msgBody)
 	if err := json.Unmarshal(bodyAsBytes, &smartLogicConcept); err != nil {
 		return "", false, nil, err
 	}
 
-	conceptUuid := smartLogicConcept.Concepts[0].Ids[0].Value
+	conceptUuid := extractUuid(smartLogicConcept.Concepts[0].Id)
 	if conceptUuid == "" {
 		return "", false, nil, errors.New("Payload: " + msgBody + "; is missing concept uuid")
 	}
 
 	var concordanceIds []string
-	for _, id := range smartLogicConcept.Concepts[0].Identifiers {
+	for _, id := range smartLogicConcept.Concepts[0].TmeIdentifiers {
 		concordanceIds = append(concordanceIds, id.Value)
 	}
 
 	if len(concordanceIds) > 0 {
-		uppConcordance := utils.UppConcordance{}
+		uppConcordance := UppConcordance{}
 		uppConcordance.ConceptUuid = conceptUuid
 		uppConcordance.ConcordedIds = concordanceIds
 
@@ -128,4 +130,12 @@ func (ts *TransformerService) makeDeleteRequest(uuid string, tid string) error {
 	defer resp.Body.Close()
 
 	return nil
+}
+
+func extractUuid(url string) string {
+	extractedUuid := strings.Trim(url, "http://www.ft.com/thing/")
+	if !uuidMatcher.MatchString(extractedUuid) {
+		return ""
+	}
+	return extractedUuid
 }

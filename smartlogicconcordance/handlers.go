@@ -1,4 +1,4 @@
-package service
+package smartlogicconcordance
 
 import (
 	"github.com/gorilla/mux"
@@ -13,6 +13,8 @@ import (
 	"os"
 	"os/signal"
 	"github.com/Shopify/sarama"
+	"io/ioutil"
+	"github.com/Financial-Times/transactionid-utils-go"
 )
 
 var concordanceRwGtg = "__concordance-rw-dynamodb/__gtg"
@@ -70,15 +72,46 @@ func (h *SmartlogicConcordanceTransformerHandler) processKafkaMessage(msg sarama
 	h.service.handleConcordanceEvent(msgBody, tid)
 }
 
-func (h *SmartlogicConcordanceTransformerHandler) TransformHandler(rw http.ResponseWriter, r *http.Request) {
+func (h *SmartlogicConcordanceTransformerHandler) TransformHandler(rw http.ResponseWriter, req *http.Request) {
+	rw.Header().Set("Content-Type", "application/json")
+	tid := transactionidutils.GetTransactionIDFromRequest(req)
 
+	body, err := ioutil.ReadAll(req.Body)
+	if err != nil {
+		log.Errorf("Error %v whilst processing json body", err)
+		rw.WriteHeader(http.StatusServiceUnavailable)
+		rw.Write([]byte("{\"message\":\"Error whilst processing request body.\"}"))
+		return
+	}
+
+	h.service.handleConcordanceEvent(string(body), tid)
 }
 
-func (h *SmartlogicConcordanceTransformerHandler) SendHandler(rw http.ResponseWriter, r *http.Request) {
+func (h *SmartlogicConcordanceTransformerHandler) SendHandler(rw http.ResponseWriter, req *http.Request) {
+	tid := transactionidutils.GetTransactionIDFromRequest(req)
+	rw.Header().Set("Content-Type", "application/json")
+	rw.Header().Set("X-Request-Id", tid)
 
+	body, err := ioutil.ReadAll(req.Body)
+	if err != nil {
+		log.Errorf("Error %v whilst processing json body", err)
+		rw.WriteHeader(http.StatusBadRequest)
+		rw.Write([]byte("{\"message\":\"Error whilst processing request body.\"}"))
+		return
+	}
+
+	_, _, uppConcordanceJson, err := convertToUppConcordance(string(body))
+	if err != nil {
+		log.Errorf("Error %v whilst processing json", err)
+		rw.WriteHeader(http.StatusUnprocessableEntity)
+		rw.Write([]byte("{\"message\":\"Error whilst processing json.\"}"))
+		return
+	}
+	rw.WriteHeader(http.StatusOK)
+	rw.Write(uppConcordanceJson)
 }
 
-func (h *SmartlogicConcordanceTransformerHandler) gtgCheck(rw http.ResponseWriter, r *http.Request) {
+func (h *SmartlogicConcordanceTransformerHandler) gtgCheck(rw http.ResponseWriter, req *http.Request) {
 	if err := h.checkKafkaConnectivity(); err != nil {
 		log.Errorf("Kafka Healthcheck failed; %v", err.Error())
 		rw.WriteHeader(http.StatusServiceUnavailable)

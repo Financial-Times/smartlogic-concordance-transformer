@@ -1,17 +1,12 @@
-package utils
+package smartlogicconcordance
 
 type SmartlogicConcept struct {
 	Concepts []Concept `json:"@graph"`
-	Contexts  Context  `json:"@context"`
 }
 
 type Concept struct {
-	Ids []Uuid `json:"sem:guid"`
-	Identifiers []TmeId `json:"http://www.ft.com/ontology/TMEIdentifier"`
-}
-
-type Uuid struct {
-	Value string `json:"@value"`
+	Id string `json:"@id"`
+	TmeIdentifiers []TmeId `json:"http://www.ft.com/ontology/TMEIdentifier"`
 }
 
 type TmeId struct {
