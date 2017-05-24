@@ -27,43 +27,73 @@ func NewHandler(service TransformerService) SmartlogicConcordanceTransformerHand
 	}
 }
 
+//func (h *SmartlogicConcordanceTransformerHandler) Run() {
+//	fmt.Println("Step 0\n")
+//	defer func() {
+//		if err := h.service.consumer.Close(); err != nil {
+//			log.Fatal(err)
+//		}
+//	}()
+//	fmt.Println("Step 1\n")
+//	h.service.consumer.ConsumePartition()
+//
+//	partitionConsumer, err := h.service.consumer.ConsumePartition(h.service.topic, 1, 1)
+//	if err != nil {
+//		log.Fatal(err)
+//	}
+//
+//
+//	fmt.Println("Step 2\n")
+//	defer func() {
+//		if err := partitionConsumer.Close(); err != nil {
+//			log.Fatal(err)
+//		}
+//	}()
+//
+//	fmt.Println("Step 3\n")
+//	signals := make(chan os.Signal, 1)
+//	signal.Notify(signals, os.Interrupt)
+//
+//
+//	fmt.Println("Step 4\n")
+//	ConsumerLoop:
+//	for {
+//		select {
+//		case msg := <-partitionConsumer.Messages():
+//			fmt.Println("Step 5\n")
+//			go h.processKafkaMessage(*msg)
+//		case <- signals:
+//			break ConsumerLoop
+//		}
+//
+//	}
+//}
+
 func (h *SmartlogicConcordanceTransformerHandler) Run() {
-	defer func() {
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt)
+	go func() {
+		<-c
 		if err := h.service.consumer.Close(); err != nil {
-			log.Fatal(err)
-		}
-	}()
-	fmt.Println("Step 1")
-
-	partitionConsumer, err := h.service.consumer.ConsumePartition(h.service.topic, 1, 1)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-
-	fmt.Println("Step 2")
-	defer func() {
-		if err := partitionConsumer.Close(); err != nil {
-			log.Fatal(err)
+			log.Error("Error closing the consumer: %v", err)
 		}
 	}()
 
-	fmt.Println("Step 3")
-	signals := make(chan os.Signal, 1)
-	signal.Notify(signals, os.Interrupt)
-
-
-	fmt.Println("Step 4")
-	ConsumerLoop:
-	for {
-		select {
-		case msg := <-partitionConsumer.Messages():
-			fmt.Println("Step 5")
-			go h.processKafkaMessage(*msg)
-		case <- signals:
-			break ConsumerLoop
+	go func() {
+		for err := range h.service.consumer.Errors() {
+			log.Println(err)
 		}
+	}()
+	offsets := make(map[string]map[int32]int64)
 
+	for message := range h.service.consumer.Messages() {
+		if offsets[message.Topic] == nil {
+			offsets[message.Topic] = make(map[int32]int64)
+		}
+		go h.processKafkaMessage(*message)
+
+		offsets[message.Topic][message.Partition] = message.Offset
+		h.service.consumer.CommitUpto(message)
 	}
 }
 
@@ -194,7 +224,7 @@ func (h *SmartlogicConcordanceTransformerHandler) checkConcordanceRwConnectivity
 }
 
 func (h *SmartlogicConcordanceTransformerHandler) checkKafkaConnectivity() error {
-	_, err := h.service.consumer.Topics()
+	var err error
 	if err != nil {
 		return err
 	} else {

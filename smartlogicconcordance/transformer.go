@@ -2,7 +2,6 @@ package smartlogicconcordance
 
 import (
 	"github.com/golang/go/src/pkg/fmt"
-	"github.com/Shopify/sarama"
 	"encoding/json"
 	"errors"
 	"net/http"
@@ -10,12 +9,13 @@ import (
 	"github.com/coreos/fleet/log"
 	"strings"
 	"regexp"
+	"github.com/wvanbergen/kafka/consumergroup"
 )
 
 var uuidMatcher = regexp.MustCompile("^[0-9a-f]{8}/[0-9a-f]{4}/[0-9a-f]{4}/[0-9a-f]{4}/[0-9a-f]{12}$")
 
 type TransformerService struct {
-	consumer sarama.Consumer
+	consumer consumergroup.ConsumerGroup
 	topic	string
 	writerAddress string
 	httpClient 	httpClient
@@ -25,7 +25,7 @@ type httpClient interface {
 	Do(req *http.Request) (resp *http.Response, err error)
 }
 
-func NewTransformerService(consumer sarama.Consumer, topic string, writerAddress string, httpClient httpClient) TransformerService {
+func NewTransformerService(consumer consumergroup.ConsumerGroup, topic string, writerAddress string, httpClient httpClient) TransformerService {
 	return TransformerService{
 		consumer:	consumer,
 		topic: 		topic,

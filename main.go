@@ -5,11 +5,12 @@ import (
 	"github.com/jawher/mow.cli"
 	"net/http"
 	"os"
-	"github.com/Shopify/sarama"
 	"github.com/gorilla/mux"
 	"net"
 	"time"
 	slc "github.com/Financial-Times/smartlogic-concordance-transformer/smartlogicconcordance"
+	"github.com/wvanbergen/kafka/consumergroup"
+	"github.com/Shopify/sarama"
 )
 
 const appDescription = "Service which listens to kafka for concordance updates, transforms smartlogic concordance json and sends updates to concordance-rw-dynamodb"
@@ -69,13 +70,17 @@ func main() {
 	app.Action = func() {
 		log.Infof("System code: %s, App Name: %s, Port: %s", *appSystemCode, *appName, *port)
 
-		consumer, err := sarama.NewConsumer([]string{*kafkaAddress}, sarama.NewConfig())
+		config := consumergroup.NewConfig()
+		config.Offsets.Initial = sarama.OffsetNewest
+
+		consumer, err := consumergroup.JoinConsumerGroup("groupName", []string{*topic}, []string{*kafkaAddress}, config)
 		if err != nil {
-			log.Fatal(err)
+			log.Error("Error creating kafka consumer: %v", err)
+			return
 		}
 
 		router := mux.NewRouter()
-		transformer := slc.NewTransformerService(consumer, *topic, *writerAddress, &httpClient)
+		transformer := slc.NewTransformerService(*consumer, *topic, *writerAddress, &httpClient)
 		handler := slc.NewHandler(transformer)
 		handler.RegisterHandlers(router)
 		handler.RegisterAdminHandlers(router)
