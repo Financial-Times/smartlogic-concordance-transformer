@@ -45,10 +45,10 @@ func main() {
 		EnvVar: "APP_PORT",
 	})
 	kafkaAddress := app.String(cli.StringOpt{
-		Name:   "kafka_addr",
-		Value:  "http://localhost:9092",
+		Name:   "kafkaAddress",
+		Value:  "http://localhost:2181",
 		Desc:   "Kafka broker address",
-		EnvVar: "KAFKA_ADDR",
+		EnvVar: "KAFKA_ADDRESS",
 	})
 	topic := app.String(cli.StringOpt{
 		Name:   "topic",
@@ -56,11 +56,11 @@ func main() {
 		Desc:   "Kafka topic subscribed to",
 		EnvVar: "TOPIC",
 	})
-	vulcanAddress := app.String(cli.StringOpt{
-		Name:   "vulcanAddress",
-		Value:  "http://localhost:8080/",
-		Desc:   "Vulcan address for routing requests",
-		EnvVar: "VULCAN_ADDR",
+	writerAddress := app.String(cli.StringOpt{
+		Name:   "writerAddress",
+		Value:  "http://localhost:8080/__concordance-rw-dynamodb/",
+		Desc:   "Concordance rw address for routing requests",
+		EnvVar: "WRITER_ADDRESS",
 	})
 
 	log.SetLevel(log.InfoLevel)
@@ -75,7 +75,7 @@ func main() {
 		}
 
 		router := mux.NewRouter()
-		transformer := slc.NewTransformerService(consumer, *topic, *vulcanAddress, &httpClient)
+		transformer := slc.NewTransformerService(consumer, *topic, *writerAddress, &httpClient)
 		handler := slc.NewHandler(transformer)
 		handler.RegisterHandlers(router)
 		handler.RegisterAdminHandlers(router)

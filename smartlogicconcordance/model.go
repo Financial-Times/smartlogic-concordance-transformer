@@ -10,11 +10,8 @@ type Concept struct {
 }
 
 type TmeId struct {
-	Language string `json:"@language"`
 	Value string `json:"@value"`
 }
-
-type Context struct {}
 
 type UppConcordance struct {
 	ConceptUuid string `json:"uuid"`

@@ -17,8 +17,6 @@ import (
 	"github.com/Financial-Times/transactionid-utils-go"
 )
 
-var concordanceRwGtg = "__concordance-rw-dynamodb/__gtg"
-
 type SmartlogicConcordanceTransformerHandler struct {
 	service TransformerService
 }
@@ -35,25 +33,32 @@ func (h *SmartlogicConcordanceTransformerHandler) Run() {
 			log.Fatal(err)
 		}
 	}()
+	fmt.Println("Step 1")
 
 	partitionConsumer, err := h.service.consumer.ConsumePartition(h.service.topic, 1, 1)
 	if err != nil {
 		log.Fatal(err)
 	}
 
+
+	fmt.Println("Step 2")
 	defer func() {
 		if err := partitionConsumer.Close(); err != nil {
 			log.Fatal(err)
 		}
 	}()
 
+	fmt.Println("Step 3")
 	signals := make(chan os.Signal, 1)
 	signal.Notify(signals, os.Interrupt)
 
+
+	fmt.Println("Step 4")
 	ConsumerLoop:
 	for {
 		select {
 		case msg := <-partitionConsumer.Messages():
+			fmt.Println("Step 5")
 			go h.processKafkaMessage(*msg)
 		case <- signals:
 			break ConsumerLoop
@@ -176,7 +181,7 @@ func (h *SmartlogicConcordanceTransformerHandler) concordanceRwDynamoDbHealthChe
 }
 
 func (h *SmartlogicConcordanceTransformerHandler) checkConcordanceRwConnectivity() error {
-	urlToCheck := h.service.vulcanAddress + concordanceRwGtg
+	urlToCheck := h.service.writerAddress + "__gtg"
 	resp, err := http.Get(urlToCheck)
 	if err != nil {
 		return fmt.Errorf("Error calling writer at %s : %v", urlToCheck, err)

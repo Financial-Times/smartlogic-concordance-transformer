@@ -12,16 +12,12 @@ import (
 	"regexp"
 )
 
-const (
-	writerRoute = "__concordance-rw-dynamodb/concordance/"
-)
-
 var uuidMatcher = regexp.MustCompile("^[0-9a-f]{8}/[0-9a-f]{4}/[0-9a-f]{4}/[0-9a-f]{4}/[0-9a-f]{12}$")
 
 type TransformerService struct {
 	consumer sarama.Consumer
 	topic	string
-	vulcanAddress string
+	writerAddress string
 	httpClient 	httpClient
 }
 
@@ -29,11 +25,11 @@ type httpClient interface {
 	Do(req *http.Request) (resp *http.Response, err error)
 }
 
-func NewTransformerService(consumer sarama.Consumer, topic string, vulcanAddress string, httpClient httpClient) TransformerService {
+func NewTransformerService(consumer sarama.Consumer, topic string, writerAddress string, httpClient httpClient) TransformerService {
 	return TransformerService{
 		consumer:	consumer,
 		topic: 		topic,
-		vulcanAddress: vulcanAddress,
+		writerAddress: writerAddress,
 		httpClient:    httpClient,
 	}
 }
@@ -95,7 +91,7 @@ func (ts *TransformerService) makeRelevantRequest(uuid string, concordanceFound 
 }
 
 func (ts *TransformerService) makeWriteRequest(uuid string, concordedJson []byte, tid string) error {
-	reqURL := ts.vulcanAddress + writerRoute + uuid
+	reqURL := ts.writerAddress + "concordance/" + uuid
 	request, err := http.NewRequest("PUT", reqURL, strings.NewReader(string(concordedJson)))
 	if err != nil {
 		return fmt.Errorf("Failed to create request to %s with body %s", reqURL, concordedJson)
@@ -114,7 +110,7 @@ func (ts *TransformerService) makeWriteRequest(uuid string, concordedJson []byte
 }
 
 func (ts *TransformerService) makeDeleteRequest(uuid string, tid string) error {
-	reqURL := ts.vulcanAddress + writerRoute + uuid
+	reqURL := ts.writerAddress + "concordance/" + uuid
 	request, err := http.NewRequest("DELETE", reqURL, nil)
 	if err != nil {
 		return fmt.Errorf("Failed to create request to %s with body %s", reqURL, nil)
