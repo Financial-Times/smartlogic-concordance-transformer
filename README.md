@@ -1,17 +1,12 @@
 # smartlogic-concordance-transformer
-_Should be the same as the github repo name but it isn't always._
 
 [![Circle CI](https://circleci.com/gh/Financial-Times/smartlogic-concordance-transformer/tree/master.png?style=shield)](https://circleci.com/gh/Financial-Times/smartlogic-concordance-transformer/tree/master)[![Go Report Card](https://goreportcard.com/badge/github.com/Financial-Times/smartlogic-concordance-transformer)](https://goreportcard.com/report/github.com/Financial-Times/smartlogic-concordance-transformer) [![Coverage Status](https://coveralls.io/repos/github/Financial-Times/smartlogic-concordance-transformer/badge.svg)](https://coveralls.io/github/Financial-Times/smartlogic-concordance-transformer)
 
 ## Introduction
 
-_What is this service and what is it for? What other services does it depend on_
-
-Service which listens to kafka for concordance updates, transforms smartlogic concordance json and sends updates to concordance-rw-dynamodb
+This service will listen to Kafka for a notification of a change made in Smartlogic, verify whether the change concerns concordance, convert the JSON-LD in the message to a normalised UPP view of a concordance and finally send the JSON to the concordance-rw-dynamo.
 
 ## Installation
-      
-_How can I install it_
 
 Download the source code, dependencies and test dependencies:
 
@@ -22,7 +17,6 @@ Download the source code, dependencies and test dependencies:
         go build .
 
 ## Running locally
-_How can I run it_
 
 1. Run the tests and install the binary:
 
@@ -36,47 +30,161 @@ _How can I run it_
 
 Options:
 
-        --app-system-code="smartlogic-concordance-transformer"            System Code of the application ($APP_SYSTEM_CODE)
-        --app-name="Smartlogic Concordance Transformer"                   Application name ($APP_NAME)
+        --app-system-code="smartlogic-concordance-transformer"      System Code of the application ($APP_SYSTEM_CODE)
+        --app-name="smartlogic-concordance-transformer"             Application name ($APP_NAME)
         --port="8080"                                           Port to listen on ($APP_PORT)
+        --kafka-address="http:localhost:9092"                   Kafka Address
+        --kafka-topic="smartlogic-concordance"                      Kafka Topic for Smartlogic concordances
+        --kafka-group="smartlogic-concordance-transformer"          Kafka Group for this service 
+        --writer-endpoint="http://localhost:8080/"              Routing for the RW App                             
         
-3. Test:
-
-    1. Either using curl:
-
-            curl http://localhost:8080/people/143ba45c-2fb3-35bc-b227-a6ed80b5c517 | json_pp
-
-    1. Or using [httpie](https://github.com/jkbrzt/httpie):
-
-            http GET http://localhost:8080/people/143ba45c-2fb3-35bc-b227-a6ed80b5c517
-
+        
 ## Build and deployment
-_How can I build and deploy it (lots of this will be links out as the steps will be common)_
 
-* Built by Docker Hub on merge to master: [smartlogic-concordance-transformer](https://hub.docker.com/r/smartlogic-concordance-transformer/)
+* Built by Docker Hub on merge to master: [coco/smartlogic-concordance-transformer](https://hub.docker.com/r/coco/smartlogic-concordance-transformer/)
 * CI provided by CircleCI: [smartlogic-concordance-transformer](https://circleci.com/gh/Financial-Times/smartlogic-concordance-transformer)
 
 ## Service endpoints
-_What are the endpoints offered by the service_
+See the api/api.yml for the swagger definitions of the endpoints
 
-e.g.
-### GET
+### POST /transform
+This endpoint is for testing and help ongoing support. This endpoint only transforms the JSON-LD payload and returns the UPP source representation but doesn’t send it on down the pipeline to the concordance-rw-s3
 
 Using curl:
 
-    curl http://localhost:8080/people/143ba45c-2fb3-35bc-b227-a6ed80b5c517 | json_pp`
+    curl -X POST -i https://user:pass@pub-prod-up.ft.com/__smartlogic-concordance-transformer/transform/send --d @payload.txt --header "Content-Type:application/json"
 
-Or using [httpie](https://github.com/jkbrzt/httpie):
+Payload.txt:
 
-    http GET http://localhost:8080/people/143ba45c-2fb3-35bc-b227-a6ed80b5c517
+    {
+      "@graph": [
+        {
+          "@id": "http://www.ft.com/thing/018be9f8-22ff-459e-b605-288b101362e3",
+          "@type": [
+            "http://www.ft.com/ontology/product/Brand"
+          ],
+          "http://www.ft.com/ontology/description": [
+            {
+              "@language": "en",
+              "@value": "<p><span>This is a concordances description </span><br/></p>"
+            }
+          ],
+          "http://www.ft.com/ontology/subBrandOf": [
+            {
+              "@id": "http://www.ft.com/thing/d1748734-e917-4217-a2cd-e7c19717dd4b"
+            }
+          ],
+          "http://www.ft.com/thing/_logoURL": [
+            {
+              "@language": "en",
+              "@value": "<p><img src=\"http://im.ft-static.com/content/images/d5ffade2-99ea-11e6-8f9b-70e3cabccfae.png\"/></p>"
+            }
+          ],
+          "sem:guid": [
+            {
+              "@value": "efd4a777-c2c4-4a04-9c52-1f1485196338"
+            }
+          ],
+          "skosxl:prefLabel": [
+            {
+              "@id": "http://www.ft.com/thing/efd4a777-c2c4-4a04-9c52-1f1485196338/Lex_en",
+              "skosxl:literalForm": [
+                {
+                  "@language": "en",
+                  "@value": "Lex"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "@context": {}
+      }
+    }
 
-The expected response will contain information about the person, and the organisations they are connected to (via memberships).
-
-Based on the following [google doc](https://docs.google.com/document/d/1SC4Uskl-VD78y0lg5H2Gq56VCmM4OFHofZM-OvpsOFo/edit#heading=h.qjo76xuvpj83).
-
+Based on the following [google doc](https://docs.google.com/document/d/1-8Yv1ob6qjAOzfU1ngEOeXJDGq_zP7pLM7F5HnORCoM/edit#).
 
 ## Utility endpoints
-_Endpoints that are there for support or testing, e.g read endpoints on the writers_
+### POST /transform/send
+Transforms smartlogic payload into the upp representation of concordance and sends result to concordances-rw-s3
+
+Using curl:
+
+    curl -X POST -i https://user:pass@pub-prod-up.ft.com/__smartlogic-concordance-transformer/transform/send --d @payload.txt --header "Content-Type:application/json"
+
+Payload.txt:
+
+    {
+      "@graph": [
+        {
+          "@id": "http://www.ft.com/thing/018be9f8-22ff-459e-b605-288b101362e3",
+          "@type": [
+            "http://www.ft.com/ontology/product/Brand"
+          ],
+          "http://www.ft.com/ontology/description": [
+            {
+              "@language": "en",
+              "@value": "<p><span>This is a concordances description </span><br/></p>"
+            }
+          ],
+          "http://www.ft.com/ontology/subBrandOf": [
+            {
+              "@id": "http://www.ft.com/thing/d1748734-e917-4217-a2cd-e7c19717dd4b"
+            }
+          ],
+          "http://www.ft.com/thing/_logoURL": [
+            {
+              "@language": "en",
+              "@value": "<p><img src=\"http://im.ft-static.com/content/images/d5ffade2-99ea-11e6-8f9b-70e3cabccfae.png\"/></p>"
+            }
+          ],
+          "sem:guid": [
+            {
+              "@value": "efd4a777-c2c4-4a04-9c52-1f1485196338"
+            }
+          ],
+          "skosxl:prefLabel": [
+            {
+              "@id": "http://www.ft.com/thing/efd4a777-c2c4-4a04-9c52-1f1485196338/Lex_en",
+              "skosxl:literalForm": [
+                {
+                  "@language": "en",
+                  "@value": "Lex"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "@context": {}
+      }
+    }
+
+
+The expected response will give us a UPP source system representation of this smart logic concordance
+
+e.g
+    
+    HTTP/1.1 200 OK
+    Content-Type: application/json
+    X-Request-Id: transaction ID, e.g. tid_etmIWTJVeA
+    X
+    {
+      "uuid": "018be9f8-22ff-459e-b605-288b101362e3",
+      "prefLabel": "Lex",
+      "type": "Brand",
+      "authority": "SmartLogic",
+      “parentBrandUuids”: [
+    	"d1748734-e917-4217-a2cd-e7c19717dd4b"
+    ],
+      "authorityValue": "efd4a777-c2c4-4a04-9c52-1f1485196338",
+      "description": "This is a concordances description",
+      "strapline": "Another FT concordance managed in Smart Logic",
+      "descriptionXML": "<p>This is a concordances description XML</p>",
+      "_imageUrl": "http://im.ft-static.com/content/images/d5ffade2-99ea-11e6-8f9b-70e3cabccfae.png"
+    }
+
+Based on the following [google doc](https://docs.google.com/document/d/1-8Yv1ob6qjAOzfU1ngEOeXJDGq_zP7pLM7F5HnORCoM/edit#).
 
 ## Healthchecks
 Admin endpoints are:
@@ -87,19 +195,9 @@ Admin endpoints are:
 
 `/__build-info`
 
-_These standard endpoints do not need to be specifically documented._
-
-_This section *should* however explain what checks are done to determine health and gtg status._
-
 There are several checks performed:
 
-_e.g._
-* Checks that a connection can be made to Neo4j, using the neo4j url supplied as a parameter in service startup.
-
-## Other information
-_Anything else you want to add._
-
-_e.g. (NB: this example may be something we want to extract as it's probably common to a lot of services)_
+* Checks that a connection can be made to the concordances-rw-s3 service
 
 ### Logging
 
