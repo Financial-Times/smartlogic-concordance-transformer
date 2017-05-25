@@ -77,8 +77,8 @@ func main() {
 		// DO stuff
 		waitForSignal()
 	}
-	err := app.Run(os.Args)
-	if err != nil {
+	errs := app.Run(os.Args)
+	if errs != nil {
 		log.Errorf("App: smartlogic-concordance-transformer could not start, error=[%s]\n", err)
 		return
 	}
