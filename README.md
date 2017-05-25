@@ -30,12 +30,12 @@ Download the source code, dependencies and test dependencies:
 
 Options:
 
-        --app-system-code="smartlogic-concordance-transformer"      System Code of the application ($APP_SYSTEM_CODE)
-        --app-name="smartlogic-concordance-transformer"             Application name ($APP_NAME)
+        --app-system-code="smartlogic-concordance-transformer"  System Code of the application ($APP_SYSTEM_CODE)
+        --app-name="smartlogic-concordance-transformer"         Application name ($APP_NAME)
         --port="8080"                                           Port to listen on ($APP_PORT)
-        --kafka-address="http:localhost:9092"                   Kafka Address
-        --kafka-topic="smartlogic-concordance"                      Kafka Topic for Smartlogic concordances
-        --kafka-group="smartlogic-concordance-transformer"          Kafka Group for this service 
+        --kafka-address="http:localhost:9092"                   Kafka Address 
+        --kafka-topic="smartlogic-concepts"                     Kafka Topic for Smartlogic concordances
+        --kafka-group="smartlogic-concordance-transformer"      Kafka Group for this service 
         --writer-endpoint="http://localhost:8080/"              Routing for the RW App                             
         
         
@@ -57,50 +57,83 @@ Using curl:
 Payload.txt:
 
     {
-      "@graph": [
-        {
-          "@id": "http://www.ft.com/thing/018be9f8-22ff-459e-b605-288b101362e3",
-          "@type": [
-            "http://www.ft.com/ontology/product/Brand"
-          ],
-          "http://www.ft.com/ontology/description": [
+        "@graph": [
             {
-              "@language": "en",
-              "@value": "<p><span>This is a concordances description </span><br/></p>"
+                "@id": "http://www.ft.com/thing/2d3e16e0-61cb-4322-8aff-3b01c59f4daa",
+                "@type": [
+                    "http://www.ft.com/ontology/product/Brand"
+                ],
+                "http://www.ft.com/ontology/TMEIdentifier": [
+                    {
+                        "@value": "YzhlNzZkYTctMDJiNy00NTViLTk3NmYtNmJjYTE5NDEyM2Yw-QnJhbmRz"
+                    }
+                ],
+                "http://www.ft.com/ontology/_logoURL": [
+                    {
+                        "@value": "http://im.ft-static.com/content/images/d5ffade2-99ea-11e6-8f9b-70e3cabccfae.png"
+                    }
+                ],
+                "http://www.ft.com/ontology/description": [
+                    {
+                        "@language": "en",
+                        "@value": "<p>Lex is a premium daily commentary service from the Financial Times. It is the oldest and arguably the most influential business and finance column of its kind in the world. It helps readers make better investment decisions by highlighting key emerging risks and opportunities.</p>"
+                    }
+                ],
+                "http://www.ft.com/ontology/hasSubBrand": [
+                    {
+                        "@id": "http://www.ft.com/thing/e363dfb8-f6d9-4f2c-beba-5162b334272b"
+                    }
+                ],
+                "http://www.ft.com/ontology/strapline": [
+                    {
+                        "@language": "en",
+                        "@value": "FT's agenda-setting column on business and finance"
+                    }
+                ],
+                "http://www.ft.com/ontology/subBrandOf": [
+                    {
+                        "@id": "http://www.ft.com/thing/dbb0bdae-1f0c-11e4-b0cb-b2227cce2b54"
+                    }
+                ],
+                "sem:guid": [
+                    {
+                        "@value": "2d3e16e0-61cb-4322-8aff-3b01c59f4daa"
+                    }
+                ],
+                "skosxl:prefLabel": [
+                    {
+                        "@id": "http://www.ft.com/thing/2d3e16e0-61cb-4322-8aff-3b01c59f4daa/Lex_en",
+                        "skosxl:literalForm": [
+                            {
+                                "@language": "en",
+                                "@value": "Lex"
+                            }
+                        ]
+                    }
+                ]
             }
-          ],
-          "http://www.ft.com/ontology/subBrandOf": [
-            {
-              "@id": "http://www.ft.com/thing/d1748734-e917-4217-a2cd-e7c19717dd4b"
-            }
-          ],
-          "http://www.ft.com/thing/_logoURL": [
-            {
-              "@language": "en",
-              "@value": "<p><img src=\"http://im.ft-static.com/content/images/d5ffade2-99ea-11e6-8f9b-70e3cabccfae.png\"/></p>"
-            }
-          ],
-          "sem:guid": [
-            {
-              "@value": "efd4a777-c2c4-4a04-9c52-1f1485196338"
-            }
-          ],
-          "skosxl:prefLabel": [
-            {
-              "@id": "http://www.ft.com/thing/efd4a777-c2c4-4a04-9c52-1f1485196338/Lex_en",
-              "skosxl:literalForm": [
-                {
-                  "@language": "en",
-                  "@value": "Lex"
-                }
-              ]
-            }
-          ]
+        ],
+        "@context": {
+            ...
+          
         }
-      ],
-      "@context": {}
-      }
     }
+
+
+The expected response will give us a UPP source system representation of this smart logic concordance
+
+e.g
+    
+    HTTP/1.1 200 OK
+    Content-Type: application/json
+    X-Request-Id: transaction ID, e.g. tid_etmIWTJVeA
+    {
+      "uuid": "2d3e16e0-61cb-4322-8aff-3b01c59f4daa"",
+      "concordedIds": [
+    	"YzhlNzZkYTctMDJiNy00NTViLTk3NmYtNmJjYTE5NDEyM2Yw-QnJhbmRz"
+      ]
+    }
+
 
 Based on the following [google doc](https://docs.google.com/document/d/1-8Yv1ob6qjAOzfU1ngEOeXJDGq_zP7pLM7F5HnORCoM/edit#).
 
@@ -114,75 +147,70 @@ Using curl:
 
 Payload.txt:
 
+
     {
-      "@graph": [
-        {
-          "@id": "http://www.ft.com/thing/018be9f8-22ff-459e-b605-288b101362e3",
-          "@type": [
-            "http://www.ft.com/ontology/product/Brand"
-          ],
-          "http://www.ft.com/ontology/description": [
+        "@graph": [
             {
-              "@language": "en",
-              "@value": "<p><span>This is a concordances description </span><br/></p>"
+                "@id": "http://www.ft.com/thing/2d3e16e0-61cb-4322-8aff-3b01c59f4daa",
+                "@type": [
+                    "http://www.ft.com/ontology/product/Brand"
+                ],
+                "http://www.ft.com/ontology/TMEIdentifier": [
+                    {
+                        "@value": "YzhlNzZkYTctMDJiNy00NTViLTk3NmYtNmJjYTE5NDEyM2Yw-QnJhbmRz"
+                    }
+                ],
+                "http://www.ft.com/ontology/_logoURL": [
+                    {
+                        "@value": "http://im.ft-static.com/content/images/d5ffade2-99ea-11e6-8f9b-70e3cabccfae.png"
+                    }
+                ],
+                "http://www.ft.com/ontology/description": [
+                    {
+                        "@language": "en",
+                        "@value": "<p>Lex is a premium daily commentary service from the Financial Times. It is the oldest and arguably the most influential business and finance column of its kind in the world. It helps readers make better investment decisions by highlighting key emerging risks and opportunities.</p>"
+                    }
+                ],
+                "http://www.ft.com/ontology/hasSubBrand": [
+                    {
+                        "@id": "http://www.ft.com/thing/e363dfb8-f6d9-4f2c-beba-5162b334272b"
+                    }
+                ],
+                "http://www.ft.com/ontology/strapline": [
+                    {
+                        "@language": "en",
+                        "@value": "FT's agenda-setting column on business and finance"
+                    }
+                ],
+                "http://www.ft.com/ontology/subBrandOf": [
+                    {
+                        "@id": "http://www.ft.com/thing/dbb0bdae-1f0c-11e4-b0cb-b2227cce2b54"
+                    }
+                ],
+                "sem:guid": [
+                    {
+                        "@value": "2d3e16e0-61cb-4322-8aff-3b01c59f4daa"
+                    }
+                ],
+                "skosxl:prefLabel": [
+                    {
+                        "@id": "http://www.ft.com/thing/2d3e16e0-61cb-4322-8aff-3b01c59f4daa/Lex_en",
+                        "skosxl:literalForm": [
+                            {
+                                "@language": "en",
+                                "@value": "Lex"
+                            }
+                        ]
+                    }
+                ]
             }
-          ],
-          "http://www.ft.com/ontology/subBrandOf": [
-            {
-              "@id": "http://www.ft.com/thing/d1748734-e917-4217-a2cd-e7c19717dd4b"
-            }
-          ],
-          "http://www.ft.com/thing/_logoURL": [
-            {
-              "@language": "en",
-              "@value": "<p><img src=\"http://im.ft-static.com/content/images/d5ffade2-99ea-11e6-8f9b-70e3cabccfae.png\"/></p>"
-            }
-          ],
-          "sem:guid": [
-            {
-              "@value": "efd4a777-c2c4-4a04-9c52-1f1485196338"
-            }
-          ],
-          "skosxl:prefLabel": [
-            {
-              "@id": "http://www.ft.com/thing/efd4a777-c2c4-4a04-9c52-1f1485196338/Lex_en",
-              "skosxl:literalForm": [
-                {
-                  "@language": "en",
-                  "@value": "Lex"
-                }
-              ]
-            }
-          ]
+        ],
+        "@context": {
+            ...
+          
         }
-      ],
-      "@context": {}
-      }
     }
 
-
-The expected response will give us a UPP source system representation of this smart logic concordance
-
-e.g
-    
-    HTTP/1.1 200 OK
-    Content-Type: application/json
-    X-Request-Id: transaction ID, e.g. tid_etmIWTJVeA
-    X
-    {
-      "uuid": "018be9f8-22ff-459e-b605-288b101362e3",
-      "prefLabel": "Lex",
-      "type": "Brand",
-      "authority": "SmartLogic",
-      “parentBrandUuids”: [
-    	"d1748734-e917-4217-a2cd-e7c19717dd4b"
-    ],
-      "authorityValue": "efd4a777-c2c4-4a04-9c52-1f1485196338",
-      "description": "This is a concordances description",
-      "strapline": "Another FT concordance managed in Smart Logic",
-      "descriptionXML": "<p>This is a concordances description XML</p>",
-      "_imageUrl": "http://im.ft-static.com/content/images/d5ffade2-99ea-11e6-8f9b-70e3cabccfae.png"
-    }
 
 Based on the following [google doc](https://docs.google.com/document/d/1-8Yv1ob6qjAOzfU1ngEOeXJDGq_zP7pLM7F5HnORCoM/edit#).
 
