@@ -63,7 +63,12 @@ func main() {
 		EnvVar: "LOG_LEVEL",
 	})
 
-	log.SetLevel(logLevel)
+	lvl, err := log.ParseLevel(*logLevel)
+	if err != nil {
+		log.Fatalf("Cannot parse log level: %s", *logLevel)
+	}
+	log.SetLevel(lvl)
+
 	log.Infof("[Startup] smartlogic-concordance-transformer is starting ")
 
 	app.Action = func() {
