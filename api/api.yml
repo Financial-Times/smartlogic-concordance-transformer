@@ -36,6 +36,10 @@ paths:
     post:
       summary: Transforms smartlogic payload into the upp representation of concordance and send it to the concordance-rw-dynamodb
       description: Transforms smartlogic payload into the upp representation of concordance and send it to the concordance-rw-dynamodb
+      tags:
+        - Internal API
+      produces:
+        - application/json
       responses:
         200:
           description: Successfully transformed and sent onewards the smart logic concept
