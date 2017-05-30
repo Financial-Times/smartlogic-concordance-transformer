@@ -4,7 +4,7 @@ info:
   
   version: "1.0.0"
   title: "SmartLogic Concordance Transformer"
-host: api.ft.com
+host: pub-prod-up.ft.com
 schemes:
   - https
 basePath: /
@@ -16,12 +16,15 @@ paths:
       description: Transforms smartlogic payload into the upp representation of concordance if one exists and returns request. Used for support and testing
       tags:
         - Internal API
+      consumes:
+              - application/ld+json
       parameters:
         - name: transformRequest
           in: body
           description: Minimal Payload that comes out of the smartlogic api
           schema:
             type: string
+          
       produces:
               - application/json
       responses:
@@ -48,6 +51,14 @@ paths:
         - Internal API
       produces:
         - application/json
+      consumes:
+              - application/ld+json
+      parameters:
+        - name: transformRequest
+          in: body
+          description: Minimal Payload that comes out of the smartlogic api
+          schema:
+            type: string  
       responses:
         200:
           description: Successfully transformed and sent onewards the smart logic concept
