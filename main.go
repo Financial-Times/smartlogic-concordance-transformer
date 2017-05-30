@@ -9,8 +9,7 @@ import (
 	"net"
 	"time"
 	slc "github.com/Financial-Times/smartlogic-concordance-transformer/smartlogic"
-	"github.com/wvanbergen/kafka/consumergroup"
-	"github.com/Shopify/sarama"
+	cluster "github.com/bsm/sarama-cluster"
 )
 
 const appDescription = "Service which listens to kafka for concordance updates, transforms smartlogic concordance json and sends updates to concordance-rw-dynamodb"
@@ -57,6 +56,12 @@ func main() {
 		Desc:   "Kafka topic subscribed to",
 		EnvVar: "TOPIC",
 	})
+	groupName := app.String(cli.StringOpt{
+		Name:   "groupName",
+		Value:  "SmartlogicConcordanceSemantic",
+		Desc:   "Group name of connection to SmartLogicChangeEvents Topic",
+		EnvVar: "GROUP_NAME",
+	})
 	writerAddress := app.String(cli.StringOpt{
 		Name:   "writerAddress",
 		Value:  "http://localhost:8080/__concordance-rw-dynamodb/",
@@ -70,11 +75,30 @@ func main() {
 	app.Action = func() {
 		log.Infof("System code: %s, App Name: %s, Port: %s", *appSystemCode, *appName, *port)
 
-		config := consumergroup.NewConfig()
-		config.Offsets.Initial = sarama.OffsetNewest
-		config.Offsets.ProcessingTimeout = 10 * time.Second
+		//config := consumergroup.NewConfig()
+		//config.Offsets.Initial = sarama.OffsetOldest
+		//config.Offsets.ProcessingTimeout = 10 * time.Second
+		//fmt.Printf("Group name is %s\n", *groupName)
+		//fmt.Printf("Topic is %s\n", *topic)
+		//fmt.Printf("Kafka address is %s\n", *kafkaAddress)
+		//
+		//zookeeperNodes, chroot := kazoo.ParseConnectionString(*kafkaAddress)
+		//config.Zookeeper.Chroot = chroot
+		//config.Zookeeper.Timeout = 10 * time.Second
+		//kafkaTopics := strings.Split(*topic, ",")
+		//fmt.Printf("Topic is %s\n", kafkaTopics)
+		//fmt.Printf("Kafka address is %s\n", zookeeperNodes)
 
-		consumer, err := consumergroup.JoinConsumerGroup("groupName", []string{*topic}, []string{*kafkaAddress}, config)
+		config := cluster.NewConfig()
+		config.Consumer.Return.Errors = true
+		config.Group.Return.Notifications = true
+
+		// init consumer
+		brokers := []string{*kafkaAddress}
+		topics := []string{*topic}
+		consumer, err := cluster.NewConsumer(brokers, *groupName, topics, config)
+
+		//consumer, err := consumergroup.JoinConsumerGroup(*groupName, kafkaTopics, zookeeperNodes, config)
 		if err != nil {
 			log.Error("Error creating kafka consumer: %v", err)
 			return
@@ -87,6 +111,7 @@ func main() {
 		handler.RegisterAdminHandlers(router)
 
 		go handler.Run()
+		defer consumer.Close()
 	}
 	err := app.Run(os.Args)
 	if err != nil {

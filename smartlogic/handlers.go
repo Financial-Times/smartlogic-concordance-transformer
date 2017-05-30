@@ -69,36 +69,68 @@ func NewHandler(service TransformerService) SmartlogicConcordanceTransformerHand
 //	}
 //}
 
+//func (h *SmartlogicConcordanceTransformerHandler) Run() {
+//	fmt.Printf("We got here!\n")
+//	c := make(chan os.Signal, 1)
+//	signal.Notify(c, os.Interrupt)
+//	fmt.Printf("Step 1!")
+//	go func() {
+//		<-c
+//		if err := h.service.consumer.Close(); err != nil {
+//			log.Error("Error closing the consumer: %v", err)
+//		}
+//	}()
+//	fmt.Printf("Step 2!")
+//
+//	go func() {
+//		for err := range h.service.consumer.Errors() {
+//			log.Println(err)
+//		}
+//	}()
+//	fmt.Printf("Step 3!")
+//	offsets := make(map[string]map[int32]int64)
+//	for message := range h.service.consumer.Messages() {
+//		fmt.Printf("Step 4!")
+//		if offsets[message.Topic] == nil {
+//			offsets[message.Topic] = make(map[int32]int64)
+//		}
+//		go h.processKafkaMessage(*message)
+//
+//		offsets[message.Topic][message.Partition] = message.Offset
+//		//h.service.consumer.CommitUpto(message)
+//	}
+//}
+
 func (h *SmartlogicConcordanceTransformerHandler) Run() {
-	fmt.Printf("We got here!")
-	c := make(chan os.Signal, 1)
-	signal.Notify(c, os.Interrupt)
+	fmt.Printf("We got here!\n")
+	signals := make(chan os.Signal, 1)
+	signal.Notify(signals, os.Interrupt)
 	fmt.Printf("Step 1!")
-	go func() {
-		<-c
-		if err := h.service.consumer.Close(); err != nil {
-			log.Error("Error closing the consumer: %v", err)
+	for {
+		fmt.Printf("Step 2!\n")
+		select {
+		case msg, more := <-h.service.consumer.Messages():
+			fmt.Printf("Step 3!\n")
+			if msg != nil {
+				h.processKafkaMessage(*msg)
+			}
+			if more {
+				fmt.Fprintf(os.Stdout, "%s/%d/%d\t%s\t%s\n", msg.Topic, msg.Partition, msg.Offset, msg.Key, msg.Value)
+				h.service.consumer.MarkOffset(msg, "") // mark message as processed
+			}
+		case err, more := <-h.service.consumer.Errors():
+			if more {
+				log.Printf("Error: %s\n", err.Error())
+			}
+		case ntf, more := <-h.service.consumer.Notifications():
+			if more {
+				log.Printf("Rebalanced: %+v\n", ntf)
+				fmt.Printf("Step 4!\n")
+			}
+		case <-signals:
+			fmt.Printf("Step 5!\n")
+			return
 		}
-	}()
-	fmt.Printf("Step 2!")
-
-	go func() {
-		for err := range h.service.consumer.Errors() {
-			log.Println(err)
-		}
-	}()
-	fmt.Printf("Step 3!")
-	offsets := make(map[string]map[int32]int64)
-
-	for message := range h.service.consumer.Messages() {
-		fmt.Printf("Step 4!")
-		if offsets[message.Topic] == nil {
-			offsets[message.Topic] = make(map[int32]int64)
-		}
-		go h.processKafkaMessage(*message)
-
-		offsets[message.Topic][message.Partition] = message.Offset
-		h.service.consumer.CommitUpto(message)
 	}
 }
 

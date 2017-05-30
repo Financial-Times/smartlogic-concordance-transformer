@@ -9,13 +9,13 @@ import (
 	"github.com/coreos/fleet/log"
 	"strings"
 	"regexp"
-	"github.com/wvanbergen/kafka/consumergroup"
+	"github.com/bsm/sarama-cluster"
 )
 
 var uuidMatcher = regexp.MustCompile("^[0-9a-f]{8}/[0-9a-f]{4}/[0-9a-f]{4}/[0-9a-f]{4}/[0-9a-f]{12}$")
 
 type TransformerService struct {
-	consumer consumergroup.ConsumerGroup
+	consumer cluster.Consumer
 	topic	string
 	writerAddress string
 	httpClient 	httpClient
@@ -25,7 +25,7 @@ type httpClient interface {
 	Do(req *http.Request) (resp *http.Response, err error)
 }
 
-func NewTransformerService(consumer consumergroup.ConsumerGroup, topic string, writerAddress string, httpClient httpClient) TransformerService {
+func NewTransformerService(consumer cluster.Consumer, topic string, writerAddress string, httpClient httpClient) TransformerService {
 	return TransformerService{
 		consumer:	consumer,
 		topic: 		topic,
