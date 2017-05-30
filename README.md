@@ -212,7 +212,7 @@ Payload.txt:
     }
 
 
-Based on the following [google doc](https://docs.google.com/document/d/1-8Yv1ob6qjAOzfU1ngEOeXJDGq_zP7pLM7F5HnORCoM/edit#).
+Based on the following [google doc](https://docs.google.com/document/d/1vyXZOJrj19KS6uHD2jBx1DOO4PesAjh043034AXR72o/edit#).
 
 ## Healthchecks
 Admin endpoints are:
