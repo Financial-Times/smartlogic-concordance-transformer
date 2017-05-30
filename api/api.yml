@@ -1,8 +1,9 @@
 swagger: "2.0"
 info:
   description: "API specification for the SmartLogic Concordance Transformer"
+  
   version: "1.0.0"
-  title: "SmartLogic Conconcordance Transformer"
+  title: "SmartLogic Concordance Transformer"
 host: api.ft.com
 schemes:
   - https
@@ -32,15 +33,15 @@ paths:
                 concordedIds:
                   - a931079b-00b8-4d10-b893-2b94ddd93b43
         400:
-          description: Invalid input - invalid JSON-LD or a missing uuid
+          description: Invalid input - invalid JSON-LD or a missing uuid.  
         500:
           description: Internal error transforming the Smart Logic JSON-LD
         503:
           description: Service cannot connect to Kafka or the concordances-rw-dynamodb service
   /transform/send:
     post:
-      summary: Transforms smartlogic payload into the upp representation of concordance and send it to the concordance-rw-dynamodb
-      description: Transforms smartlogic payload into the upp representation of concordance and send it to the concordance-rw-dynamodb
+      summary: Transforms smartlogic payload into the upp representation of concordance and sends it to the concordance-rw-dynamodb. 
+      description: Transforms smartlogic payload into the upp representation of concordance and sends it to the concordance-rw-dynamodb.  If no concordance exists, a delete request is sent instead (response outlined in concordance-rw-dynamodb)
       tags:
         - Internal API
       produces:
@@ -49,11 +50,13 @@ paths:
         200:
           description: Successfully transformed and sent onewards the smart logic concept
         400:
-          description: Invalid input - invalid JSON-LD or a missing prefLabel, type or Id
+          description: Invalid input - invalid JSON-LD or a missing uuid
         500:
           description: Internal error transforming the Smart Logic JSON-LD
         503:
           description: Service cannot connect to Kafka or the concordances-rw-dynamodb service
+  
+    
   /__ping:
     get:
       summary: Ping
