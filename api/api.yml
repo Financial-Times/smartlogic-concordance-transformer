@@ -33,7 +33,9 @@ paths:
                 concordedIds:
                   - a931079b-00b8-4d10-b893-2b94ddd93b43
         400:
-          description: Invalid input - invalid JSON-LD or a missing uuid.  
+          description: Invalid input - invalid JSON-LD or a missing uuid
+        405:
+          description: Method not allowed - any method not specified for this endpoint will return a 405 response  
         500:
           description: Internal error transforming the Smart Logic JSON-LD
         503:
@@ -51,6 +53,8 @@ paths:
           description: Successfully transformed and sent onewards the smart logic concept
         400:
           description: Invalid input - invalid JSON-LD or a missing uuid
+        405:
+          description: Method not allowed - any method not specified for this endpoint will return a 405 response
         500:
           description: Internal error transforming the Smart Logic JSON-LD
         503:
