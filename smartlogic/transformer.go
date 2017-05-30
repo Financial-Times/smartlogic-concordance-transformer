@@ -1,4 +1,4 @@
-package smartlogicconcordance
+package smartlogic
 
 import (
 	"github.com/golang/go/src/pkg/fmt"

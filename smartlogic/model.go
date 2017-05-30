@@ -1,4 +1,4 @@
-package smartlogicconcordance
+package smartlogic
 
 type SmartlogicConcept struct {
 	Concepts []Concept `json:"@graph"`

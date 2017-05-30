@@ -1,4 +1,4 @@
-package smartlogicconcordance
+package smartlogic
 
 import (
 	"github.com/gorilla/mux"
@@ -70,23 +70,28 @@ func NewHandler(service TransformerService) SmartlogicConcordanceTransformerHand
 //}
 
 func (h *SmartlogicConcordanceTransformerHandler) Run() {
+	fmt.Printf("We got here!")
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
+	fmt.Printf("Step 1!")
 	go func() {
 		<-c
 		if err := h.service.consumer.Close(); err != nil {
 			log.Error("Error closing the consumer: %v", err)
 		}
 	}()
+	fmt.Printf("Step 2!")
 
 	go func() {
 		for err := range h.service.consumer.Errors() {
 			log.Println(err)
 		}
 	}()
+	fmt.Printf("Step 3!")
 	offsets := make(map[string]map[int32]int64)
 
 	for message := range h.service.consumer.Messages() {
+		fmt.Printf("Step 4!")
 		if offsets[message.Topic] == nil {
 			offsets[message.Topic] = make(map[int32]int64)
 		}
@@ -192,7 +197,7 @@ func (h *SmartlogicConcordanceTransformerHandler) kafkaHealthCheck() fthealth.Ch
 	return fthealth.Check{
 		BusinessImpact:   "Editorial updates of concpet concordances will not be written into UPP",
 		Name:             "Check connectivity to Kafka",
-		PanicGuide:       "https://dewey.ft.com/smartlogic-concordance-transformer.html",
+		PanicGuide:       "https://dewey.ft.com/smartlogic-concordance-transform.html",
 		Severity:         3,
 		TechnicalSummary: `Cannot connect to Kafka. If false check that kafka is healthy in this cluster; if so restart service`,
 		Checker:          h.checkKafkaConnectivity,
@@ -203,7 +208,7 @@ func (h *SmartlogicConcordanceTransformerHandler) concordanceRwDynamoDbHealthChe
 	return fthealth.Check{
 		BusinessImpact:   "Editorial updates of concpet concordances will not be written into UPP",
 		Name:             "Check connectivity to concordance reader/writer",
-		PanicGuide:       "https://dewey.ft.com/smartlogic-concordance-transformer.html",
+		PanicGuide:       "https://dewey.ft.com/smartlogic-concordance-transform.html",
 		Severity:         3,
 		TechnicalSummary: `Cannot connect to concordance rw. If false, check health of concordance-rw-dynamodb`,
 		Checker:          h.checkConcordanceRwConnectivity,

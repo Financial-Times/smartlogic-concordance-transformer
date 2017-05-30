@@ -8,7 +8,7 @@ import (
 	"github.com/gorilla/mux"
 	"net"
 	"time"
-	slc "github.com/Financial-Times/smartlogic-concordance-transformer/smartlogicconcordance"
+	slc "github.com/Financial-Times/smartlogic-concordance-transformer/smartlogic"
 	"github.com/wvanbergen/kafka/consumergroup"
 	"github.com/Shopify/sarama"
 )
@@ -72,6 +72,7 @@ func main() {
 
 		config := consumergroup.NewConfig()
 		config.Offsets.Initial = sarama.OffsetNewest
+		config.Offsets.ProcessingTimeout = 10 * time.Second
 
 		consumer, err := consumergroup.JoinConsumerGroup("groupName", []string{*topic}, []string{*kafkaAddress}, config)
 		if err != nil {
