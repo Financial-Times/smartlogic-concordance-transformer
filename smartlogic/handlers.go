@@ -1,20 +1,20 @@
 package smartlogic
 
 import (
-	"fmt"
-	"github.com/Financial-Times/go-fthealth"
+	"github.com/gorilla/mux"
+	"github.com/gorilla/handlers"
+	log "github.com/Sirupsen/logrus"
 	"github.com/Financial-Times/http-handlers-go/httphandlers"
 	status "github.com/Financial-Times/service-status-go/httphandlers"
-	"github.com/Financial-Times/transactionid-utils-go"
-	"github.com/Shopify/sarama"
-	log "github.com/Sirupsen/logrus"
-	"github.com/gorilla/handlers"
-	"github.com/gorilla/mux"
 	"github.com/rcrowley/go-metrics"
-	"io/ioutil"
+	"fmt"
+	"github.com/Financial-Times/go-fthealth"
 	"net/http"
 	"os"
 	"os/signal"
+	"github.com/Shopify/sarama"
+	"io/ioutil"
+	"github.com/Financial-Times/transactionid-utils-go"
 )
 
 type SmartlogicConcordanceTransformerHandler struct {
@@ -111,6 +111,7 @@ func (h *SmartlogicConcordanceTransformerHandler) Run() {
 		select {
 		case msg, more := <-h.service.consumer.Messages():
 			if msg != nil {
+				fmt.Printf("Adding message to list!\n")
 				list = append(list, *msg)
 			}
 			if more {
