@@ -44,11 +44,17 @@ func main() {
 		Desc:   "Port to listen on",
 		EnvVar: "APP_PORT",
 	})
-	kafkaAddress := app.String(cli.StringOpt{
-		Name:   "kafkaAddress",
-		Value:  "http://localhost:2181",
-		Desc:   "Kafka broker address",
-		EnvVar: "KAFKA_ADDRESS",
+	kafkaHost := app.String(cli.StringOpt{
+		Name:   "kafkaHost",
+		Value:  "localhost",
+		Desc:   "Kafka broker host",
+		EnvVar: "KAFKA_HOST",
+	})
+	kafkaPort := app.String(cli.StringOpt{
+		Name:   "kafkaPort",
+		Value:  "9092",
+		Desc:   "Kafka broker port",
+		EnvVar: "KAFKA_PORT",
 	})
 	topic := app.String(cli.StringOpt{
 		Name:   "topic",
@@ -94,7 +100,7 @@ func main() {
 		config.Group.Return.Notifications = true
 
 		// init consumer
-		brokers := []string{*kafkaAddress}
+		brokers := []string{*kafkaHost + ":" + *kafkaPort}
 		topics := []string{*topic}
 		consumer, err := cluster.NewConsumer(brokers, *groupName, topics, config)
 
@@ -111,7 +117,12 @@ func main() {
 		handler.RegisterAdminHandlers(router)
 
 		go handler.Run()
-		defer consumer.Close()
+
+		defer func() {
+			if cErr := consumer.Close(); cErr != nil {
+				log.Fatal(cErr)
+				}
+			}()
 	}
 	err := app.Run(os.Args)
 	if err != nil {

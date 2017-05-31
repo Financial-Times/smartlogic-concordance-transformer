@@ -1,24 +1,24 @@
 package smartlogic
 
 import (
-	"github.com/golang/go/src/pkg/fmt"
 	"encoding/json"
 	"errors"
-	"net/http"
-	"strconv"
-	"github.com/coreos/fleet/log"
-	"strings"
-	"regexp"
 	"github.com/bsm/sarama-cluster"
+	"github.com/coreos/fleet/log"
+	"github.com/golang/go/src/pkg/fmt"
+	"net/http"
+	"regexp"
+	"strconv"
+	"strings"
 )
 
 var uuidMatcher = regexp.MustCompile("^[0-9a-f]{8}/[0-9a-f]{4}/[0-9a-f]{4}/[0-9a-f]{4}/[0-9a-f]{12}$")
 
 type TransformerService struct {
-	consumer cluster.Consumer
-	topic	string
+	consumer      cluster.Consumer
+	topic         string
 	writerAddress string
-	httpClient 	httpClient
+	httpClient    httpClient
 }
 
 type httpClient interface {
@@ -27,8 +27,8 @@ type httpClient interface {
 
 func NewTransformerService(consumer cluster.Consumer, topic string, writerAddress string, httpClient httpClient) TransformerService {
 	return TransformerService{
-		consumer:	consumer,
-		topic: 		topic,
+		consumer:      consumer,
+		topic:         topic,
 		writerAddress: writerAddress,
 		httpClient:    httpClient,
 	}

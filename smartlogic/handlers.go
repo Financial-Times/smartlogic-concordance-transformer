@@ -1,20 +1,20 @@
 package smartlogic
 
 import (
-	"github.com/gorilla/mux"
-	"github.com/gorilla/handlers"
-	log "github.com/Sirupsen/logrus"
-	"github.com/Financial-Times/http-handlers-go/httphandlers"
-	status "github.com/Financial-Times/service-status-go/httphandlers"
-	"github.com/rcrowley/go-metrics"
 	"fmt"
 	"github.com/Financial-Times/go-fthealth"
+	"github.com/Financial-Times/http-handlers-go/httphandlers"
+	status "github.com/Financial-Times/service-status-go/httphandlers"
+	"github.com/Financial-Times/transactionid-utils-go"
+	"github.com/Shopify/sarama"
+	log "github.com/Sirupsen/logrus"
+	"github.com/gorilla/handlers"
+	"github.com/gorilla/mux"
+	"github.com/rcrowley/go-metrics"
+	"io/ioutil"
 	"net/http"
 	"os"
 	"os/signal"
-	"github.com/Shopify/sarama"
-	"io/ioutil"
-	"github.com/Financial-Times/transactionid-utils-go"
 )
 
 type SmartlogicConcordanceTransformerHandler struct {
@@ -103,16 +103,15 @@ func NewHandler(service TransformerService) SmartlogicConcordanceTransformerHand
 
 func (h *SmartlogicConcordanceTransformerHandler) Run() {
 	fmt.Printf("We got here!\n")
+	var list []sarama.ConsumerMessage
 	signals := make(chan os.Signal, 1)
 	signal.Notify(signals, os.Interrupt)
 	fmt.Printf("Step 1!")
 	for {
-		fmt.Printf("Step 2!\n")
 		select {
 		case msg, more := <-h.service.consumer.Messages():
-			fmt.Printf("Step 3!\n")
 			if msg != nil {
-				h.processKafkaMessage(*msg)
+				list = append(list, *msg)
 			}
 			if more {
 				fmt.Fprintf(os.Stdout, "%s/%d/%d\t%s\t%s\n", msg.Topic, msg.Partition, msg.Offset, msg.Key, msg.Value)
@@ -130,6 +129,12 @@ func (h *SmartlogicConcordanceTransformerHandler) Run() {
 		case <-signals:
 			fmt.Printf("Step 5!\n")
 			return
+		}
+		if len(list) > 0 {
+			for _, messsage := range list {
+				fmt.Print("Here")
+				h.processKafkaMessage(messsage)
+			}
 		}
 	}
 }

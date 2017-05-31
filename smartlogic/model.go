@@ -5,7 +5,7 @@ type SmartlogicConcept struct {
 }
 
 type Concept struct {
-	Id string `json:"@id"`
+	Id             string  `json:"@id"`
 	TmeIdentifiers []TmeId `json:"http://www.ft.com/ontology/TMEIdentifier"`
 }
 
@@ -14,6 +14,6 @@ type TmeId struct {
 }
 
 type UppConcordance struct {
-	ConceptUuid string `json:"uuid"`
+	ConceptUuid  string   `json:"uuid"`
 	ConcordedIds []string `json:"concordedIds"`
 }
