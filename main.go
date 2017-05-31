@@ -9,7 +9,6 @@ import (
 	"net"
 	"time"
 	slc "github.com/Financial-Times/smartlogic-concordance-transformer/smartlogic"
-	//cluster "github.com/bsm/sarama-cluster"
 	"github.com/wvanbergen/kafka/consumergroup"
 	"github.com/Shopify/sarama"
 	"github.com/wvanbergen/kazoo-go"
