@@ -9,11 +9,6 @@ import (
 	"net"
 	"time"
 	slc "github.com/Financial-Times/smartlogic-concordance-transformer/smartlogic"
-	"github.com/wvanbergen/kafka/consumergroup"
-	"github.com/Shopify/sarama"
-	"github.com/wvanbergen/kazoo-go"
-	"fmt"
-	"strings"
 )
 
 const appDescription = "Service which listens to kafka for concordance updates, transforms smartlogic concordance json and sends updates to concordance-rw-dynamodb"
@@ -85,35 +80,6 @@ func main() {
 	app.Action = func() {
 		log.Infof("System code: %s, App Name: %s, Port: %s", *appSystemCode, *appName, *port)
 
-		config := consumergroup.NewConfig()
-		config.Offsets.Initial = sarama.OffsetOldest
-		config.Offsets.ProcessingTimeout = 10 * time.Second
-		fmt.Printf("Group name is %s\n", *groupName)
-		fmt.Printf("Topic is %s\n", *topic)
-		fmt.Printf("Kafka address is %s\n", *kafkaHost + ":" + *kafkaPort)
-
-		zookeeperNodes, chroot := kazoo.ParseConnectionString(*kafkaHost + ":" + *kafkaPort)
-		config.Zookeeper.Chroot = chroot
-		config.Zookeeper.Timeout = 10 * time.Second
-		kafkaTopics := strings.Split(*topic, ",")
-		fmt.Printf("Topic is %s\n", kafkaTopics)
-		fmt.Printf("Kafka address is %s\n", zookeeperNodes)
-
-		//config := cluster.NewConfig()
-		//config.Consumer.Return.Errors = true
-		//config.Group.Return.Notifications = true
-		//
-		//// init consumer
-		//brokers := []string{*kafkaHost + ":" + *kafkaPort}
-		//topics := []string{*topic}
-		//consumer, err := cluster.NewConsumer(brokers, *groupName, topics, config)
-
-		consumer, err := consumergroup.JoinConsumerGroup(*groupName, kafkaTopics, zookeeperNodes, config)
-		if err != nil {
-			log.Error("Error creating kafka consumer: %v", err)
-			return
-		}
-
 		router := mux.NewRouter()
 		transformer := slc.NewTransformerService(*consumer, *topic, *writerAddress, &httpClient)
 		handler := slc.NewHandler(transformer)
@@ -122,11 +88,6 @@ func main() {
 
 		go handler.Run()
 
-		defer func() {
-			if cErr := consumer.Close(); cErr != nil {
-				log.Fatal(cErr)
-				}
-			}()
 	}
 	err := app.Run(os.Args)
 	if err != nil {

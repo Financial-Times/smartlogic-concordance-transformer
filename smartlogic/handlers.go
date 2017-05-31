@@ -10,8 +10,6 @@ import (
 	"fmt"
 	"github.com/Financial-Times/go-fthealth"
 	"net/http"
-	"os"
-	"os/signal"
 	"io/ioutil"
 	"github.com/Financial-Times/transactionid-utils-go"
 	"github.com/Shopify/sarama"
@@ -27,118 +25,9 @@ func NewHandler(service TransformerService) SmartlogicConcordanceTransformerHand
 	}
 }
 
-//func (h *SmartlogicConcordanceTransformerHandler) Run() {
-//	fmt.Println("Step 0\n")
-//	defer func() {
-//		if err := h.service.consumer.Close(); err != nil {
-//			log.Fatal(err)
-//		}
-//	}()
-//	fmt.Println("Step 1\n")
-//	h.service.consumer.ConsumePartition()
-//
-//	partitionConsumer, err := h.service.consumer.ConsumePartition(h.service.topic, 1, 1)
-//	if err != nil {
-//		log.Fatal(err)
-//	}
-//
-//
-//	fmt.Println("Step 2\n")
-//	defer func() {
-//		if err := partitionConsumer.Close(); err != nil {
-//			log.Fatal(err)
-//		}
-//	}()
-//
-//	fmt.Println("Step 3\n")
-//	signals := make(chan os.Signal, 1)
-//	signal.Notify(signals, os.Interrupt)
-//
-//
-//	fmt.Println("Step 4\n")
-//	ConsumerLoop:
-//	for {
-//		select {
-//		case msg := <-partitionConsumer.Messages():
-//			fmt.Println("Step 5\n")
-//			go h.processKafkaMessage(*msg)
-//		case <- signals:
-//			break ConsumerLoop
-//		}
-//
-//	}
-//}
+func (h *SmartlogicConcordanceTransformerHandler) Run()  {
 
-func (h *SmartlogicConcordanceTransformerHandler) Run() {
-	fmt.Printf("We got here!\n")
-	c := make(chan os.Signal, 1)
-	signal.Notify(c, os.Interrupt)
-	fmt.Printf("Step 1!")
-	go func() {
-		<-c
-		if err := h.service.consumer.Close(); err != nil {
-			log.Error("Error closing the consumer: %v", err)
-		}
-	}()
-	fmt.Printf("Step 2!")
-
-	go func() {
-		for err := range h.service.consumer.Errors() {
-			log.Println(err)
-		}
-	}()
-	fmt.Printf("Step 3!")
-	offsets := make(map[string]map[int32]int64)
-	for message := range h.service.consumer.Messages() {
-		fmt.Printf("Step 4!")
-		if offsets[message.Topic] == nil {
-			offsets[message.Topic] = make(map[int32]int64)
-		}
-		go h.processKafkaMessage(*message)
-
-		offsets[message.Topic][message.Partition] = message.Offset
-		h.service.consumer.CommitUpto(message)
-	}
 }
-
-//func (h *SmartlogicConcordanceTransformerHandler) Run() {
-//	fmt.Printf("We got here!\n")
-//	var list []sarama.ConsumerMessage
-//	signals := make(chan os.Signal, 1)
-//	signal.Notify(signals, os.Interrupt)
-//	fmt.Printf("Step 1!")
-//	for {
-//		select {
-//		case msg, more := <-h.service.consumer.Messages():
-//			if msg != nil {
-//				fmt.Printf("Adding message to list!\n")
-//				list = append(list, *msg)
-//			}
-//			if more {
-//				fmt.Fprintf(os.Stdout, "%s/%d/%d\t%s\t%s\n", msg.Topic, msg.Partition, msg.Offset, msg.Key, msg.Value)
-//				h.service.consumer.MarkOffset(msg, "") // mark message as processed
-//			}
-//		case err, more := <-h.service.consumer.Errors():
-//			if more {
-//				log.Printf("Error: %s\n", err.Error())
-//			}
-//		case ntf, more := <-h.service.consumer.Notifications():
-//			if more {
-//				log.Printf("Rebalanced: %+v\n", ntf)
-//				fmt.Printf("Step 4!\n")
-//			}
-//		case <-signals:
-//			fmt.Printf("Step 5!\n")
-//			return
-//		}
-//		if len(list) > 0 {
-//			for _, messsage := range list {
-//				fmt.Print("Here")
-//				h.processKafkaMessage(messsage)
-//			}
-//		}
-//	}
-//}
 
 func (h *SmartlogicConcordanceTransformerHandler) processKafkaMessage(msg sarama.ConsumerMessage) {
 	fmt.Printf("Message processed %s\n", msg)
