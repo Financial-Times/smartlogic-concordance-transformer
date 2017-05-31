@@ -12,31 +12,57 @@ import (
 	"net/http"
 	"io/ioutil"
 	"github.com/Financial-Times/transactionid-utils-go"
-	"github.com/Shopify/sarama"
+	queueConsumer "github.com/Financial-Times/message-queue-gonsumer/consumer"
+	"sync"
+	"os"
+	"os/signal"
+	"syscall"
 )
 
 type SmartlogicConcordanceTransformerHandler struct {
-	service TransformerService
+	transformer TransformerService
+	queue  QueueService
+
 }
 
-func NewHandler(service TransformerService) SmartlogicConcordanceTransformerHandler {
+func NewHandler(transformer TransformerService, queue QueueService) SmartlogicConcordanceTransformerHandler {
 	return SmartlogicConcordanceTransformerHandler{
-		service: service,
+		transformer: transformer,
+		queue: queue,
 	}
 }
 
-func (h *SmartlogicConcordanceTransformerHandler) Run()  {
+func (h *SmartlogicConcordanceTransformerHandler) SubscribeToQueue(client http.Client) {
+	consumer := queueConsumer.NewConsumer(h.queue.consumerConfig, h.processKafkaMessage, &client)
 
+	var wg sync.WaitGroup
+	wg.Add(1)
+
+	go func() {
+		consumer.Start()
+		wg.Done()
+	}()
+
+	ch := make(chan os.Signal)
+	signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
+
+	<-ch
+	log.Println("Shutting down application...")
+
+	consumer.Stop()
+	wg.Wait()
+
+	log.Println("Application closing")
 }
 
-func (h *SmartlogicConcordanceTransformerHandler) processKafkaMessage(msg sarama.ConsumerMessage) {
+func (h *SmartlogicConcordanceTransformerHandler) processKafkaMessage(msg queueConsumer.Message) {
 	fmt.Printf("Message processed %s\n", msg)
 	//Extract body and tid from message
 
 	var tid string = ""
 	var msgBody string = ""
 
-	h.service.handleConcordanceEvent(msgBody, tid)
+	h.transformer.handleConcordanceEvent(msgBody, tid)
 }
 
 func (h *SmartlogicConcordanceTransformerHandler) TransformHandler(rw http.ResponseWriter, req *http.Request) {
@@ -51,7 +77,7 @@ func (h *SmartlogicConcordanceTransformerHandler) TransformHandler(rw http.Respo
 		return
 	}
 
-	h.service.handleConcordanceEvent(string(body), tid)
+	h.transformer.handleConcordanceEvent(string(body), tid)
 }
 
 func (h *SmartlogicConcordanceTransformerHandler) SendHandler(rw http.ResponseWriter, req *http.Request) {
@@ -143,7 +169,7 @@ func (h *SmartlogicConcordanceTransformerHandler) concordanceRwDynamoDbHealthChe
 }
 
 func (h *SmartlogicConcordanceTransformerHandler) checkConcordanceRwConnectivity() error {
-	urlToCheck := h.service.writerAddress + "__gtg"
+	urlToCheck := h.transformer.writerAddress + "__gtg"
 	resp, err := http.Get(urlToCheck)
 	if err != nil {
 		return fmt.Errorf("Error calling writer at %s : %v", urlToCheck, err)
