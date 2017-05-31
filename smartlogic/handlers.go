@@ -12,9 +12,9 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-	"github.com/Shopify/sarama"
 	"io/ioutil"
 	"github.com/Financial-Times/transactionid-utils-go"
+	"github.com/Shopify/sarama"
 )
 
 type SmartlogicConcordanceTransformerHandler struct {
@@ -97,7 +97,7 @@ func (h *SmartlogicConcordanceTransformerHandler) Run() {
 		go h.processKafkaMessage(*message)
 
 		offsets[message.Topic][message.Partition] = message.Offset
-		//h.service.consumer.CommitUpto(message)
+		h.service.consumer.CommitUpto(message)
 	}
 }
 
