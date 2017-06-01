@@ -13,6 +13,9 @@ import (
 	"github.com/cyberdelia/go-metrics-graphite"
 	"github.com/rcrowley/go-metrics"
 	standardLog "log"
+	"sync"
+	"os/signal"
+	"syscall"
 )
 
 const appDescription = "Service which listens to kafka for concordance updates, transforms smartlogic concordance json and sends updates to concordance-rw-dynamodb"
@@ -43,8 +46,8 @@ func main() {
 		EnvVar: "APP_NAME",
 	})
 	routingAddress := app.String(cli.StringOpt{
-		Name:   "vulcan_addr",
-		Value:  "https://vulcan-address",
+		Name:   "routing_address",
+		Value:  "http://localhost:8080",
 		Desc:   "Address used for routing requests",
 		EnvVar: "ROUTING_ADDRESS",
 	})
@@ -74,19 +77,19 @@ func main() {
 	})
 	consumerOffset := app.String(cli.StringOpt{
 		Name:   "consumer_offset",
-		Value:  "",
+		Value:  "largest",
 		Desc:   "Kafka read offset.",
 		EnvVar: "OFFSET",
 	})
 	consumerAutoCommitEnable := app.Bool(cli.BoolOpt{
 		Name:   "consumer_autocommit_enable",
-		Value:  true,
+		Value:  false,
 		Desc:   "Enable autocommit for small messages.",
 		EnvVar: "COMMIT_ENABLE",
 	})
 	consumerQueue := app.String(cli.StringOpt{
 		Name:   "consumer_queue_id",
-		Value:  "",
+		Value:  "kafka-rest-proxy",
 		Desc:   "The kafka queue id",
 		EnvVar: "QUEUE_ID",
 	})
@@ -101,6 +104,12 @@ func main() {
 		Value:  "",
 		Desc:   "Prefix to use. Should start with content, include the environment, and the host name. e.g. coco.pre-prod.special-reports-rw-neo4j.1",
 		EnvVar: "GRAPHITE_PREFIX",
+	})
+	logMetrics := app.Bool(cli.BoolOpt{
+		Name:   "log-metrics",
+		Value:  false,
+		Desc:   "Whether to log metrics. Set to true if running locally and you want metrics output",
+		EnvVar: "LOG_METRICS",
 	})
 
 	log.SetLevel(log.InfoLevel)
@@ -117,20 +126,41 @@ func main() {
 			AutoCommitEnable:     *consumerAutoCommitEnable,
 			ConcurrentProcessing: true,
 		}
-		outputMetricsIfRequired(*graphiteTCPAddress, *graphitePrefix, true)
+		outputMetricsIfRequired(*graphiteTCPAddress, *graphitePrefix, *logMetrics)
 
 		router := mux.NewRouter()
 		transformer := slc.NewTransformerService(*topic, *writerAddress, &httpClient)
-		queueService := slc.NewQueueService(consumerConfig, &httpClient)
-		handler := slc.NewHandler(transformer, queueService)
+		handler := slc.NewHandler(transformer)
 		handler.RegisterHandlers(router)
 		handler.RegisterAdminHandlers(router)
 
-		go handler.SubscribeToQueue(httpClient)
+		go func() {
+			if err := http.ListenAndServe(":" + *port, nil); err != nil {
+				log.Fatalf("Unable to start server: %v\n", err)
+			}
+		}()
 
-		if err := http.ListenAndServe(":" + *port, nil); err != nil {
-			log.Fatalf("Unable to start server: %v\n", err)
-		}
+		consumer := queueConsumer.NewConsumer(consumerConfig, handler.ProcessKafkaMessage, &httpClient)
+		handler.Consumer = consumer
+
+		var wg sync.WaitGroup
+		wg.Add(1)
+
+		go func() {
+			consumer.Start()
+			wg.Done()
+		}()
+
+		ch := make(chan os.Signal)
+		signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
+
+		<-ch
+		log.Println("Shutting down application...")
+
+		consumer.Stop()
+		wg.Wait()
+
+		log.Println("Application closing")
 	}
 	err := app.Run(os.Args)
 	if err != nil {

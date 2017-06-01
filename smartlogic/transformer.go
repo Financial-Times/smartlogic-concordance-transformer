@@ -1,7 +1,7 @@
 package smartlogic
 
 import (
-	"github.com/golang/go/src/pkg/fmt"
+	"fmt"
 	"encoding/json"
 	"errors"
 	"net/http"
@@ -11,7 +11,7 @@ import (
 	"regexp"
 )
 
-var uuidMatcher = regexp.MustCompile("^[0-9a-f]{8}/[0-9a-f]{4}/[0-9a-f]{4}/[0-9a-f]{4}/[0-9a-f]{12}$")
+var uuidMatcher = regexp.MustCompile("^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$")
 
 type TransformerService struct {
 	topic	string
@@ -126,8 +126,10 @@ func (ts *TransformerService) makeDeleteRequest(uuid string, tid string) error {
 }
 
 func extractUuid(url string) string {
+	fmt.Printf("url is %s\n", url)
 	extractedUuid := strings.Trim(url, "http://www.ft.com/thing/")
-	if !uuidMatcher.MatchString(extractedUuid) {
+
+	if uuidMatcher.MatchString(extractedUuid) != true {
 		return ""
 	}
 	return extractedUuid

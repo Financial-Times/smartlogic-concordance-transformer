@@ -13,74 +13,24 @@ import (
 	"io/ioutil"
 	"github.com/Financial-Times/transactionid-utils-go"
 	queueConsumer "github.com/Financial-Times/message-queue-gonsumer/consumer"
-	"sync"
-	"os"
-	"os/signal"
-	"syscall"
 )
 
 type SmartlogicConcordanceTransformerHandler struct {
 	transformer TransformerService
-	queue  QueueService
-
+	Consumer queueConsumer.MessageConsumer
 }
 
-func NewHandler(transformer TransformerService, queue QueueService) SmartlogicConcordanceTransformerHandler {
+func NewHandler(transformer TransformerService) SmartlogicConcordanceTransformerHandler {
 	return SmartlogicConcordanceTransformerHandler{
 		transformer: transformer,
-		queue: queue,
 	}
 }
 
-func (h *SmartlogicConcordanceTransformerHandler) SubscribeToQueue(client http.Client) {
-	consumer := queueConsumer.NewConsumer(h.queue.consumerConfig, h.processKafkaMessage, &client)
-
-	var wg sync.WaitGroup
-	wg.Add(1)
-
-	go func() {
-		consumer.Start()
-		wg.Done()
-	}()
-
-	ch := make(chan os.Signal)
-	signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
-
-	<-ch
-	log.Println("Shutting down application...")
-
-	consumer.Stop()
-	wg.Wait()
-
-	log.Println("Application closing")
-}
-
-func (h *SmartlogicConcordanceTransformerHandler) processKafkaMessage(msg queueConsumer.Message) {
-	fmt.Printf("Message processed %s\n", msg)
-	//Extract body and tid from message
-
-	var tid string = ""
-	var msgBody string = ""
-
-	h.transformer.handleConcordanceEvent(msgBody, tid)
+func (h *SmartlogicConcordanceTransformerHandler) ProcessKafkaMessage(msg queueConsumer.Message) {
+	h.transformer.handleConcordanceEvent(msg.Body, msg.Headers["X-Request-Id"])
 }
 
 func (h *SmartlogicConcordanceTransformerHandler) TransformHandler(rw http.ResponseWriter, req *http.Request) {
-	rw.Header().Set("Content-Type", "application/json")
-	tid := transactionidutils.GetTransactionIDFromRequest(req)
-
-	body, err := ioutil.ReadAll(req.Body)
-	if err != nil {
-		log.Errorf("Error %v whilst processing json body", err)
-		rw.WriteHeader(http.StatusServiceUnavailable)
-		rw.Write([]byte("{\"message\":\"Error whilst processing request body.\"}"))
-		return
-	}
-
-	h.transformer.handleConcordanceEvent(string(body), tid)
-}
-
-func (h *SmartlogicConcordanceTransformerHandler) SendHandler(rw http.ResponseWriter, req *http.Request) {
 	tid := transactionidutils.GetTransactionIDFromRequest(req)
 	rw.Header().Set("Content-Type", "application/json")
 	rw.Header().Set("X-Request-Id", tid)
@@ -93,7 +43,8 @@ func (h *SmartlogicConcordanceTransformerHandler) SendHandler(rw http.ResponseWr
 		return
 	}
 
-	_, _, uppConcordanceJson, err := convertToUppConcordance(string(body))
+	conceptUuid, _, uppConcordanceJson, err := convertToUppConcordance(string(body))
+	log.Infof("Processing concordance transformation for concept with uuid: %s and trans id: %s", conceptUuid, tid)
 	if err != nil {
 		log.Errorf("Error %v whilst processing json", err)
 		rw.WriteHeader(http.StatusUnprocessableEntity)
@@ -102,6 +53,21 @@ func (h *SmartlogicConcordanceTransformerHandler) SendHandler(rw http.ResponseWr
 	}
 	rw.WriteHeader(http.StatusOK)
 	rw.Write(uppConcordanceJson)
+}
+
+func (h *SmartlogicConcordanceTransformerHandler) SendHandler(rw http.ResponseWriter, req *http.Request) {
+	rw.Header().Set("Content-Type", "application/json")
+	tid := transactionidutils.GetTransactionIDFromRequest(req)
+
+	body, err := ioutil.ReadAll(req.Body)
+	if err != nil {
+		log.Errorf("Error %v whilst processing json body", err)
+		rw.WriteHeader(http.StatusServiceUnavailable)
+		rw.Write([]byte("{\"message\":\"Error whilst processing request body.\"}"))
+		return
+	}
+
+	h.transformer.handleConcordanceEvent(string(body), tid)
 }
 
 func (h *SmartlogicConcordanceTransformerHandler) gtgCheck(rw http.ResponseWriter, req *http.Request) {
@@ -152,7 +118,7 @@ func (h *SmartlogicConcordanceTransformerHandler) kafkaHealthCheck() fthealth.Ch
 		Name:             "Check connectivity to Kafka",
 		PanicGuide:       "https://dewey.ft.com/smartlogic-concordance-transform.html",
 		Severity:         3,
-		TechnicalSummary: `Cannot connect to Kafka. If false check that kafka is healthy in this cluster; if so restart service`,
+		TechnicalSummary: `Check that kafka, zookeeper, kafka-proxy are healthy in this cluster; if so restart this service`,
 		Checker:          h.checkKafkaConnectivity,
 	}
 }
@@ -163,7 +129,7 @@ func (h *SmartlogicConcordanceTransformerHandler) concordanceRwDynamoDbHealthChe
 		Name:             "Check connectivity to concordance reader/writer",
 		PanicGuide:       "https://dewey.ft.com/smartlogic-concordance-transform.html",
 		Severity:         3,
-		TechnicalSummary: `Cannot connect to concordance rw. If false, check health of concordance-rw-dynamodb`,
+		TechnicalSummary: `Check health of concordance-rw-dynamodb`,
 		Checker:          h.checkConcordanceRwConnectivity,
 	}
 }
@@ -182,7 +148,7 @@ func (h *SmartlogicConcordanceTransformerHandler) checkConcordanceRwConnectivity
 }
 
 func (h *SmartlogicConcordanceTransformerHandler) checkKafkaConnectivity() error {
-	var err error
+	_, err := h.Consumer.ConnectivityCheck()
 	if err != nil {
 		return err
 	} else {
