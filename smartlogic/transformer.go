@@ -42,33 +42,33 @@ func (ts *TransformerService) handleConcordanceEvent(msgBody string, tid string)
 
 func convertToUppConcordance(msgBody string) (string, bool, []byte, error) {
 	smartLogicConcept := SmartlogicConcept{}
+	concordanceFound := false
 	bodyAsBytes := []byte(msgBody)
 	if err := json.Unmarshal(bodyAsBytes, &smartLogicConcept); err != nil {
-		return "", false, nil, err
+		return "", concordanceFound, nil, err
 	}
 
 	conceptUuid := extractUuid(smartLogicConcept.Concepts[0].Id)
 	if conceptUuid == "" {
-		return "", false, nil, errors.New("Payload: " + msgBody + "; is missing concept uuid")
+		return "", concordanceFound, nil, errors.New("Payload: " + msgBody + "; is missing concept uuid")
 	}
 
-	var concordanceIds []string
+	concordanceIds := make([]string, 0)
 	for _, id := range smartLogicConcept.Concepts[0].TmeIdentifiers {
 		concordanceIds = append(concordanceIds, id.Value)
 	}
-
 	if len(concordanceIds) > 0 {
-		uppConcordance := UppConcordance{}
-		uppConcordance.ConceptUuid = conceptUuid
-		uppConcordance.ConcordedIds = concordanceIds
-
-		concordedJson, err := json.Marshal(uppConcordance)
-		if err != nil {
-			return "", false, nil, err
-		}
-		return conceptUuid, true, concordedJson, nil
+		concordanceFound = true
 	}
-	return conceptUuid, false, nil, nil
+	uppConcordance := UppConcordance{}
+	uppConcordance.ConceptUuid = conceptUuid
+	uppConcordance.ConcordedIds = concordanceIds
+
+	concordedJson, err := json.Marshal(uppConcordance)
+	if err != nil {
+		return "", concordanceFound, nil, err
+	}
+	return conceptUuid, concordanceFound, concordedJson, nil
 }
 
 func (ts *TransformerService) makeRelevantRequest(uuid string, concordanceFound bool, uppConcordanceJson []byte, tid string) {
@@ -126,7 +126,6 @@ func (ts *TransformerService) makeDeleteRequest(uuid string, tid string) error {
 }
 
 func extractUuid(url string) string {
-	fmt.Printf("url is %s\n", url)
 	extractedUuid := strings.Trim(url, "http://www.ft.com/thing/")
 
 	if uuidMatcher.MatchString(extractedUuid) != true {
