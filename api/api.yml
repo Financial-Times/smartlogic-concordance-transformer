@@ -7,7 +7,7 @@ info:
 host: pub-prod-up.ft.com
 schemes:
   - https
-basePath: /
+basePath: /__smartlogic-concordance-transformer
 
 paths:
   /transform:
