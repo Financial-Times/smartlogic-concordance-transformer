@@ -39,7 +39,7 @@ func (h *SmartlogicConcordanceTransformerHandler) TransformHandler(rw http.Respo
 	if err != nil {
 		log.Errorf("Error %v whilst processing json body", err)
 		rw.WriteHeader(http.StatusBadRequest)
-		rw.Write([]byte("{\"message\":\"Error whilst processing request body.\"}"))
+		rw.Write([]byte("{\"message\":\"Error whilst processing request body: " + err.Error() + "\"}"))
 		return
 	}
 
@@ -48,7 +48,7 @@ func (h *SmartlogicConcordanceTransformerHandler) TransformHandler(rw http.Respo
 	if err != nil {
 		log.Errorf("Error %v whilst processing json", err)
 		rw.WriteHeader(http.StatusUnprocessableEntity)
-		rw.Write([]byte("{\"message\":\"Error whilst processing json.\"}"))
+		rw.Write([]byte("{\"message\":\"Error whilst processing json: " + err.Error() + "\"}"))
 		return
 	}
 	rw.WriteHeader(http.StatusOK)
@@ -63,7 +63,7 @@ func (h *SmartlogicConcordanceTransformerHandler) SendHandler(rw http.ResponseWr
 	if err != nil {
 		log.Errorf("Error %v whilst processing json body", err)
 		rw.WriteHeader(http.StatusServiceUnavailable)
-		rw.Write([]byte("{\"message\":\"Error whilst processing request body.\"}"))
+		rw.Write([]byte("{\"message\":\"Error whilst processing request body:" + err.Error() + "\"}"))
 		return
 	}
 
@@ -71,6 +71,7 @@ func (h *SmartlogicConcordanceTransformerHandler) SendHandler(rw http.ResponseWr
 }
 
 func (h *SmartlogicConcordanceTransformerHandler) gtgCheck(rw http.ResponseWriter, req *http.Request) {
+	rw.Header().Set("Content-Type", "application/json")
 	if err := h.checkKafkaConnectivity(); err != nil {
 		log.Errorf("Kafka Healthcheck failed; %v", err.Error())
 		rw.WriteHeader(http.StatusServiceUnavailable)

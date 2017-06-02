@@ -9,6 +9,7 @@ import (
 	"github.com/coreos/fleet/log"
 	"strings"
 	"regexp"
+	"github.com/pborman/uuid"
 )
 
 var uuidMatcher = regexp.MustCompile("^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$")
@@ -55,7 +56,11 @@ func convertToUppConcordance(msgBody string) (string, bool, []byte, error) {
 
 	concordanceIds := make([]string, 0)
 	for _, id := range smartLogicConcept.Concepts[0].TmeIdentifiers {
-		concordanceIds = append(concordanceIds, id.Value)
+		uuidFromTmeId, err := validateIdAndConvertToUuid(id.Value)
+		if err != nil {
+			return "", concordanceFound, nil, err
+		}
+		concordanceIds = append(concordanceIds, uuidFromTmeId)
 	}
 	if len(concordanceIds) > 0 {
 		concordanceFound = true
@@ -69,6 +74,24 @@ func convertToUppConcordance(msgBody string) (string, bool, []byte, error) {
 		return "", concordanceFound, nil, err
 	}
 	return conceptUuid, concordanceFound, concordedJson, nil
+}
+
+func validateIdAndConvertToUuid(tmeId string) (string, error) {
+	subStrings := strings.Split(tmeId, "-")
+	if len(subStrings) != 2 || validateSubstrings(subStrings) == true {
+		return "", errors.New(tmeId + " is not a valid TME Id")
+	} else {
+		return uuid.NewMD5(uuid.UUID{}, []byte(tmeId)).String(), nil
+	}
+}
+func validateSubstrings(subStrings []string) bool {
+	subStringIsEmpty := false
+	for _, string := range subStrings {
+		if string == "" {
+			subStringIsEmpty = true
+		}
+	}
+	return subStringIsEmpty
 }
 
 func (ts *TransformerService) makeRelevantRequest(uuid string, concordanceFound bool, uppConcordanceJson []byte, tid string) {
