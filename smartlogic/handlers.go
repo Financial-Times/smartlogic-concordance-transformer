@@ -7,12 +7,13 @@ import (
 	"github.com/Financial-Times/http-handlers-go/httphandlers"
 	status "github.com/Financial-Times/service-status-go/httphandlers"
 	"github.com/rcrowley/go-metrics"
-	"fmt"
 	"github.com/Financial-Times/go-fthealth"
 	"net/http"
 	"io/ioutil"
 	"github.com/Financial-Times/transactionid-utils-go"
 	queueConsumer "github.com/Financial-Times/message-queue-gonsumer/consumer"
+	"github.com/pkg/errors"
+	"github.com/golang/go/src/pkg/strconv"
 )
 
 type SmartlogicConcordanceTransformerHandler struct {
@@ -101,6 +102,7 @@ func (h *SmartlogicConcordanceTransformerHandler) RegisterHandlers(router *mux.R
 
 func (h *SmartlogicConcordanceTransformerHandler) RegisterAdminHandlers(router *mux.Router) {
 	log.Info("Registering admin handlers")
+
 	var monitoringRouter http.Handler = router
 	monitoringRouter = httphandlers.TransactionAwareRequestLoggingHandler(log.StandardLogger(), monitoringRouter)
 	monitoringRouter = httphandlers.HTTPMetricsHandler(metrics.DefaultRegistry, monitoringRouter)
@@ -139,11 +141,11 @@ func (h *SmartlogicConcordanceTransformerHandler) checkConcordanceRwConnectivity
 	urlToCheck := h.transformer.writerAddress + "__gtg"
 	resp, err := http.Get(urlToCheck)
 	if err != nil {
-		return fmt.Errorf("Error calling writer at %s : %v", urlToCheck, err)
+		return errors.New("Error " + err.Error() + " calling writer at " + urlToCheck)
 	}
 	resp.Body.Close()
 	if resp != nil && resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("Writer %v returned status %d", urlToCheck, resp.StatusCode)
+		return errors.New("Writer " + urlToCheck + " returned status " + strconv.Itoa(resp.StatusCode))
 	}
 	return nil
 }

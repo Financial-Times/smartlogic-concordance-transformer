@@ -134,7 +134,6 @@ e.g
       ]
     }
 
-
 Based on the following [google doc](https://docs.google.com/document/d/1-8Yv1ob6qjAOzfU1ngEOeXJDGq_zP7pLM7F5HnORCoM/edit#).
 
 ## Utility endpoints

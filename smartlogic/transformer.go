@@ -1,7 +1,6 @@
 package smartlogic
 
 import (
-	"fmt"
 	"encoding/json"
 	"errors"
 	"net/http"
@@ -38,7 +37,11 @@ func (ts *TransformerService) handleConcordanceEvent(msgBody string, tid string)
 		log.Errorf("Request resulted in error: %v\n", err)
 		return
 	}
-	ts.makeRelevantRequest(conceptUuid, concordanceFound, uppConcordanceJson, tid)
+	err = ts.makeRelevantRequest(conceptUuid, concordanceFound, uppConcordanceJson, tid)
+	if err != nil {
+		log.Errorf("Request resulted in error: %v\n", err)
+		return
+	}
 }
 
 func convertToUppConcordance(msgBody string) (string, bool, []byte, error) {
@@ -51,7 +54,7 @@ func convertToUppConcordance(msgBody string) (string, bool, []byte, error) {
 
 	conceptUuid := extractUuid(smartLogicConcept.Concepts[0].Id)
 	if conceptUuid == "" {
-		return "", concordanceFound, nil, errors.New("Payload: " + msgBody + "; is missing concept uuid")
+		return "", concordanceFound, nil, errors.New("Json payload Id field " + smartLogicConcept.Concepts[0].Id + " has invalid/missing url")
 	}
 
 	concordanceIds := make([]string, 0)
@@ -84,6 +87,7 @@ func validateIdAndConvertToUuid(tmeId string) (string, error) {
 		return uuid.NewMD5(uuid.UUID{}, []byte(tmeId)).String(), nil
 	}
 }
+
 func validateSubstrings(subStrings []string) bool {
 	subStringIsEmpty := false
 	for _, string := range subStrings {
@@ -94,35 +98,37 @@ func validateSubstrings(subStrings []string) bool {
 	return subStringIsEmpty
 }
 
-func (ts *TransformerService) makeRelevantRequest(uuid string, concordanceFound bool, uppConcordanceJson []byte, tid string) {
+func (ts *TransformerService) makeRelevantRequest(uuid string, concordanceFound bool, uppConcordanceJson []byte, tid string) error {
 	var err error
 	if concordanceFound {
-		log.Infof("Concordance found for %s; forwarding request to writer", uuid)
+		log.Infof("Transaction Id: " + tid + ". Concordance found for %s; forwarding request to writer", uuid)
 		err = ts.makeWriteRequest(uuid, uppConcordanceJson, tid)
 	} else {
-		log.Infof("No Concordance found for %s; making delete request", uuid)
+		log.Infof("Transaction Id: " + tid + ". No Concordance found for %s; making delete request", uuid)
 		err = ts.makeDeleteRequest(uuid, tid)
 	}
 
 	if err != nil {
-		log.Errorf("Write request resulted in error: %v\n", err)
-		return
+		return errors.New("Write request resulted in error: " + err.Error())
 	}
+	return nil
 }
 
 func (ts *TransformerService) makeWriteRequest(uuid string, concordedJson []byte, tid string) error {
 	reqURL := ts.writerAddress + "concordance/" + uuid
 	request, err := http.NewRequest("PUT", reqURL, strings.NewReader(string(concordedJson)))
 	if err != nil {
-		return fmt.Errorf("Failed to create request to %s with body %s", reqURL, concordedJson)
+		return errors.New("Failed to create GET request to " + reqURL + " with body " + string(concordedJson))
 	}
 	request.ContentLength = -1
 	request.Header.Set("X-Request-Id", tid)
 
 	resp, reqErr := ts.httpClient.Do(request)
 
-	if reqErr != nil || resp.StatusCode != 200 {
-		return fmt.Errorf("Request to %s returned status: %d", reqURL, strconv.Itoa(resp.StatusCode))
+	if reqErr != nil {
+		return errors.New("Get request to resulted in error: " + reqErr.Error())
+	} else if resp.StatusCode != 200 {
+		return errors.New("Get request to returned status: " + strconv.Itoa(resp.StatusCode))
 	}
 
 	defer resp.Body.Close()
@@ -130,21 +136,22 @@ func (ts *TransformerService) makeWriteRequest(uuid string, concordedJson []byte
 }
 
 func (ts *TransformerService) makeDeleteRequest(uuid string, tid string) error {
-	reqURL := ts.writerAddress + "concordance/" + uuid
+	reqURL := ts.writerAddress + "concordances/" + uuid
 	request, err := http.NewRequest("DELETE", reqURL, nil)
 	if err != nil {
-		return fmt.Errorf("Failed to create request to %s with body %s", reqURL, nil)
+		return errors.New("Failed to create Delete request to " + reqURL)
 	}
 	request.ContentLength = -1
 	request.Header.Set("X-Request-Id", tid)
 
 	resp, reqErr := ts.httpClient.Do(request)
 
-	if reqErr != nil || resp.StatusCode != 204 || resp.StatusCode != 404 {
-		return errors.New("Request to " + reqURL + " returned status: " + strconv.Itoa(resp.StatusCode) + "; skipping " + uuid)
+	if reqErr != nil {
+		return errors.New("Delete request to resulted in error: " + reqErr.Error())
+	} else if resp.StatusCode != 204 && resp.StatusCode != 404 {
+		return errors.New("Delete request to returned status: " + strconv.Itoa(resp.StatusCode))
 	}
 	defer resp.Body.Close()
-
 	return nil
 }
 
