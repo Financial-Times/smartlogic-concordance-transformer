@@ -31,22 +31,27 @@ func NewTransformerService(topic string, writerAddress string, httpClient httpCl
 	}
 }
 
-func (ts *TransformerService) handleConcordanceEvent(msgBody string, tid string) {
+func (ts *TransformerService) handleConcordanceEvent(msgBody string, tid string) error {
 	conceptUuid, concordanceFound, uppConcordanceJson, err := convertToUppConcordance(msgBody)
 	if err != nil {
-		log.Errorf("Request resulted in error: %v\n", err)
-		return
+		return errors.New("Conversion of payload to upp concordance resulted in error: " + err.Error())
 	}
 	err = ts.makeRelevantRequest(conceptUuid, concordanceFound, uppConcordanceJson, tid)
 	if err != nil {
-		log.Errorf("Request resulted in error: %v\n", err)
-		return
+		return errors.New("Request to concordance rw resulted in error: " + err.Error())
 	}
+	return nil
 }
 
 func convertToUppConcordance(msgBody string) (string, bool, []byte, error) {
-	smartLogicConcept := SmartlogicConcept{}
 	concordanceFound := false
+	if !strings.Contains(msgBody, "@graph") || !strings.Contains(msgBody, "@graph") {
+		return "", concordanceFound, nil, errors.New("Input: " + msgBody + " is missing @graph and/or @id fields")
+	}
+	if strings.Contains(msgBody, "<p>") || strings.Contains(msgBody, "<div>") {
+		return "", concordanceFound, nil, errors.New("Input: " + msgBody + " contains list of tmeIds in wrong format; please input values individually")
+	}
+	smartLogicConcept := SmartlogicConcept{}
 	bodyAsBytes := []byte(msgBody)
 	if err := json.Unmarshal(bodyAsBytes, &smartLogicConcept); err != nil {
 		return "", concordanceFound, nil, err
@@ -63,7 +68,19 @@ func convertToUppConcordance(msgBody string) (string, bool, []byte, error) {
 		if err != nil {
 			return "", concordanceFound, nil, err
 		}
-		concordanceIds = append(concordanceIds, uuidFromTmeId)
+		if len(concordanceIds) > 0 {
+			alreadyExists := false
+			for _, concordedId := range concordanceIds {
+				if concordedId == uuidFromTmeId {
+					alreadyExists = true
+				}
+			}
+			if alreadyExists != true {
+				concordanceIds = append(concordanceIds, uuidFromTmeId)
+			}
+		} else {
+			concordanceIds = append(concordanceIds, uuidFromTmeId)
+		}
 	}
 	if len(concordanceIds) > 0 {
 		concordanceFound = true

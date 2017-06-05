@@ -38,7 +38,7 @@ func (h *SmartlogicConcordanceTransformerHandler) TransformHandler(rw http.Respo
 
 	body, err := ioutil.ReadAll(req.Body)
 	if err != nil {
-		log.Errorf("Error %v whilst processing json body", err)
+		log.Errorf("Error whilst processing request body: %s", err)
 		rw.WriteHeader(http.StatusBadRequest)
 		rw.Write([]byte("{\"message\":\"Error whilst processing request body: " + err.Error() + "\"}"))
 		return
@@ -47,13 +47,14 @@ func (h *SmartlogicConcordanceTransformerHandler) TransformHandler(rw http.Respo
 	conceptUuid, _, uppConcordanceJson, err := convertToUppConcordance(string(body))
 	log.Infof("Processing concordance transformation for concept with uuid: %s and trans id: %s", conceptUuid, tid)
 	if err != nil {
-		log.Errorf("Error %v whilst processing json", err)
+		log.Errorf("Error whilst converting to concorded json: %s", err)
 		rw.WriteHeader(http.StatusUnprocessableEntity)
-		rw.Write([]byte("{\"message\":\"Error whilst processing json: " + err.Error() + "\"}"))
+		rw.Write([]byte("{\"message\":\"Error whilst converting to concorded json: " + err.Error() + "\"}"))
 		return
 	}
 	rw.WriteHeader(http.StatusOK)
 	rw.Write(uppConcordanceJson)
+	return
 }
 
 func (h *SmartlogicConcordanceTransformerHandler) SendHandler(rw http.ResponseWriter, req *http.Request) {
@@ -63,12 +64,20 @@ func (h *SmartlogicConcordanceTransformerHandler) SendHandler(rw http.ResponseWr
 	body, err := ioutil.ReadAll(req.Body)
 	if err != nil {
 		log.Errorf("Error %v whilst processing json body", err)
-		rw.WriteHeader(http.StatusServiceUnavailable)
+		rw.WriteHeader(http.StatusBadRequest)
 		rw.Write([]byte("{\"message\":\"Error whilst processing request body:" + err.Error() + "\"}"))
 		return
 	}
 
-	h.transformer.handleConcordanceEvent(string(body), tid)
+	err = h.transformer.handleConcordanceEvent(string(body), tid)
+	if err != nil {
+		log.Errorf("Error whilst converting to concorded json: %s", err)
+		rw.WriteHeader(http.StatusUnprocessableEntity)
+		rw.Write([]byte("{\"message\":\"Error whilst processing request body:" + err.Error() + "\"}"))
+		return
+	}
+	rw.WriteHeader(http.StatusOK)
+	rw.Write([]byte("Concordance successfully written to db"))
 }
 
 func (h *SmartlogicConcordanceTransformerHandler) gtgCheck(rw http.ResponseWriter, req *http.Request) {
@@ -93,7 +102,7 @@ func (h *SmartlogicConcordanceTransformerHandler) RegisterHandlers(router *mux.R
 	transformAndWrite := handlers.MethodHandler{
 		"POST": http.HandlerFunc(h.SendHandler),
 	}
-	router.Handle("/transformer/send", transformAndWrite)
+	router.Handle("/transform/send", transformAndWrite)
 	transformAndReturn := handlers.MethodHandler{
 		"POST": http.HandlerFunc(h.TransformHandler),
 	}
@@ -139,7 +148,11 @@ func (h *SmartlogicConcordanceTransformerHandler) concordanceRwDynamoDbHealthChe
 
 func (h *SmartlogicConcordanceTransformerHandler) checkConcordanceRwConnectivity() error {
 	urlToCheck := h.transformer.writerAddress + "__gtg"
-	resp, err := http.Get(urlToCheck)
+	request, err := http.NewRequest("GET", urlToCheck, nil)
+	if err != nil {
+		return errors.New("Failed to create request: " + urlToCheck)
+	}
+	resp, err := h.transformer.httpClient.Do(request)
 	if err != nil {
 		return errors.New("Error " + err.Error() + " calling writer at " + urlToCheck)
 	}

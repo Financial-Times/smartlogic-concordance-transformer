@@ -5,6 +5,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"errors"
 	"encoding/json"
+	"io/ioutil"
 )
 
 var testUuid = "20db1bd6-59f9-4404-adb5-3165a448f8b0"
@@ -23,9 +24,9 @@ func TestValidateSubstrings(t *testing.T) {
 	thirdSubstringIsEmpty := testStruct{testName: "thirdSubstringIsEmpty", tmeIdParts: []string{"YzhlNzZkYTctMDJiNy00NTViLTk3NmYtNmJ", "jYTE5NDEyM2Yw", ""}, expectedResult: true}
 	secondSubstringIsEmpty := testStruct{testName: "secondSubstringIsEmpty", tmeIdParts: []string{"YzhlNzZkYTctMDJiNy00NTViLTk3NmYtNmJ", ""}, expectedResult: true}
 	firstSubstringIsEmpty := testStruct{testName: "firstSubstringIsEmpty", tmeIdParts: []string{"", "jYTE5NDEyM2Yw"}, expectedResult: true}
-	onlySubstringisEmpty := testStruct{testName: "onlySubstringisEmpty", tmeIdParts: []string{""}, expectedResult: true}
+	onlySubstringIsEmpty := testStruct{testName: "onlySubstringIsEmpty", tmeIdParts: []string{""}, expectedResult: true}
 
-	testScenarios := []testStruct{oneValidSubstring, twoValidSubstring, thirdSubstringIsEmpty, secondSubstringIsEmpty, firstSubstringIsEmpty, onlySubstringisEmpty}
+	testScenarios := []testStruct{oneValidSubstring, twoValidSubstring, thirdSubstringIsEmpty, secondSubstringIsEmpty, firstSubstringIsEmpty, onlySubstringIsEmpty}
 
 	for _, scenario := range testScenarios {
 		substringsAreValid := validateSubstrings(scenario.tmeIdParts)
@@ -109,4 +110,45 @@ func TestMakeRelevantRequest(t *testing.T) {
 			assert.Equal(t, reqErr, scenario.expectedError, "Scenario: " + scenario.testName + " failed")
 		}
 	}
+}
+
+func TestConvertToUppConcordance(t *testing.T) {
+	type testStruct struct {
+		testName string
+		pathToFile string
+		conceptUuid string
+		concordanceFound bool
+		concordedJson []byte
+		expectedError error
+	}
+
+	missingRequiredFieldsJson := testStruct{testName: "missingRequiredFieldsJson", pathToFile: "../resources/sourceJson/missingIdField.json", conceptUuid: "", concordanceFound: false, concordedJson: nil, expectedError: errors.New("missing @graph and/or @id fields")}
+	invalidTmeListInputJson := testStruct{testName: "invalidTmeListInputJson", pathToFile: "../resources/sourceJson/invalidTmeListInput.json", conceptUuid: "", concordanceFound: false, concordedJson: nil, expectedError: errors.New("contains list of tmeIds in wrong format; please input values individually")}
+	invalidMessageJson := testStruct{testName: "invalidMessageJson", pathToFile: "../resources/sourceJson/invalid.json", conceptUuid: "", concordanceFound: false, concordedJson: nil, expectedError: errors.New("invalid character")}
+	invalidIdFieldJson := testStruct{testName: "invalidIdFieldJson", pathToFile: "../resources/sourceJson/invalidIdValue.json", conceptUuid: "", concordanceFound: false, concordedJson: nil, expectedError: errors.New("has invalid/missing url")}
+	invalidTmeId := testStruct{testName: "invalidTmeId", pathToFile: "../resources/sourceJson/invalidTmeId.json", conceptUuid: "", concordanceFound: false, concordedJson: nil, expectedError: errors.New("is not a valid TME Id")}
+	filtersDuplicateTmeIds := testStruct{testName: "filtersDuplicateTmeIds", pathToFile: "../resources/sourceJson/duplicateTmeIds.json", conceptUuid: testUuid, concordanceFound: true, concordedJson: []byte(readFile(t, "../resources/concordedJson/oneConcordance.json")), expectedError: nil}
+	handlesMultipleTmeIds := testStruct{testName: "handlesMultipleTmeIds", pathToFile: "../resources/sourceJson/multipleTmeIds.json", conceptUuid: testUuid, concordanceFound: true, concordedJson: []byte(readFile(t, "../resources/concordedJson/multipleConcordance.json")), expectedError: nil}
+	handlesNoTmeIds := testStruct{testName: "handlesNoTmeIds", pathToFile: "../resources/sourceJson/noTmeIds.json", conceptUuid: testUuid, concordanceFound: false, concordedJson: []byte(readFile(t, "../resources/concordedJson/noConcordance.json")), expectedError: nil}
+
+	testScenarios := []testStruct{missingRequiredFieldsJson, invalidTmeListInputJson, invalidMessageJson, invalidIdFieldJson, invalidTmeId, filtersDuplicateTmeIds, handlesMultipleTmeIds, handlesNoTmeIds}
+
+	for _, scenario := range testScenarios {
+		uuid, concordanceFound, concordedJson, err := convertToUppConcordance(readFile(t, scenario.pathToFile))
+		assert.Equal(t, scenario.conceptUuid, uuid, "Scenario: " + scenario.testName + " failed")
+		assert.Equal(t, scenario.concordanceFound, concordanceFound, "Scenario: " + scenario.testName + " failed. No concordances found")
+		assert.Equal(t, scenario.concordedJson, concordedJson, "Scenario: " + scenario.testName + " failed. Json output does not match")
+		if scenario.expectedError != nil {
+			assert.Error(t, err, "Scenario: " + scenario.testName + "should have returned error")
+			assert.Contains(t, err.Error(), scenario.expectedError.Error(), "Scenario: " + scenario.testName + " returned unexpected output")
+		} else {
+			assert.Equal(t, err, scenario.expectedError, "Scenario: " + scenario.testName + " failed")
+		}
+	}
+}
+
+func readFile(t *testing.T, fileName string) string {
+	fullMessage, err := ioutil.ReadFile(fileName)
+	assert.NoError(t, err, "Error reading file ")
+	return string(fullMessage)
 }

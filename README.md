@@ -128,9 +128,9 @@ e.g
     Content-Type: application/json
     X-Request-Id: transaction ID, e.g. tid_etmIWTJVeA
     {
-      "uuid": "2d3e16e0-61cb-4322-8aff-3b01c59f4daa"",
+      "uuid": "2d3e16e0-61cb-4322-8aff-3b01c59f4daa",
       "concordedIds": [
-    	"YzhlNzZkYTctMDJiNy00NTViLTk3NmYtNmJjYTE5NDEyM2Yw-QnJhbmRz"
+    	"70f4732b-7f7d-30a1-9c29-0cceec23760e"
       ]
     }
 
@@ -221,6 +221,8 @@ Admin endpoints are:
 `/__health`
 
 `/__build-info`
+
+`/__ping`
 
 There are several checks performed:
 
