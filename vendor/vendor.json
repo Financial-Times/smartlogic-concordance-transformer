@@ -69,10 +69,6 @@
 			"revisionTime": "2016-10-29T20:57:26Z"
 		},
 		{
-			"path": "github.com/golang/go/src/pkg/strconv",
-			"revision": ""
-		},
-		{
 			"checksumSHA1": "g/V4qrXjUGG9B+e3hB+4NAYJ5Gs=",
 			"path": "github.com/gorilla/context",
 			"revision": "08b5f424b9271eedf6f9f0ce86cb9396ed337a42",
@@ -143,6 +139,10 @@
 			"path": "golang.org/x/sys/unix",
 			"revision": "b90f89a1e7a9c1f6b918820b3daa7f08488c8594",
 			"revisionTime": "2017-05-29T13:44:53Z"
+		},
+		{
+			"path": "strconv",
+			"revision": ""
 		}
 	],
 	"rootPath": "github.com/Financial-Times/smartlogic-concordance-transformer"

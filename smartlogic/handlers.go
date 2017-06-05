@@ -13,7 +13,7 @@ import (
 	"github.com/Financial-Times/transactionid-utils-go"
 	queueConsumer "github.com/Financial-Times/message-queue-gonsumer/consumer"
 	"github.com/pkg/errors"
-	"github.com/golang/go/src/pkg/strconv"
+	"strconv"
 )
 
 type SmartlogicConcordanceTransformerHandler struct {
