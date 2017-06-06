@@ -48,9 +48,6 @@ func convertToUppConcordance(msgBody string) (string, bool, []byte, error) {
 	if !strings.Contains(msgBody, "@graph") || !strings.Contains(msgBody, "@graph") {
 		return "", concordanceFound, nil, errors.New("Input: " + msgBody + " is missing @graph and/or @id fields")
 	}
-	if strings.Contains(msgBody, "<p>") || strings.Contains(msgBody, "<div>") {
-		return "", concordanceFound, nil, errors.New("Input: " + msgBody + " contains list of tmeIds in wrong format; please input values individually")
-	}
 	smartLogicConcept := SmartlogicConcept{}
 	bodyAsBytes := []byte(msgBody)
 	if err := json.Unmarshal(bodyAsBytes, &smartLogicConcept); err != nil {

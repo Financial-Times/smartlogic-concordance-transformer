@@ -123,7 +123,7 @@ func TestConvertToUppConcordance(t *testing.T) {
 	}
 
 	missingRequiredFieldsJson := testStruct{testName: "missingRequiredFieldsJson", pathToFile: "../resources/sourceJson/missingIdField.json", conceptUuid: "", concordanceFound: false, concordedJson: nil, expectedError: errors.New("missing @graph and/or @id fields")}
-	invalidTmeListInputJson := testStruct{testName: "invalidTmeListInputJson", pathToFile: "../resources/sourceJson/invalidTmeListInput.json", conceptUuid: "", concordanceFound: false, concordedJson: nil, expectedError: errors.New("contains list of tmeIds in wrong format; please input values individually")}
+	invalidTmeListInputJson := testStruct{testName: "invalidTmeListInputJson", pathToFile: "../resources/sourceJson/invalidTmeListInput.json", conceptUuid: "", concordanceFound: false, concordedJson: nil, expectedError: errors.New("is not a valid TME Id")}
 	invalidMessageJson := testStruct{testName: "invalidMessageJson", pathToFile: "../resources/sourceJson/invalid.json", conceptUuid: "", concordanceFound: false, concordedJson: nil, expectedError: errors.New("invalid character")}
 	invalidIdFieldJson := testStruct{testName: "invalidIdFieldJson", pathToFile: "../resources/sourceJson/invalidIdValue.json", conceptUuid: "", concordanceFound: false, concordedJson: nil, expectedError: errors.New("has invalid/missing url")}
 	invalidTmeId := testStruct{testName: "invalidTmeId", pathToFile: "../resources/sourceJson/invalidTmeId.json", conceptUuid: "", concordanceFound: false, concordedJson: nil, expectedError: errors.New("is not a valid TME Id")}
