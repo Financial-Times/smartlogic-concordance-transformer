@@ -14,6 +14,7 @@ import (
 	queueConsumer "github.com/Financial-Times/message-queue-gonsumer/consumer"
 	"github.com/pkg/errors"
 	"strconv"
+	"encoding/json"
 )
 
 type SmartlogicConcordanceTransformerHandler struct {
@@ -44,16 +45,23 @@ func (h *SmartlogicConcordanceTransformerHandler) TransformHandler(rw http.Respo
 		return
 	}
 
-	conceptUuid, _, uppConcordanceJson, err := convertToUppConcordance(string(body))
+	conceptUuid, uppConcordance, err := convertToUppConcordance(string(body))
 	log.Infof("Processing concordance transformation for concept with uuid: %s and trans id: %s", conceptUuid, tid)
 	if err != nil {
-		log.Errorf("Error whilst converting to concorded json: %s", err)
+		log.Errorf("Error whilst mapping to upp concordance model: %s", err)
+		rw.WriteHeader(http.StatusUnprocessableEntity)
+		rw.Write([]byte("{\"message\":\"Error whilst converting to concorded json: " + err.Error() + "\"}"))
+		return
+	}
+	concordedJson, err := json.Marshal(uppConcordance)
+	if err != nil {
+		log.Errorf("Error whilst marshalling upp concordance model to json: %s", err)
 		rw.WriteHeader(http.StatusUnprocessableEntity)
 		rw.Write([]byte("{\"message\":\"Error whilst converting to concorded json: " + err.Error() + "\"}"))
 		return
 	}
 	rw.WriteHeader(http.StatusOK)
-	rw.Write(uppConcordanceJson)
+	rw.Write(concordedJson)
 	return
 }
 

@@ -1,6 +1,8 @@
 # smartlogic-concordance-transformer
 
-[![Circle CI](https://circleci.com/gh/Financial-Times/smartlogic-concordance-transformer/tree/master.png?style=shield)](https://circleci.com/gh/Financial-Times/smartlogic-concordance-transformer/tree/master) [![Go Report Card](https://goreportcard.com/badge/github.com/Financial-Times/smartlogic-concordance-transformer)](https://goreportcard.com/report/github.com/Financial-Times/smartlogic-concordance-transformer) [![Coverage Status](https://coveralls.io/repos/github/Financial-Times/smartlogic-concordance-transformer/badge.svg)](https://coveralls.io/github/Financial-Times/smartlogic-concordance-transformer)
+[![Circle CI](https://circleci.com/gh/Financial-Times/smartlogic-concordance-transformer/tree/master.png?style=shield)](https://circleci.com/gh/Financial-Times/smartlogic-concordance-transformer/tree/master)
+[![Go Report Card](https://goreportcard.com/badge/github.com/Financial-Times/smartlogic-concordance-transformer)](https://goreportcard.com/report/github.com/Financial-Times/smartlogic-concordance-transformer)
+[![Coverage Status](https://coveralls.io/repos/github/Financial-Times/smartlogic-concordance-transformer/badge.svg)](https://coveralls.io/github/Financial-Times/smartlogic-concordance-transformer)
 
 ## Introduction
 

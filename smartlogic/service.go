@@ -32,65 +32,53 @@ func NewTransformerService(topic string, writerAddress string, httpClient httpCl
 }
 
 func (ts *TransformerService) handleConcordanceEvent(msgBody string, tid string) error {
-	conceptUuid, concordanceFound, uppConcordanceJson, err := convertToUppConcordance(msgBody)
+	conceptUuid, uppConcordance, err := convertToUppConcordance(msgBody)
 	if err != nil {
 		return errors.New("Conversion of payload to upp concordance resulted in error: " + err.Error())
 	}
-	err = ts.makeRelevantRequest(conceptUuid, concordanceFound, uppConcordanceJson, tid)
+	err = ts.makeRelevantRequest(conceptUuid, uppConcordance, tid)
 	if err != nil {
 		return errors.New("Request to concordance rw resulted in error: " + err.Error())
 	}
 	return nil
 }
 
-func convertToUppConcordance(msgBody string) (string, bool, []byte, error) {
-	concordanceFound := false
+func convertToUppConcordance(msgBody string) (string, UppConcordance, error) {
 	if !strings.Contains(msgBody, "@graph") || !strings.Contains(msgBody, "@graph") {
-		return "", concordanceFound, nil, errors.New("Input: " + msgBody + " is missing @graph and/or @id fields")
+		return "", UppConcordance{}, errors.New("Input: " + msgBody + " is missing @graph and/or @id fields")
 	}
 	smartLogicConcept := SmartlogicConcept{}
 	bodyAsBytes := []byte(msgBody)
 	if err := json.Unmarshal(bodyAsBytes, &smartLogicConcept); err != nil {
-		return "", concordanceFound, nil, err
+		return "", UppConcordance{}, err
 	}
 
 	conceptUuid := extractUuid(smartLogicConcept.Concepts[0].Id)
 	if conceptUuid == "" {
-		return "", concordanceFound, nil, errors.New("Json payload Id field " + smartLogicConcept.Concepts[0].Id + " has invalid/missing url")
+		return "", UppConcordance{}, errors.New("Json payload Id field " + smartLogicConcept.Concepts[0].Id + " has invalid/missing url")
 	}
 
 	concordanceIds := make([]string, 0)
 	for _, id := range smartLogicConcept.Concepts[0].TmeIdentifiers {
 		uuidFromTmeId, err := validateIdAndConvertToUuid(id.Value)
 		if err != nil {
-			return "", concordanceFound, nil, err
+			return "", UppConcordance{}, err
 		}
 		if len(concordanceIds) > 0 {
-			alreadyExists := false
 			for _, concordedId := range concordanceIds {
 				if concordedId == uuidFromTmeId {
-					alreadyExists = true
+					return "", UppConcordance{}, errors.New("Payload from smartlogic: " + msgBody + " contains duplicate TME id values")
 				}
 			}
-			if alreadyExists != true {
-				concordanceIds = append(concordanceIds, uuidFromTmeId)
-			}
+			concordanceIds = append(concordanceIds, uuidFromTmeId)
 		} else {
 			concordanceIds = append(concordanceIds, uuidFromTmeId)
 		}
 	}
-	if len(concordanceIds) > 0 {
-		concordanceFound = true
-	}
 	uppConcordance := UppConcordance{}
 	uppConcordance.ConceptUuid = conceptUuid
 	uppConcordance.ConcordedIds = concordanceIds
-
-	concordedJson, err := json.Marshal(uppConcordance)
-	if err != nil {
-		return "", concordanceFound, nil, err
-	}
-	return conceptUuid, concordanceFound, concordedJson, nil
+	return conceptUuid, uppConcordance, nil
 }
 
 func validateIdAndConvertToUuid(tmeId string) (string, error) {
@@ -112,11 +100,11 @@ func validateSubstrings(subStrings []string) bool {
 	return subStringIsEmpty
 }
 
-func (ts *TransformerService) makeRelevantRequest(uuid string, concordanceFound bool, uppConcordanceJson []byte, tid string) error {
+func (ts *TransformerService) makeRelevantRequest(uuid string, uppConcordance UppConcordance, tid string) error {
 	var err error
-	if concordanceFound {
+	if len(uppConcordance.ConcordedIds) > 0 {
 		log.Infof("Transaction Id: " + tid + ". Concordance found for %s; forwarding request to writer", uuid)
-		err = ts.makeWriteRequest(uuid, uppConcordanceJson, tid)
+		err = ts.makeWriteRequest(uuid, uppConcordance, tid)
 	} else {
 		log.Infof("Transaction Id: " + tid + ". No Concordance found for %s; making delete request", uuid)
 		err = ts.makeDeleteRequest(uuid, tid)
@@ -128,8 +116,12 @@ func (ts *TransformerService) makeRelevantRequest(uuid string, concordanceFound 
 	return nil
 }
 
-func (ts *TransformerService) makeWriteRequest(uuid string, concordedJson []byte, tid string) error {
+func (ts *TransformerService) makeWriteRequest(uuid string, uppConcordance UppConcordance, tid string) error {
 	reqURL := ts.writerAddress + "concordance/" + uuid
+	concordedJson, err := json.Marshal(uppConcordance)
+	if err != nil {
+		return errors.New("Error whilst marshalling upp concordance model to json: " + err.Error())
+	}
 	request, err := http.NewRequest("PUT", reqURL, strings.NewReader(string(concordedJson)))
 	if err != nil {
 		return errors.New("Failed to create GET request to " + reqURL + " with body " + string(concordedJson))
