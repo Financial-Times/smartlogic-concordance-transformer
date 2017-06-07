@@ -1,17 +1,15 @@
 package main
 
 import (
-	health "github.com/Financial-Times/go-fthealth/v1_1"
-	status "github.com/Financial-Times/service-status-go/httphandlers"
 	log "github.com/Sirupsen/logrus"
 	"github.com/jawher/mow.cli"
-	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 )
 
-const appDescription = "Service which listens to kafka for concordance updates, transforms smartlogic concordance json and sends updates to concordance-rw-dynamodb"
+const appDescription = "Service to transform the JSON-LD from Smart Logic to an UPP source system representation of a " +
+	"concordance and send it to the concordances-rw-s3"
 
 func main() {
 	app := cli.App("smartlogic-concordance-transformer", appDescription)
@@ -22,59 +20,74 @@ func main() {
 		Desc:   "System Code of the application",
 		EnvVar: "APP_SYSTEM_CODE",
 	})
-
 	appName := app.String(cli.StringOpt{
 		Name:   "app-name",
 		Value:  "Smartlogic Concordance Transformer",
 		Desc:   "Application name",
 		EnvVar: "APP_NAME",
 	})
-
 	port := app.String(cli.StringOpt{
 		Name:   "port",
 		Value:  "8080",
 		Desc:   "Port to listen on",
 		EnvVar: "APP_PORT",
 	})
+	//kafkaAddress := app.String(cli.StringOpt{
+	//	Name:   "kafka-address",
+	//	Value:  "http://localhost:9092",
+	//	Desc:   "Kafka broker address",
+	//	EnvVar: "KAFKA_ADDR",
+	//})
+	//kafkaTopic := app.String(cli.StringOpt{
+	//	Name:   "kafka-topic",
+	//	Value:  "SmartLogicChangeEvents",
+	//	Desc:   "Kafka topic subscribed to",
+	//	EnvVar: "TOPIC",
+	//})
+	//kafkaGroup := app.String(cli.StringOpt{
+	//	Name:   "kafka-group",
+	//	Desc:   "Kafka topic subscribed to",
+	//	EnvVar: "TOPIC",
+	//})
+	//writerEndpoint := app.String(cli.StringOpt{
+	//	Name:   "writerEndpoint",
+	//	Value:  "http://localhost:8080",
+	//	Desc:   "Endpoint for the concordance RW app.",
+	//	EnvVar: "WRITER_ENDPOINT",
+	//})
 
-	log.SetLevel(log.InfoLevel)
+	logLevel := app.String(cli.StringOpt{
+		Name:   "logLevel",
+		Value:  "INFO",
+		Desc:   "Log level",
+		EnvVar: "LOG_LEVEL",
+	})
+
+	lvl, err := log.ParseLevel(*logLevel)
+	if err != nil {
+		log.Fatalf("Cannot parse log level: %s", *logLevel)
+	}
+	log.SetLevel(lvl)
+
 	log.Infof("[Startup] smartlogic-concordance-transformer is starting ")
 
 	app.Action = func() {
 		log.Infof("System code: %s, App Name: %s, Port: %s", *appSystemCode, *appName, *port)
 
-		go func() {
-			serveAdminEndpoints(*appSystemCode, *appName, *port)
-		}()
-
-		// todo: insert app code here
-
+		// DO stuff
 		waitForSignal()
 	}
-	err := app.Run(os.Args)
-	if err != nil {
-		log.Errorf("App could not start, error=[%s]\n", err)
+	errs := app.Run(os.Args)
+	if errs != nil {
+		log.Errorf("App: smartlogic-concordance-transformer could not start, error=[%s]\n", err)
 		return
 	}
 }
 
-func serveAdminEndpoints(appSystemCode string, appName string, port string) {
-	healthService := newHealthService(&healthConfig{appSystemCode: appSystemCode, appName: appName, port: port})
-
-	serveMux := http.NewServeMux()
-
-	hc := health.HealthCheck{SystemCode: appSystemCode, Name: appName, Description: appDescription, Checks: healthService.checks}
-	serveMux.HandleFunc(healthPath, health.Handler(hc))
-	serveMux.HandleFunc(status.GTGPath, status.NewGoodToGoHandler(healthService.gtgCheck))
-	serveMux.HandleFunc(status.BuildInfoPath, status.BuildInfoHandler)
-
-	if err := http.ListenAndServe(":"+port, serveMux); err != nil {
-		log.Fatalf("Unable to start: %v", err)
-	}
-}
 
 func waitForSignal() {
 	ch := make(chan os.Signal)
 	signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
 	<-ch
 }
+
