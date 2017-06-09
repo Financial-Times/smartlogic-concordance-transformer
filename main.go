@@ -1,21 +1,22 @@
 package main
 
 import (
-	log "github.com/Sirupsen/logrus"
-	"github.com/jawher/mow.cli"
+	standardLog "log"
+	"net"
 	"net/http"
 	"os"
-	"github.com/gorilla/mux"
-	"net"
-	"time"
-	slc "github.com/Financial-Times/smartlogic-concordance-transformer/smartlogic"
-	queueConsumer "github.com/Financial-Times/message-queue-gonsumer/consumer"
-	"github.com/cyberdelia/go-metrics-graphite"
-	"github.com/rcrowley/go-metrics"
-	standardLog "log"
-	"sync"
 	"os/signal"
 	"syscall"
+	"time"
+
+	"github.com/Financial-Times/smartlogic-concordance-transformer/kafka"
+	slc "github.com/Financial-Times/smartlogic-concordance-transformer/smartlogic"
+	log "github.com/Sirupsen/logrus"
+	"github.com/cyberdelia/go-metrics-graphite"
+	"github.com/gorilla/mux"
+	"github.com/jawher/mow.cli"
+	_ "github.com/joho/godotenv/autoload"
+	"github.com/rcrowley/go-metrics"
 )
 
 const appDescription = "Service which listens to kafka for concordance updates, transforms smartlogic concordance json and sends updates to concordance-rw-dynamodb"
@@ -45,12 +46,6 @@ func main() {
 		Desc:   "Application name",
 		EnvVar: "APP_NAME",
 	})
-	routingAddress := app.String(cli.StringOpt{
-		Name:   "routing_address",
-		Value:  "http://localhost:8080",
-		Desc:   "Address used for routing requests",
-		EnvVar: "ROUTING_ADDRESS",
-	})
 	port := app.String(cli.StringOpt{
 		Name:   "port",
 		Value:  "8080",
@@ -59,7 +54,7 @@ func main() {
 	})
 	topic := app.String(cli.StringOpt{
 		Name:   "topic",
-		Value:  "SmartLogicChangeEvents",
+		Value:  "SmartLogicConcepts",
 		Desc:   "Kafka topic subscribed to",
 		EnvVar: "TOPIC",
 	})
@@ -74,24 +69,6 @@ func main() {
 		Value:  "http://localhost:8080/__concordance-rw-dynamodb/",
 		Desc:   "Concordance rw address for routing requests",
 		EnvVar: "WRITER_ADDRESS",
-	})
-	consumerOffset := app.String(cli.StringOpt{
-		Name:   "consumer_offset",
-		Value:  "largest",
-		Desc:   "Kafka read offset.",
-		EnvVar: "OFFSET",
-	})
-	consumerAutoCommitEnable := app.Bool(cli.BoolOpt{
-		Name:   "consumer_autocommit_enable",
-		Value:  false,
-		Desc:   "Enable autocommit for small messages.",
-		EnvVar: "COMMIT_ENABLE",
-	})
-	consumerQueue := app.String(cli.StringOpt{
-		Name:   "consumer_queue_id",
-		Value:  "kafka-rest-proxy",
-		Desc:   "The kafka queue id",
-		EnvVar: "QUEUE_ID",
 	})
 	graphiteTCPAddress := app.String(cli.StringOpt{
 		Name:   "graphite-tcp-address",
@@ -111,21 +88,18 @@ func main() {
 		Desc:   "Whether to log metrics. Set to true if running locally and you want metrics output",
 		EnvVar: "LOG_METRICS",
 	})
+	brokerConnectionString := app.String(cli.StringOpt{
+		Name:   "brokerConnectionString",
+		Desc:   "Zookeeper connection string in the form host1:2181,host2:2181/chroot",
+		EnvVar: "BROKER_CONNECTION_STRING",
+	})
 
 	log.SetLevel(log.InfoLevel)
 	log.Infof("[Startup] smartlogic-concordance-transformer is starting ")
 
 	app.Action = func() {
 		log.Infof("System code: %s, App Name: %s, Port: %s", *appSystemCode, *appName, *port)
-		consumerConfig := queueConsumer.QueueConfig{
-			Addrs:                []string{*routingAddress},
-			Group:                *groupName,
-			Queue:                *consumerQueue,
-			Topic:                *topic,
-			Offset:               *consumerOffset,
-			AutoCommitEnable:     *consumerAutoCommitEnable,
-			ConcurrentProcessing: true,
-		}
+
 		outputMetricsIfRequired(*graphiteTCPAddress, *graphitePrefix, *logMetrics)
 
 		router := mux.NewRouter()
@@ -135,32 +109,21 @@ func main() {
 		handler.RegisterAdminHandlers(router)
 
 		go func() {
-			if err := http.ListenAndServe(":" + *port, nil); err != nil {
+			if err := http.ListenAndServe(":"+*port, nil); err != nil {
 				log.Fatalf("Unable to start server: %v\n", err)
 			}
 		}()
 
-		consumer := queueConsumer.NewConsumer(consumerConfig, handler.ProcessKafkaMessage, &httpClient)
-		handler.Consumer = consumer
+		consumer, err := kafka.NewKafkaClient(*brokerConnectionString, *groupName, []string{*topic})
+		if err != nil {
+			log.WithError(err).Fatal("Cannot create Kafka client")
+		}
+		consumer.StartListening(handler.ProcessKafkaMessage)
 
-		var wg sync.WaitGroup
-		wg.Add(1)
-
-		go func() {
-			consumer.Start()
-			wg.Done()
-		}()
-
-		ch := make(chan os.Signal)
-		signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
-
-		<-ch
-		log.Println("Shutting down application...")
-
-		consumer.Stop()
-		wg.Wait()
-
-		log.Println("Application closing")
+		waitForSignal()
+		log.Info("Shutting down Kafka consumer")
+		consumer.Shutdown()
+		log.Info("Stopping application")
 	}
 	err := app.Run(os.Args)
 	if err != nil {
@@ -178,4 +141,10 @@ func outputMetricsIfRequired(graphiteTCPAddress string, graphitePrefix string, l
 		//messy use of the 'standard' log package here as this method takes the log struct, not an interface, so can't use logrus.Logger
 		go metrics.Log(metrics.DefaultRegistry, 60*time.Second, standardLog.New(os.Stdout, "metrics", standardLog.Lmicroseconds))
 	}
+}
+
+func waitForSignal() {
+	ch := make(chan os.Signal)
+	signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
+	<-ch
 }

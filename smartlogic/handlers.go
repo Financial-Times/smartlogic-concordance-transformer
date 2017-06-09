@@ -1,25 +1,25 @@
 package smartlogic
 
 import (
-	"github.com/gorilla/mux"
-	"github.com/gorilla/handlers"
-	log "github.com/Sirupsen/logrus"
+	"encoding/json"
+	"io/ioutil"
+	"net/http"
+	"strconv"
+
+	"github.com/Financial-Times/go-fthealth"
 	"github.com/Financial-Times/http-handlers-go/httphandlers"
 	status "github.com/Financial-Times/service-status-go/httphandlers"
-	"github.com/rcrowley/go-metrics"
-	"github.com/Financial-Times/go-fthealth"
-	"net/http"
-	"io/ioutil"
+	"github.com/Financial-Times/smartlogic-concordance-transformer/kafka"
 	"github.com/Financial-Times/transactionid-utils-go"
-	queueConsumer "github.com/Financial-Times/message-queue-gonsumer/consumer"
+	log "github.com/Sirupsen/logrus"
+	"github.com/gorilla/handlers"
+	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
-	"strconv"
-	"encoding/json"
+	"github.com/rcrowley/go-metrics"
 )
 
 type SmartlogicConcordanceTransformerHandler struct {
 	transformer TransformerService
-	Consumer queueConsumer.MessageConsumer
 }
 
 func NewHandler(transformer TransformerService) SmartlogicConcordanceTransformerHandler {
@@ -28,8 +28,8 @@ func NewHandler(transformer TransformerService) SmartlogicConcordanceTransformer
 	}
 }
 
-func (h *SmartlogicConcordanceTransformerHandler) ProcessKafkaMessage(msg queueConsumer.Message) {
-	h.transformer.handleConcordanceEvent(msg.Body, msg.Headers["X-Request-Id"])
+func (h *SmartlogicConcordanceTransformerHandler) ProcessKafkaMessage(msg kafka.FTMessage) error {
+	return h.transformer.handleConcordanceEvent(msg.Body, msg.Headers["X-Request-Id"])
 }
 
 func (h *SmartlogicConcordanceTransformerHandler) TransformHandler(rw http.ResponseWriter, req *http.Request) {
@@ -172,10 +172,10 @@ func (h *SmartlogicConcordanceTransformerHandler) checkConcordanceRwConnectivity
 }
 
 func (h *SmartlogicConcordanceTransformerHandler) checkKafkaConnectivity() error {
-	_, err := h.Consumer.ConnectivityCheck()
-	if err != nil {
-		return err
-	} else {
-		return nil
-	}
+	//_, err := h.Consumer.ConnectivityCheck()
+	//if err != nil {
+	//	return err
+	//} else {
+	return nil
+	//}
 }

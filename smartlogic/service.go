@@ -4,10 +4,11 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
-	"strconv"
-	"github.com/coreos/fleet/log"
-	"strings"
 	"regexp"
+	"strconv"
+	"strings"
+
+	"github.com/coreos/fleet/log"
 	"github.com/pborman/uuid"
 )
 
