@@ -1,20 +1,21 @@
 package smartlogic
 
 import (
-	"net/http"
 	"bytes"
-	"github.com/gorilla/mux"
-	"github.com/stretchr/testify/assert"
-	"testing"
-	"net/http/httptest"
 	"io"
 	"io/ioutil"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+
+	"github.com/gorilla/mux"
+	"github.com/stretchr/testify/assert"
 )
 
 const (
 	ExpectedContentType = "application/json"
-	WRITER_ADDRESS = "http://localhost:8080/__concordance-rw-dynamodb/"
-	TOPIC = "TestTopic"
+	WRITER_ADDRESS      = "http://localhost:8080/__concordance-rw-dynamodb/"
+	TOPIC               = "TestTopic"
 )
 
 type mockHttpClient struct {
@@ -32,7 +33,7 @@ func TestAdminHandler_Healthy(t *testing.T) {
 	mockClient := mockHttpClient{resp: "", statusCode: 200}
 	defaultTransformer := NewTransformerService(TOPIC, WRITER_ADDRESS, &mockClient)
 	h := NewHandler(defaultTransformer)
-	h.Consumer = mockConsumer{}
+	//h.Consumer = mockConsumer{}
 	h.RegisterAdminHandlers(r)
 
 	type testStruct struct {
@@ -63,14 +64,14 @@ func TestTransformHandler(t *testing.T) {
 	mockClient := mockHttpClient{resp: "", statusCode: 200}
 	defaultTransformer := NewTransformerService(TOPIC, WRITER_ADDRESS, &mockClient)
 	h := NewHandler(defaultTransformer)
-	h.Consumer = mockConsumer{}
+	//h.Consumer = mockConsumer{}
 	h.RegisterHandlers(r)
 
 	type testStruct struct {
-		filePath string
-		endpoint string
+		filePath           string
+		endpoint           string
 		expectedStatusCode int
-		expectedResult string
+		expectedResult     string
 	}
 
 	transform_convertingToConcordedJsonError := testStruct{filePath: "../resources/sourceJson/invalidTmeId.json", endpoint: "/transform", expectedStatusCode: 422, expectedResult: "{\"message\":\"Error whilst converting to concorded json: "}
@@ -89,7 +90,6 @@ func TestTransformHandler(t *testing.T) {
 		assert.Contains(t, rec.Body.String(), scenario.expectedResult)
 	}
 
-
 }
 
 func TestSendHandler(t *testing.T) {
@@ -97,14 +97,14 @@ func TestSendHandler(t *testing.T) {
 	mockClient := mockHttpClient{}
 	defaultTransformer := NewTransformerService(TOPIC, WRITER_ADDRESS, &mockClient)
 	h := NewHandler(defaultTransformer)
-	h.Consumer = mockConsumer{}
+	//h.Consumer = mockConsumer{}
 	h.RegisterHandlers(r)
 
 	type testStruct struct {
-		filePath string
-		endpoint string
+		filePath           string
+		endpoint           string
 		expectedStatusCode int
-		expectedResult string
+		expectedResult     string
 	}
 
 	convertingToConcordedJsonError := testStruct{filePath: "../resources/sourceJson/invalidTmeId.json", endpoint: "/transform", expectedStatusCode: 422, expectedResult: "{\"message\":\"Error whilst converting to concorded json: "}
@@ -119,7 +119,6 @@ func TestSendHandler(t *testing.T) {
 		assert.Equal(t, rec.HeaderMap["Content-Type"], []string{"application/json"})
 		assert.Contains(t, rec.Body.String(), scenario.expectedResult)
 	}
-
 
 }
 
