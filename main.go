@@ -9,7 +9,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/Financial-Times/smartlogic-concordance-transformer/kafka"
+	"github.com/Financial-Times/kafka-client-go/kafka"
 	slc "github.com/Financial-Times/smartlogic-concordance-transformer/smartlogic"
 	log "github.com/Sirupsen/logrus"
 	"github.com/cyberdelia/go-metrics-graphite"
@@ -114,7 +114,8 @@ func main() {
 			}
 		}()
 
-		consumer, err := kafka.NewKafkaClient(*brokerConnectionString, *groupName, []string{*topic})
+		consumerConfig := kafka.DefaultConsumerConfig()
+		consumer, err := kafka.NewConsumer(*brokerConnectionString, *groupName, []string{*topic}, consumerConfig)
 		if err != nil {
 			log.WithError(err).Fatal("Cannot create Kafka client")
 		}

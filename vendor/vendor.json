@@ -15,6 +15,12 @@
 			"revisionTime": "2016-08-03T10:40:03Z"
 		},
 		{
+			"checksumSHA1": "FtKTVT6uDNXg+jXS/6v1jKVH36g=",
+			"path": "github.com/Financial-Times/kafka-client-go/kafka",
+			"revision": "08ed2498ae2346b012c6fd8b53499498e1745897",
+			"revisionTime": "2017-06-12T15:52:56Z"
+		},
+		{
 			"checksumSHA1": "/kMYtkcxWV4dZNvJaEGkDUwt3TA=",
 			"path": "github.com/Financial-Times/message-queue-gonsumer/consumer",
 			"revision": "4e173298922ba4c10721b1b5b3e0d35be7f162e9",
@@ -70,7 +76,6 @@
 		},
 		{
 			"checksumSHA1": "dvabztWVQX8f6oMLRyv4dLH+TGY=",
-			"origin": "github.com/Financial-Times/smartlogic-concordance-transformer/vendor/github.com/davecgh/go-spew/spew",
 			"path": "github.com/davecgh/go-spew/spew",
 			"revision": "346938d642f2ec3594ed81d874461961cd0faa76",
 			"revisionTime": "2016-10-29T20:57:26Z"
