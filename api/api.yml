@@ -4,10 +4,10 @@ info:
   
   version: "1.0.0"
   title: "SmartLogic Concordance Transformer"
-host: api.ft.com
+host: pub-prod-up.ft.com
 schemes:
   - https
-basePath: /
+basePath: /__smartlogic-concordance-transformer
 
 paths:
   /transform:
@@ -16,12 +16,15 @@ paths:
       description: Transforms smartlogic payload into the upp representation of concordance if one exists and returns request. Used for support and testing
       tags:
         - Internal API
+      consumes:
+              - application/ld+json
       parameters:
         - name: transformRequest
           in: body
           description: Minimal Payload that comes out of the smartlogic api
           schema:
             type: string
+          
       produces:
               - application/json
       responses:
@@ -33,7 +36,9 @@ paths:
                 concordedIds:
                   - a931079b-00b8-4d10-b893-2b94ddd93b43
         400:
-          description: Invalid input - invalid JSON-LD or a missing uuid.  
+          description: Invalid input - invalid JSON-LD or a missing uuid
+        405:
+          description: Method not allowed - any method not specified for this endpoint will return a 405 response  
         500:
           description: Internal error transforming the Smart Logic JSON-LD
         503:
@@ -46,11 +51,21 @@ paths:
         - Internal API
       produces:
         - application/json
+      consumes:
+              - application/ld+json
+      parameters:
+        - name: transformRequest
+          in: body
+          description: Minimal Payload that comes out of the smartlogic api
+          schema:
+            type: string  
       responses:
         200:
           description: Successfully transformed and sent onewards the smart logic concept
         400:
           description: Invalid input - invalid JSON-LD or a missing uuid
+        405:
+          description: Method not allowed - any method not specified for this endpoint will return a 405 response
         500:
           description: Internal error transforming the Smart Logic JSON-LD
         503:

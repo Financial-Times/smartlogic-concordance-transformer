@@ -46,7 +46,7 @@ Options:
 * Built by Docker Hub on merge to master: [coco/smartlogic-concordance-transformer](https://hub.docker.com/r/coco/smartlogic-concordance-transformer/)
 * CI provided by CircleCI: [smartlogic-concordance-transformer](https://circleci.com/gh/Financial-Times/smartlogic-concordance-transformer)
 
-## Service endpoints
+## Utility endpoints
 See the api/api.yml for the swagger definitions of the endpoints
 
 ### POST /transform
@@ -136,9 +136,10 @@ e.g
       ]
     }
 
+
 Based on the following [google doc](https://docs.google.com/document/d/1-8Yv1ob6qjAOzfU1ngEOeXJDGq_zP7pLM7F5HnORCoM/edit#).
 
-## Utility endpoints
+
 ### POST /transform/send
 Transforms smartlogic payload into the upp representation of concordance and sends result to concordances-rw-s3
 
@@ -213,7 +214,7 @@ Payload.txt:
     }
 
 
-Based on the following [google doc](https://docs.google.com/document/d/1-8Yv1ob6qjAOzfU1ngEOeXJDGq_zP7pLM7F5HnORCoM/edit#).
+Based on the following [google doc](https://docs.google.com/document/d/1vyXZOJrj19KS6uHD2jBx1DOO4PesAjh043034AXR72o/edit#).
 
 ## Healthchecks
 Admin endpoints are:
