@@ -8,6 +8,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/Financial-Times/kafka-client-go/kafka"
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
 )
@@ -24,16 +25,11 @@ type mockHttpClient struct {
 	err        error
 }
 
-type mockConsumer struct {
-	err error
-}
-
 func TestAdminHandler_Healthy(t *testing.T) {
 	r := mux.NewRouter()
 	mockClient := mockHttpClient{resp: "", statusCode: 200}
 	defaultTransformer := NewTransformerService(TOPIC, WRITER_ADDRESS, &mockClient)
-	h := NewHandler(defaultTransformer)
-	//h.Consumer = mockConsumer{}
+	h := NewHandler(defaultTransformer, mockConsumer{})
 	h.RegisterAdminHandlers(r)
 
 	type testStruct struct {
@@ -63,8 +59,7 @@ func TestTransformHandler(t *testing.T) {
 	r := mux.NewRouter()
 	mockClient := mockHttpClient{resp: "", statusCode: 200}
 	defaultTransformer := NewTransformerService(TOPIC, WRITER_ADDRESS, &mockClient)
-	h := NewHandler(defaultTransformer)
-	//h.Consumer = mockConsumer{}
+	h := NewHandler(defaultTransformer, mockConsumer{})
 	h.RegisterHandlers(r)
 
 	type testStruct struct {
@@ -96,8 +91,7 @@ func TestSendHandler(t *testing.T) {
 	r := mux.NewRouter()
 	mockClient := mockHttpClient{}
 	defaultTransformer := NewTransformerService(TOPIC, WRITER_ADDRESS, &mockClient)
-	h := NewHandler(defaultTransformer)
-	//h.Consumer = mockConsumer{}
+	h := NewHandler(defaultTransformer, mockConsumer{})
 	h.RegisterHandlers(r)
 
 	type testStruct struct {
@@ -127,15 +121,19 @@ func (c mockHttpClient) Do(req *http.Request) (resp *http.Response, err error) {
 	return &http.Response{Body: cb, StatusCode: c.statusCode}, c.err
 }
 
-func (mc mockConsumer) ConnectivityCheck() (string, error) {
-	return "", mc.err
+type mockConsumer struct {
+	err error
 }
 
-func (mc mockConsumer) Start() {
+func (mc mockConsumer) ConnectivityCheck() error {
+	return mc.err
+}
+
+func (mc mockConsumer) StartListening(messageHandler func(message kafka.FTMessage) error) {
 	return
 }
 
-func (mc mockConsumer) Stop() {
+func (mc mockConsumer) Shutdown() {
 	return
 }
 
