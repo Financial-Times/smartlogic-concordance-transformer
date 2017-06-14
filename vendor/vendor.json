@@ -15,10 +15,10 @@
 			"revisionTime": "2016-08-03T10:40:03Z"
 		},
 		{
-			"checksumSHA1": "FtKTVT6uDNXg+jXS/6v1jKVH36g=",
+			"checksumSHA1": "vqBJNmBmjdaxpjfyTFR+bLec//o=",
 			"path": "github.com/Financial-Times/kafka-client-go/kafka",
-			"revision": "08ed2498ae2346b012c6fd8b53499498e1745897",
-			"revisionTime": "2017-06-12T15:52:56Z"
+			"revision": "ec5902d506744587108390a368b4c3adfdf423de",
+			"revisionTime": "2017-06-13T12:36:06Z"
 		},
 		{
 			"checksumSHA1": "/kMYtkcxWV4dZNvJaEGkDUwt3TA=",
@@ -163,12 +163,6 @@
 			"path": "github.com/pierrec/xxHash/xxHash32",
 			"revision": "5a004441f897722c627870a981d02b29924215fa",
 			"revisionTime": "2016-01-12T16:53:51Z"
-		},
-		{
-			"checksumSHA1": "rJab1YdNhQooDiBWNnt7TLWPyBU=",
-			"path": "github.com/pkg/errors",
-			"revision": "c605e284fe17294bda444b34710735b29d1a9d90",
-			"revisionTime": "2017-05-05T04:36:39Z"
 		},
 		{
 			"checksumSHA1": "LuFv4/jlrmFNnDb/5SCSEPAM9vU=",

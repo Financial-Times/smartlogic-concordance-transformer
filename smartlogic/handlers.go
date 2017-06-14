@@ -2,31 +2,31 @@ package smartlogic
 
 import (
 	"encoding/json"
+	"errors"
 	"io/ioutil"
 	"net/http"
 	"strconv"
 
-	"github.com/Financial-Times/kafka-client-go/kafka"
-
 	"github.com/Financial-Times/go-fthealth"
 	"github.com/Financial-Times/http-handlers-go/httphandlers"
+	"github.com/Financial-Times/kafka-client-go/kafka"
 	status "github.com/Financial-Times/service-status-go/httphandlers"
-	//"github.com/Financial-Times/smartlogic-concordance-transformer/kafka"
 	"github.com/Financial-Times/transactionid-utils-go"
 	log "github.com/Sirupsen/logrus"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
-	"github.com/pkg/errors"
 	"github.com/rcrowley/go-metrics"
 )
 
 type SmartlogicConcordanceTransformerHandler struct {
 	transformer TransformerService
+	consumer    kafka.Consumer
 }
 
-func NewHandler(transformer TransformerService) SmartlogicConcordanceTransformerHandler {
+func NewHandler(transformer TransformerService, consumer kafka.Consumer) SmartlogicConcordanceTransformerHandler {
 	return SmartlogicConcordanceTransformerHandler{
 		transformer: transformer,
+		consumer:    consumer,
 	}
 }
 
@@ -174,10 +174,10 @@ func (h *SmartlogicConcordanceTransformerHandler) checkConcordanceRwConnectivity
 }
 
 func (h *SmartlogicConcordanceTransformerHandler) checkKafkaConnectivity() error {
-	//_, err := h.Consumer.ConnectivityCheck()
-	//if err != nil {
-	//	return err
-	//} else {
-	return nil
-	//}
+	err := h.consumer.ConnectivityCheck()
+	if err != nil {
+		return err
+	} else {
+		return nil
+	}
 }

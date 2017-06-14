@@ -56,7 +56,7 @@ func main() {
 		Name:   "topic",
 		Value:  "SmartLogicConcepts",
 		Desc:   "Kafka topic subscribed to",
-		EnvVar: "TOPIC",
+		EnvVar: "KAFKA_TOPIC",
 	})
 	groupName := app.String(cli.StringOpt{
 		Name:   "groupName",
@@ -102,9 +102,15 @@ func main() {
 
 		outputMetricsIfRequired(*graphiteTCPAddress, *graphitePrefix, *logMetrics)
 
+		consumerConfig := kafka.DefaultConsumerConfig()
+		consumer, err := kafka.NewConsumer(*brokerConnectionString, *groupName, []string{*topic}, consumerConfig)
+		if err != nil {
+			log.WithError(err).Fatal("Cannot create Kafka client")
+		}
+
 		router := mux.NewRouter()
 		transformer := slc.NewTransformerService(*topic, *writerAddress, &httpClient)
-		handler := slc.NewHandler(transformer)
+		handler := slc.NewHandler(transformer, consumer)
 		handler.RegisterHandlers(router)
 		handler.RegisterAdminHandlers(router)
 
@@ -114,11 +120,6 @@ func main() {
 			}
 		}()
 
-		consumerConfig := kafka.DefaultConsumerConfig()
-		consumer, err := kafka.NewConsumer(*brokerConnectionString, *groupName, []string{*topic}, consumerConfig)
-		if err != nil {
-			log.WithError(err).Fatal("Cannot create Kafka client")
-		}
 		consumer.StartListening(handler.ProcessKafkaMessage)
 
 		waitForSignal()
