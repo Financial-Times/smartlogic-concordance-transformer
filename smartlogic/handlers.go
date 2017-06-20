@@ -55,15 +55,6 @@ func (h *SmartlogicConcordanceTransformerHandler) TransformHandler(rw http.Respo
 	defer req.Body.Close()
 
 	writeResponse(rw, updateStatus, err, uppConcordance)
-	//concordedJson, err := json.Marshal(uppConcordance)
-	//if err != nil {
-	//	log.Errorf("Error whilst marshalling upp concordance model to json: %s", err)
-	//	rw.WriteHeader(http.StatusUnprocessableEntity)
-	//	rw.Write([]byte("{\"message\":\"Error whilst converting to concorded json: " + err.Error() + "\"}"))
-	//	return
-	//}
-	//rw.WriteHeader(http.StatusOK)
-	//rw.Write(concordedJson)
 	return
 }
 
@@ -76,7 +67,6 @@ func (h *SmartlogicConcordanceTransformerHandler) SendHandler(rw http.ResponseWr
 	err := json.NewDecoder(req.Body).Decode(&smartLogicConcept)
 
 	if err != nil {
-		fmt.Printf("We got here?\n")
 		log.Errorf("Error %v whilst processing json body", err)
 		rw.WriteHeader(http.StatusBadRequest)
 		rw.Write([]byte("{\"message\":\"Error whilst processing request body:" + err.Error() + "\"}"))
@@ -99,21 +89,12 @@ func (h *SmartlogicConcordanceTransformerHandler) SendHandler(rw http.ResponseWr
 	rw.Write([]byte("Concordance successfully written to db"))
 
 	defer req.Body.Close()
-	//if err != nil {
-	//	log.Errorf("Error whilst converting to concorded json: %s", err)
-	//	rw.WriteHeader(http.StatusUnprocessableEntity)
-	//	rw.Write([]byte("{\"message\":\"Error whilst processing request body:" + err.Error() + "\"}"))
-	//	return
-	//}
-	//rw.WriteHeader(http.StatusOK)
-	//rw.Write([]byte("Concordance successfully written to db"))
 	return
 }
 
 func writeResponse(rw http.ResponseWriter, updateStatus status, err error, concordance UppConcordance) {
 	enc := json.NewEncoder(rw)
 	if err == nil {
-		fmt.Printf("Status is %s\n", updateStatus)
 		rw.WriteHeader(http.StatusOK)
 		bytes, _:= json.Marshal(concordance)
 		rw.Write(bytes)

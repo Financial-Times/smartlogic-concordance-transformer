@@ -65,7 +65,7 @@ func (ts *TransformerService) handleConcordanceEvent(msgBody string, tid string)
 
 func convertToUppConcordance(smartlogicConcepts SmartlogicConcept) (status, string, UppConcordance, error) {
 	if len(smartlogicConcepts.Concepts) == 0 {
-		return SEMANTICALLY_INCORRECT, "", UppConcordance{}, logAndReturnTheError("Bad Request: Requst json: %s is missing @graph field", smartlogicConcepts)
+		return SEMANTICALLY_INCORRECT, "", UppConcordance{}, logAndReturnTheError("Bad Request: Missing/invalid @graph field", smartlogicConcepts)
 	}
 	if len(smartlogicConcepts.Concepts) > 1 {
 		return SEMANTICALLY_INCORRECT, "", UppConcordance{}, logAndReturnTheError("Bad Request: More than 1 concept in smartlogic concept payload which is currently not supported", "")
@@ -75,7 +75,7 @@ func convertToUppConcordance(smartlogicConcepts SmartlogicConcept) (status, stri
 
 	conceptUuid := extractUuid(smartlogicConcept.Id)
 	if conceptUuid == "" {
-		return SYNTACTICALLY_INCORRECT, conceptUuid, UppConcordance{}, logAndReturnTheError("Bad Request: Requst json: %s has missing/invalid @id field", smartlogicConcepts)
+		return SEMANTICALLY_INCORRECT, conceptUuid, UppConcordance{}, logAndReturnTheError("Bad Request: Missing/invalid @id field", smartlogicConcepts)
 	}
 
 	concordanceIds := make([]string, 0)
@@ -134,7 +134,7 @@ func (ts *TransformerService) makeRelevantRequest(uuid string, uppConcordance Up
 }
 
 func (ts *TransformerService) makeWriteRequest(uuid string, uppConcordance UppConcordance, tid string) (status, error) {
-	reqURL := ts.writerAddress + "concordance/" + uuid
+	reqURL := ts.writerAddress + "concordances/" + uuid
 	concordedJson, err := json.Marshal(uppConcordance)
 	if err != nil {
 		return SYNTACTICALLY_INCORRECT, logAndReturnTheError("Error whilst marshalling upp concordance model to json: %s", err)
@@ -159,7 +159,7 @@ func (ts *TransformerService) makeWriteRequest(uuid string, uppConcordance UppCo
 
 func (ts *TransformerService) makeDeleteRequest(uuid string, tid string) (status, error) {
 	reqURL := ts.writerAddress + "concordances/" + uuid
-	request, err := http.NewRequest("DELETE", reqURL, nil)
+	request, err := http.NewRequest("DELETE", reqURL, strings.NewReader(""))
 	if err != nil {
 		return INTERNAL_ERROR, logAndReturnTheError("Failed to create Delete request to %s", reqURL)
 	}
