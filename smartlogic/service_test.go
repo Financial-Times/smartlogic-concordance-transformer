@@ -5,6 +5,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"errors"
 	"io/ioutil"
+	"encoding/json"
+	"bytes"
 )
 
 var testUuid = "20db1bd6-59f9-4404-adb5-3165a448f8b0"
@@ -88,18 +90,18 @@ func TestMakeRelevantRequest(t *testing.T) {
 		clientErr error
 	}
 
-	concordanceFound_WriteError := testStruct{testName: "concordanceFound_WriteError", uuid: testUuid, uppConcordance: withConcordance, expectedError: errors.New("Get request to resulted in error"), clientResp: "", statusCode: 200, clientErr: errors.New("Error")}
-	concordanceFound_Status503 := testStruct{testName: "concordanceFound_Status503", uuid: testUuid, uppConcordance: withConcordance, expectedError: errors.New("Get request to returned status"), clientResp: "",  statusCode: 503, clientErr: nil}
+	concordanceFound_WriteError := testStruct{testName: "concordanceFound_WriteError", uuid: testUuid, uppConcordance: withConcordance, expectedError: errors.New("Get request resulted in error"), clientResp: "", statusCode: 200, clientErr: errors.New("Error")}
+	concordanceFound_Status503 := testStruct{testName: "concordanceFound_Status503", uuid: testUuid, uppConcordance: withConcordance, expectedError: errors.New("Get request returned status"), clientResp: "",  statusCode: 503, clientErr: nil}
 	noConcordance_SuccessfulWrite := testStruct{testName: "noConcordance_SuccessfulWrite", uuid: testUuid, uppConcordance: withConcordance, expectedError: nil, clientResp: "",  statusCode: 200, clientErr: nil}
-	noConcordance_WriteError := testStruct{testName: "noConcordance_WriteError", uuid: testUuid, uppConcordance: noConcordance, expectedError: errors.New("Delete request to resulted in error"), clientResp: "",  statusCode: 200, clientErr: errors.New("Error")}
-	noConcordance_Status503 := testStruct{testName: "noConcordance_Status503", uuid: testUuid, uppConcordance: noConcordance, expectedError: errors.New("Delete request to returned status"), clientResp: "",  statusCode: 503, clientErr: nil}
+	noConcordance_WriteError := testStruct{testName: "noConcordance_WriteError", uuid: testUuid, uppConcordance: noConcordance, expectedError: errors.New("Delete request resulted in error"), clientResp: "",  statusCode: 200, clientErr: errors.New("Error")}
+	noConcordance_Status503 := testStruct{testName: "noConcordance_Status503", uuid: testUuid, uppConcordance: noConcordance, expectedError: errors.New("Delete request returned status"), clientResp: "",  statusCode: 503, clientErr: nil}
 	noConcordance_SuccessfulDelete := testStruct{testName: "noConcordance_SuccessfulDelete", uuid: testUuid, uppConcordance: noConcordance, expectedError: nil, clientResp: "",  statusCode: 404, clientErr: nil}
 
 	testScenarios := []testStruct{concordanceFound_WriteError, concordanceFound_Status503, noConcordance_SuccessfulWrite, noConcordance_WriteError, noConcordance_Status503, noConcordance_SuccessfulDelete}
 
 	for _, scenario := range testScenarios {
 		ts := NewTransformerService("", writerUrl, mockHttpClient{resp: scenario.clientResp, statusCode: scenario.statusCode, err: scenario.clientErr})
-		reqErr := ts.makeRelevantRequest(scenario.uuid, scenario.uppConcordance, "")
+		_, reqErr := ts.makeRelevantRequest(scenario.uuid, scenario.uppConcordance, "")
 		if reqErr != nil {
 			assert.Contains(t, reqErr.Error(), scenario.expectedError.Error(), "Scenario: " + scenario.testName + " failed")
 		} else {
@@ -121,19 +123,22 @@ func TestConvertToUppConcordance(t *testing.T) {
 		expectedError error
 	}
 
-	missingRequiredFieldsJson := testStruct{testName: "missingRequiredFieldsJson", pathToFile: "../resources/sourceJson/missingIdField.json", conceptUuid: "", uppConcordance: noConcordance, expectedError: errors.New("missing @graph and/or @id fields")}
-	invalidTmeListInputJson := testStruct{testName: "invalidTmeListInputJson", pathToFile: "../resources/sourceJson/invalidTmeListInput.json", conceptUuid: "", uppConcordance: noConcordance, expectedError: errors.New("is not a valid TME Id")}
-	invalidMessageJson := testStruct{testName: "invalidMessageJson", pathToFile: "../resources/sourceJson/invalid.json", conceptUuid: "", uppConcordance: noConcordance, expectedError: errors.New("invalid character")}
-	invalidIdFieldJson := testStruct{testName: "invalidIdFieldJson", pathToFile: "../resources/sourceJson/invalidIdValue.json", conceptUuid: "", uppConcordance: noConcordance, expectedError: errors.New("has invalid/missing url")}
-	invalidTmeId := testStruct{testName: "invalidTmeId", pathToFile: "../resources/sourceJson/invalidTmeId.json", conceptUuid: "", uppConcordance: noConcordance, expectedError: errors.New("is not a valid TME Id")}
-	errorOnDuplicateTmeIds := testStruct{testName: "errorOnDuplicateTmeIds", pathToFile: "../resources/sourceJson/duplicateTmeIds.json", conceptUuid: "", uppConcordance: noConcordance, expectedError: errors.New("contains duplicate TME id values")}
+	missingRequiredFieldsJson := testStruct{testName: "missingRequiredFieldsJson", pathToFile: "../resources/sourceJson/missingIdField.json", conceptUuid: "", uppConcordance: noConcordance, expectedError: errors.New("is missing @graph field")}
+	invalidTmeListInputJson := testStruct{testName: "invalidTmeListInputJson", pathToFile: "../resources/sourceJson/invalidTmeListInput.json", conceptUuid: testUuid, uppConcordance: noConcordance, expectedError: errors.New("is not a valid TME Id")}
+	//invalidMessageJson := testStruct{testName: "invalidMessageJson", pathToFile: "../resources/sourceJson/invalid.json", conceptUuid: "", uppConcordance: noConcordance, expectedError: errors.New("invalid character")}
+	invalidIdFieldJson := testStruct{testName: "invalidIdFieldJson", pathToFile: "../resources/sourceJson/invalidIdValue.json", conceptUuid: "", uppConcordance: noConcordance, expectedError: errors.New("has missing/invalid @id field")}
+	invalidTmeId := testStruct{testName: "invalidTmeId", pathToFile: "../resources/sourceJson/invalidTmeId.json", conceptUuid: testUuid, uppConcordance: noConcordance, expectedError: errors.New("is not a valid TME Id")}
+	errorOnDuplicateTmeIds := testStruct{testName: "errorOnDuplicateTmeIds", pathToFile: "../resources/sourceJson/duplicateTmeIds.json", conceptUuid: testUuid, uppConcordance: noConcordance, expectedError: errors.New("contains duplicate TME id values")}
 	handlesMultipleTmeIds := testStruct{testName: "handlesMultipleTmeIds", pathToFile: "../resources/sourceJson/multipleTmeIds.json", conceptUuid: testUuid, uppConcordance: multiConcordance, expectedError: nil}
 	handlesNoTmeIds := testStruct{testName: "handlesNoTmeIds", pathToFile: "../resources/sourceJson/noTmeIds.json", conceptUuid: testUuid, uppConcordance: emptyConcordance, expectedError: nil}
 
-	testScenarios := []testStruct{missingRequiredFieldsJson, invalidTmeListInputJson, invalidMessageJson, invalidIdFieldJson, invalidTmeId, errorOnDuplicateTmeIds, handlesMultipleTmeIds, handlesNoTmeIds}
+	testScenarios := []testStruct{missingRequiredFieldsJson, invalidTmeListInputJson, invalidIdFieldJson, invalidTmeId, errorOnDuplicateTmeIds, handlesMultipleTmeIds, handlesNoTmeIds}
 
 	for _, scenario := range testScenarios {
-		uuid, uppConconcordance, err := convertToUppConcordance(readFile(t, scenario.pathToFile))
+		var smartLogicConcept = SmartlogicConcept{}
+		decoder := json.NewDecoder(bytes.NewBufferString(readFile(t, scenario.pathToFile)))
+		err := decoder.Decode(&smartLogicConcept)
+		_, uuid, uppConconcordance, err := convertToUppConcordance(smartLogicConcept)
 		assert.Equal(t, scenario.conceptUuid, uuid, "Scenario: " + scenario.testName + " failed")
 		assert.Equal(t, scenario.uppConcordance, uppConconcordance, "Scenario: " + scenario.testName + " failed. Json output does not match")
 		if scenario.expectedError != nil {

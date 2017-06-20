@@ -52,6 +52,17 @@ func main() {
 		Desc:   "Port to listen on",
 		EnvVar: "APP_PORT",
 	})
+	logLevel := app.String(cli.StringOpt{
+		Name:   "logLevel",
+		Value:  "INFO",
+		Desc:   "Log level",
+		EnvVar: "LOG_LEVEL",
+	})
+	brokerConnectionString := app.String(cli.StringOpt{
+		Name:   "brokerConnectionString",
+		Desc:   "Zookeeper connection string in the form host1:2181,host2:2181/chroot",
+		EnvVar: "BROKER_CONNECTION_STRING",
+	})
 	topic := app.String(cli.StringOpt{
 		Name:   "topic",
 		Value:  "SmartLogicConcepts",
@@ -88,14 +99,22 @@ func main() {
 		Desc:   "Whether to log metrics. Set to true if running locally and you want metrics output",
 		EnvVar: "LOG_METRICS",
 	})
-	brokerConnectionString := app.String(cli.StringOpt{
-		Name:   "brokerConnectionString",
-		Desc:   "Zookeeper connection string in the form host1:2181,host2:2181/chroot",
-		EnvVar: "BROKER_CONNECTION_STRING",
-	})
 
 	log.SetLevel(log.InfoLevel)
 	log.Infof("[Startup] smartlogic-concordance-transformer is starting ")
+	lvl, err := log.ParseLevel(*logLevel)
+	if err != nil {
+		log.Fatalf("Cannot parse log level: %s", *logLevel)
+	}
+	log.SetLevel(lvl)
+	log.SetFormatter(&log.JSONFormatter{})
+
+	log.WithFields(log.Fields{
+		"WRITER_ADDRESS":           *writerAddress,
+		"KAFKA_TOPIC":              *topic,
+		"GROUP_NAME":               *groupName,
+		"BROKER_CONNECTION_STRING": *brokerConnectionString,
+	}).Infof("[Startup] smartlogic-concept-transformer is starting ")
 
 	app.Action = func() {
 		log.Infof("System code: %s, App Name: %s, Port: %s", *appSystemCode, *appName, *port)
@@ -127,9 +146,10 @@ func main() {
 		consumer.Shutdown()
 		log.Info("Stopping application")
 	}
-	err := app.Run(os.Args)
-	if err != nil {
-		log.Errorf("App could not start, error=[%s]\n", err)
+
+	runErr := app.Run(os.Args)
+	if runErr != nil {
+		log.Errorf("App could not start, error=[%s]\n", runErr)
 		return
 	}
 }

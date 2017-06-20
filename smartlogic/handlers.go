@@ -3,19 +3,19 @@ package smartlogic
 import (
 	"encoding/json"
 	"errors"
-	"io/ioutil"
 	"net/http"
 	"strconv"
 
 	"github.com/Financial-Times/go-fthealth"
 	"github.com/Financial-Times/http-handlers-go/httphandlers"
 	"github.com/Financial-Times/kafka-client-go/kafka"
-	status "github.com/Financial-Times/service-status-go/httphandlers"
+	serviceStatus "github.com/Financial-Times/service-status-go/httphandlers"
 	"github.com/Financial-Times/transactionid-utils-go"
 	log "github.com/Sirupsen/logrus"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/rcrowley/go-metrics"
+	"fmt"
 )
 
 type SmartlogicConcordanceTransformerHandler struct {
@@ -39,7 +39,9 @@ func (h *SmartlogicConcordanceTransformerHandler) TransformHandler(rw http.Respo
 	rw.Header().Set("Content-Type", "application/json")
 	rw.Header().Set("X-Request-Id", tid)
 
-	body, err := ioutil.ReadAll(req.Body)
+	var smartLogicConcept = SmartlogicConcept{}
+	err := json.NewDecoder(req.Body).Decode(&smartLogicConcept)
+
 	if err != nil {
 		log.Errorf("Error whilst processing request body: %s", err)
 		rw.WriteHeader(http.StatusBadRequest)
@@ -47,47 +49,101 @@ func (h *SmartlogicConcordanceTransformerHandler) TransformHandler(rw http.Respo
 		return
 	}
 
-	conceptUuid, uppConcordance, err := convertToUppConcordance(string(body))
-	log.Infof("Processing concordance transformation for concept with uuid: %s and trans id: %s", conceptUuid, tid)
-	if err != nil {
-		log.Errorf("Error whilst mapping to upp concordance model: %s", err)
-		rw.WriteHeader(http.StatusUnprocessableEntity)
-		rw.Write([]byte("{\"message\":\"Error whilst converting to concorded json: " + err.Error() + "\"}"))
-		return
-	}
-	concordedJson, err := json.Marshal(uppConcordance)
-	if err != nil {
-		log.Errorf("Error whilst marshalling upp concordance model to json: %s", err)
-		rw.WriteHeader(http.StatusUnprocessableEntity)
-		rw.Write([]byte("{\"message\":\"Error whilst converting to concorded json: " + err.Error() + "\"}"))
-		return
-	}
-	rw.WriteHeader(http.StatusOK)
-	rw.Write(concordedJson)
+	updateStatus, conceptUuid, uppConcordance, err := convertToUppConcordance(smartLogicConcept)
+	log.WithFields(log.Fields{"Transaction Id": tid, "Uuid": conceptUuid}).Info("Processing concordance transformation")
+
+	defer req.Body.Close()
+
+	writeResponse(rw, updateStatus, err, uppConcordance)
+	//concordedJson, err := json.Marshal(uppConcordance)
+	//if err != nil {
+	//	log.Errorf("Error whilst marshalling upp concordance model to json: %s", err)
+	//	rw.WriteHeader(http.StatusUnprocessableEntity)
+	//	rw.Write([]byte("{\"message\":\"Error whilst converting to concorded json: " + err.Error() + "\"}"))
+	//	return
+	//}
+	//rw.WriteHeader(http.StatusOK)
+	//rw.Write(concordedJson)
 	return
 }
 
 func (h *SmartlogicConcordanceTransformerHandler) SendHandler(rw http.ResponseWriter, req *http.Request) {
-	rw.Header().Set("Content-Type", "application/json")
 	tid := transactionidutils.GetTransactionIDFromRequest(req)
+	rw.Header().Set("Content-Type", "application/json")
+	rw.Header().Set("X-Request-Id", tid)
 
-	body, err := ioutil.ReadAll(req.Body)
+	var smartLogicConcept = SmartlogicConcept{}
+	err := json.NewDecoder(req.Body).Decode(&smartLogicConcept)
+
 	if err != nil {
+		fmt.Printf("We got here?\n")
 		log.Errorf("Error %v whilst processing json body", err)
 		rw.WriteHeader(http.StatusBadRequest)
 		rw.Write([]byte("{\"message\":\"Error whilst processing request body:" + err.Error() + "\"}"))
 		return
 	}
 
-	err = h.transformer.handleConcordanceEvent(string(body), tid)
+	updateStatus, conceptUuid, uppConcordance, err := convertToUppConcordance(smartLogicConcept)
 	if err != nil {
-		log.Errorf("Error whilst converting to concorded json: %s", err)
-		rw.WriteHeader(http.StatusUnprocessableEntity)
-		rw.Write([]byte("{\"message\":\"Error whilst processing request body:" + err.Error() + "\"}"))
+		writeResponse(rw, updateStatus, err, uppConcordance)
+	}
+
+	updateStatus, err = h.transformer.makeRelevantRequest(conceptUuid, uppConcordance, tid)
+	if err != nil {
+		writeResponse(rw, updateStatus, err, uppConcordance)
 		return
 	}
+
+
 	rw.WriteHeader(http.StatusOK)
 	rw.Write([]byte("Concordance successfully written to db"))
+
+	defer req.Body.Close()
+	//if err != nil {
+	//	log.Errorf("Error whilst converting to concorded json: %s", err)
+	//	rw.WriteHeader(http.StatusUnprocessableEntity)
+	//	rw.Write([]byte("{\"message\":\"Error whilst processing request body:" + err.Error() + "\"}"))
+	//	return
+	//}
+	//rw.WriteHeader(http.StatusOK)
+	//rw.Write([]byte("Concordance successfully written to db"))
+	return
+}
+
+func writeResponse(rw http.ResponseWriter, updateStatus status, err error, concordance UppConcordance) {
+	enc := json.NewEncoder(rw)
+	if err == nil {
+		fmt.Printf("Status is %s\n", updateStatus)
+		rw.WriteHeader(http.StatusOK)
+		bytes, _:= json.Marshal(concordance)
+		rw.Write(bytes)
+		return
+	}
+	switch updateStatus {
+	case VALID_CONCEPT:
+		if err := enc.Encode(concordance); err != nil {
+			writeJSONError(rw, err.Error(), http.StatusInternalServerError)
+			return
+		}
+	case SYNTACTICALLY_INCORRECT:
+		fmt.Printf("Bad request\n")
+		writeJSONError(rw, err.Error(), http.StatusBadRequest)
+		return
+	case SEMANTICALLY_INCORRECT:
+		writeJSONError(rw, err.Error(), http.StatusUnprocessableEntity)
+		return
+	case DELETED_CONCEPT:
+		writeJSONError(rw, err.Error(), http.StatusNoContent)
+		return
+	default:
+		writeJSONError(rw, err.Error(), http.StatusInternalServerError)
+		return
+	}
+}
+
+func writeJSONError(w http.ResponseWriter, errorMsg string, statusCode int) {
+	w.WriteHeader(statusCode)
+	fmt.Fprintln(w, fmt.Sprintf("{\"message\": \"%s\"}", errorMsg))
 }
 
 func (h *SmartlogicConcordanceTransformerHandler) gtgCheck(rw http.ResponseWriter, req *http.Request) {
@@ -129,8 +185,8 @@ func (h *SmartlogicConcordanceTransformerHandler) RegisterAdminHandlers(router *
 	var checks []fthealth.Check = []fthealth.Check{h.concordanceRwDynamoDbHealthCheck(), h.kafkaHealthCheck()}
 	http.HandleFunc("/__health", fthealth.Handler("ConceptIngester Healthchecks", "Checks for accessing writer", checks...))
 	http.HandleFunc("/__gtg", h.gtgCheck)
-	http.HandleFunc("/__ping", status.PingHandler)
-	http.HandleFunc("/__build-info", status.BuildInfoHandler)
+	http.HandleFunc("/__ping", serviceStatus.PingHandler)
+	http.HandleFunc("/__build-info", serviceStatus.BuildInfoHandler)
 	http.Handle("/", monitoringRouter)
 }
 
@@ -140,7 +196,7 @@ func (h *SmartlogicConcordanceTransformerHandler) kafkaHealthCheck() fthealth.Ch
 		Name:             "Check connectivity to Kafka",
 		PanicGuide:       "https://dewey.ft.com/smartlogic-concordance-transform.html",
 		Severity:         3,
-		TechnicalSummary: `Check that kafka, zookeeper, kafka-proxy are healthy in this cluster; if so restart this service`,
+		TechnicalSummary: `Check that kafka and zookeeper are healthy in this cluster; if so restart this service`,
 		Checker:          h.checkKafkaConnectivity,
 	}
 }
