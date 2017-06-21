@@ -8,18 +8,19 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/pborman/uuid"
 	"bytes"
-	log "github.com/Sirupsen/logrus"
 	"fmt"
+	log "github.com/Sirupsen/logrus"
+	"github.com/pborman/uuid"
 )
 
 var uuidMatcher = regexp.MustCompile("^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$")
+
 type status int
 
 const (
-	THING_URI_PREFIX = "http://www.ft.com/thing/"
-	DELETED_CONCEPT status = iota
+	THING_URI_PREFIX        = "http://www.ft.com/thing/"
+	DELETED_CONCEPT  status = iota
 	SYNTACTICALLY_INCORRECT
 	SEMANTICALLY_INCORRECT
 	VALID_CONCEPT
@@ -27,9 +28,9 @@ const (
 )
 
 type TransformerService struct {
-	topic	string
+	topic         string
 	writerAddress string
-	httpClient 	httpClient
+	httpClient    httpClient
 }
 
 type httpClient interface {
@@ -38,7 +39,7 @@ type httpClient interface {
 
 func NewTransformerService(topic string, writerAddress string, httpClient httpClient) TransformerService {
 	return TransformerService{
-		topic: 		topic,
+		topic:         topic,
 		writerAddress: writerAddress,
 		httpClient:    httpClient,
 	}
@@ -141,7 +142,7 @@ func (ts *TransformerService) makeWriteRequest(uuid string, uppConcordance UppCo
 	}
 	request, err := http.NewRequest("PUT", reqURL, strings.NewReader(string(concordedJson)))
 	if err != nil {
-		return INTERNAL_ERROR, logAndReturnTheError("Failed to create GET request to " + reqURL + " with body " + string(concordedJson), "")
+		return INTERNAL_ERROR, logAndReturnTheError("Failed to create GET request to "+reqURL+" with body "+string(concordedJson), "")
 	}
 	request.ContentLength = -1
 	request.Header.Set("X-Request-Id", tid)
@@ -149,7 +150,7 @@ func (ts *TransformerService) makeWriteRequest(uuid string, uppConcordance UppCo
 	resp, reqErr := ts.httpClient.Do(request)
 	if reqErr != nil {
 		return INTERNAL_ERROR, logAndReturnTheError("Get request resulted in error: %v", reqErr)
-	} else if resp.StatusCode != 200 {
+	} else if resp.StatusCode != 200 && resp.StatusCode != 201 {
 		return status(resp.StatusCode), logAndReturnTheError("Get request returned status: %d", strconv.Itoa(resp.StatusCode))
 	}
 
@@ -171,7 +172,7 @@ func (ts *TransformerService) makeDeleteRequest(uuid string, tid string) (status
 	if reqErr != nil {
 		return INTERNAL_ERROR, logAndReturnTheError("Delete request resulted in error: %v", reqErr)
 	} else if resp.StatusCode != 204 && resp.StatusCode != 404 {
-		return status(resp.StatusCode), logAndReturnTheError("Delete request returned status: %d", strconv.Itoa(resp.StatusCode))
+		return status(resp.StatusCode), logAndReturnTheError("Delete request returned status: %d", resp.StatusCode)
 	}
 	defer resp.Body.Close()
 	return status(resp.StatusCode), nil

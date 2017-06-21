@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"fmt"
 	"github.com/Financial-Times/go-fthealth"
 	"github.com/Financial-Times/http-handlers-go/httphandlers"
 	"github.com/Financial-Times/kafka-client-go/kafka"
@@ -15,7 +16,6 @@ import (
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/rcrowley/go-metrics"
-	"fmt"
 )
 
 type SmartlogicConcordanceTransformerHandler struct {
@@ -79,14 +79,14 @@ func (h *SmartlogicConcordanceTransformerHandler) SendHandler(rw http.ResponseWr
 	}
 
 	updateStatus, err = h.transformer.makeRelevantRequest(conceptUuid, uppConcordance, tid)
+
 	if err != nil {
 		writeResponse(rw, updateStatus, err, uppConcordance)
 		return
 	}
 
-
 	rw.WriteHeader(http.StatusOK)
-	rw.Write([]byte("Concordance successfully written to db"))
+	rw.Write([]byte("{\"message\":\"Concordance record for " + conceptUuid + " forwarded to writer\"}"))
 
 	defer req.Body.Close()
 	return
@@ -96,28 +96,30 @@ func writeResponse(rw http.ResponseWriter, updateStatus status, err error, conco
 	enc := json.NewEncoder(rw)
 	if err == nil {
 		rw.WriteHeader(http.StatusOK)
-		bytes, _:= json.Marshal(concordance)
+		bytes, _ := json.Marshal(concordance)
 		rw.Write(bytes)
 		return
 	}
 	switch updateStatus {
 	case VALID_CONCEPT:
 		if err := enc.Encode(concordance); err != nil {
-			writeJSONError(rw, err.Error(), http.StatusInternalServerError)
+			writeJSONError(rw, err.Error(), http.StatusServiceUnavailable)
 			return
+		} else {
+			rw.WriteHeader(int(updateStatus))
+			rw.Write([]byte(""))
 		}
 	case SYNTACTICALLY_INCORRECT:
-		fmt.Printf("Bad request\n")
 		writeJSONError(rw, err.Error(), http.StatusBadRequest)
 		return
 	case SEMANTICALLY_INCORRECT:
 		writeJSONError(rw, err.Error(), http.StatusUnprocessableEntity)
 		return
 	case DELETED_CONCEPT:
-		writeJSONError(rw, err.Error(), http.StatusNoContent)
+		writeJSONError(rw, "Concordance request forwarded to writer", http.StatusNoContent)
 		return
 	default:
-		writeJSONError(rw, err.Error(), http.StatusInternalServerError)
+		writeJSONError(rw, err.Error(), http.StatusServiceUnavailable)
 		return
 	}
 }
