@@ -82,6 +82,10 @@ func convertToUppConcordance(smartlogicConcepts SmartlogicConcept) (status, stri
 	concordanceIds := make([]string, 0)
 	for _, id := range smartlogicConcept.TmeIdentifiers {
 		uuidFromTmeId, err := validateIdAndConvertToUuid(id.Value)
+		log.Infof("Conc: %v UUID: %v", conceptUuid, uuidFromTmeId)
+		if conceptUuid == uuidFromTmeId {
+			return SYNTACTICALLY_INCORRECT, conceptUuid, UppConcordance{}, logAndReturnTheError("Payload from smartlogic: %s has a smartlogic uuid that is the same as the uuid generated from the TME id", smartlogicConcept)
+		}
 		if err != nil {
 			return SYNTACTICALLY_INCORRECT, conceptUuid, UppConcordance{}, logAndReturnTheError("Bad Request: Concordance id %s is not a valid TME Id", id.Value)
 		}
@@ -89,9 +93,6 @@ func convertToUppConcordance(smartlogicConcepts SmartlogicConcept) (status, stri
 			for _, concordedId := range concordanceIds {
 				if concordedId == uuidFromTmeId {
 					return SYNTACTICALLY_INCORRECT, conceptUuid, UppConcordance{}, logAndReturnTheError("Payload from smartlogic: %s contains duplicate TME id values", smartlogicConcept)
-				}
-				if conceptUuid == uuidFromTmeId {
-					return SYNTACTICALLY_INCORRECT, conceptUuid, UppConcordance{}, logAndReturnTheError("Payload from smartlogic: %s has a smartlogic uuid that is the same as the uuid generated from the TME d", smartlogicConcept)
 				}
 			}
 			concordanceIds = append(concordanceIds, uuidFromTmeId)

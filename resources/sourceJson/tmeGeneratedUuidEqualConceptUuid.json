@@ -1,10 +1,10 @@
 {
   "@graph": [
     {
-      "@id": "http://www.ft.com/thing/cd64fdd3-cbd9-348b-87b0-e1077ec210f2",
+      "@id": "http://www.ft.com/thing/e9f4525a-401f-3b23-a68e-e48f314cdce6",
       "http://www.ft.com/ontology/TMEIdentifier": [
         {
-          "@value": "AbCdEf-gHiJkLMnOpQ-rStUvXyZ-0123456789"
+          "@value": "AbCdEfgHiJkLMnOpQrStUvWxYz-0123456789"
         }
       ]
     }
