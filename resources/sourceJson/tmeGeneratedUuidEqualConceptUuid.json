@@ -1,0 +1,12 @@
+{
+  "@graph": [
+    {
+      "@id": "http://www.ft.com/thing/cd64fdd3-cbd9-348b-87b0-e1077ec210f2",
+      "http://www.ft.com/ontology/TMEIdentifier": [
+        {
+          "@value": "AbCdEf-gHiJkLMnOpQ-rStUvXyZ-0123456789"
+        }
+      ]
+    }
+  ]
+}

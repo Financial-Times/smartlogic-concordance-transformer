@@ -127,11 +127,12 @@ func TestConvertToUppConcordance(t *testing.T) {
 	invalidTmeListInputJson := testStruct{testName: "invalidTmeListInputJson", pathToFile: "../resources/sourceJson/invalidTmeListInput.json", conceptUuid: testUuid, uppConcordance: noConcordance, expectedError: errors.New("is not a valid TME Id")}
 	invalidIdFieldJson := testStruct{testName: "invalidIdFieldJson", pathToFile: "../resources/sourceJson/invalidIdValue.json", conceptUuid: "", uppConcordance: noConcordance, expectedError: errors.New("Missing/invalid @id field")}
 	invalidTmeId := testStruct{testName: "invalidTmeId", pathToFile: "../resources/sourceJson/invalidTmeId.json", conceptUuid: testUuid, uppConcordance: noConcordance, expectedError: errors.New("is not a valid TME Id")}
+	tmeGeneratedUuidEqualConceptUuid := testStruct{testName: "tmeGeneratedUuidEqualConceptUuid", pathToFile: "../resources/sourceJson/tmeGeneratedUuidEqualConceptUuid.json", conceptUuid: "cd64fdd3-cbd9-348b-87b0-e1077ec210f2", uppConcordance: noConcordance, expectedError: errors.New("is not a valid TME Id")}
 	errorOnDuplicateTmeIds := testStruct{testName: "errorOnDuplicateTmeIds", pathToFile: "../resources/sourceJson/duplicateTmeIds.json", conceptUuid: testUuid, uppConcordance: noConcordance, expectedError: errors.New("contains duplicate TME id values")}
 	handlesMultipleTmeIds := testStruct{testName: "handlesMultipleTmeIds", pathToFile: "../resources/sourceJson/multipleTmeIds.json", conceptUuid: testUuid, uppConcordance: multiConcordance, expectedError: nil}
 	handlesNoTmeIds := testStruct{testName: "handlesNoTmeIds", pathToFile: "../resources/sourceJson/noTmeIds.json", conceptUuid: testUuid, uppConcordance: emptyConcordance, expectedError: nil}
 
-	testScenarios := []testStruct{missingRequiredFieldsJson, invalidTmeListInputJson, invalidIdFieldJson, invalidTmeId, errorOnDuplicateTmeIds, handlesMultipleTmeIds, handlesNoTmeIds}
+	testScenarios := []testStruct{missingRequiredFieldsJson, invalidTmeListInputJson, invalidIdFieldJson, invalidTmeId, errorOnDuplicateTmeIds, handlesMultipleTmeIds, handlesNoTmeIds, tmeGeneratedUuidEqualConceptUuid}
 
 	for _, scenario := range testScenarios {
 		var smartLogicConcept = SmartlogicConcept{}

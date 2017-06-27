@@ -90,6 +90,9 @@ func convertToUppConcordance(smartlogicConcepts SmartlogicConcept) (status, stri
 				if concordedId == uuidFromTmeId {
 					return SYNTACTICALLY_INCORRECT, conceptUuid, UppConcordance{}, logAndReturnTheError("Payload from smartlogic: %s contains duplicate TME id values", smartlogicConcept)
 				}
+				if conceptUuid == uuidFromTmeId {
+					return SYNTACTICALLY_INCORRECT, conceptUuid, UppConcordance{}, logAndReturnTheError("Payload from smartlogic: %s has a smartlogic uuid that is the same as the uuid generated from the TME d", smartlogicConcept)
+				}
 			}
 			concordanceIds = append(concordanceIds, uuidFromTmeId)
 		} else {
