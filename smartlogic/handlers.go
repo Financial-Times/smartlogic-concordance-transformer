@@ -43,18 +43,18 @@ func (h *SmartlogicConcordanceTransformerHandler) TransformHandler(rw http.Respo
 	err := json.NewDecoder(req.Body).Decode(&smartLogicConcept)
 
 	if err != nil {
-		log.Errorf("Error whilst processing request body: %s", err)
+		log.WithError(err).WithFields(log.Fields{"trans_id": tid, "UUID": smartLogicConcept.Concepts[0].Id}).Error("Error whilst processing request body")
 		rw.WriteHeader(http.StatusBadRequest)
 		rw.Write([]byte("{\"message\":\"Error whilst processing request body: " + err.Error() + "\"}"))
 		return
 	}
 
 	updateStatus, conceptUuid, uppConcordance, err := convertToUppConcordance(smartLogicConcept)
-	log.WithFields(log.Fields{"Transaction Id": tid, "Uuid": conceptUuid}).Info("Processing concordance transformation")
+	log.WithFields(log.Fields{"trans_id": tid, "UUID": conceptUuid}).Debug("Processing concordance transformation")
 
 	defer req.Body.Close()
 
-	writeResponse(rw, updateStatus, err, uppConcordance)
+	writeResponse(rw, updateStatus, err, uppConcordance, tid)
 	return
 }
 
@@ -67,7 +67,7 @@ func (h *SmartlogicConcordanceTransformerHandler) SendHandler(rw http.ResponseWr
 	err := json.NewDecoder(req.Body).Decode(&smartLogicConcept)
 
 	if err != nil {
-		log.Errorf("Error %v whilst processing json body", err)
+		log.WithError(err).WithFields(log.Fields{"trans_id": tid, "UUID": smartLogicConcept.Concepts[0].Id}).Error("Error whilst processing request body")
 		rw.WriteHeader(http.StatusBadRequest)
 		rw.Write([]byte("{\"message\":\"Error whilst processing request body:" + err.Error() + "\"}"))
 		return
@@ -75,13 +75,13 @@ func (h *SmartlogicConcordanceTransformerHandler) SendHandler(rw http.ResponseWr
 
 	updateStatus, conceptUuid, uppConcordance, err := convertToUppConcordance(smartLogicConcept)
 	if err != nil {
-		writeResponse(rw, updateStatus, err, uppConcordance)
+		writeResponse(rw, updateStatus, err, uppConcordance, tid)
 	}
 
 	updateStatus, err = h.transformer.makeRelevantRequest(conceptUuid, uppConcordance, tid)
 
 	if err != nil {
-		writeResponse(rw, updateStatus, err, uppConcordance)
+		writeResponse(rw, updateStatus, err, uppConcordance, tid)
 		return
 	}
 
@@ -92,34 +92,41 @@ func (h *SmartlogicConcordanceTransformerHandler) SendHandler(rw http.ResponseWr
 	return
 }
 
-func writeResponse(rw http.ResponseWriter, updateStatus status, err error, concordance UppConcordance) {
+func writeResponse(rw http.ResponseWriter, updateStatus status, err error, concordance UppConcordance, tid string) {
 	enc := json.NewEncoder(rw)
 	if err == nil {
 		rw.WriteHeader(http.StatusOK)
 		bytes, _ := json.Marshal(concordance)
 		rw.Write(bytes)
+		log.WithFields(log.Fields{"trans_id": tid, "UUID": concordance.ConceptUuid, "status": int(updateStatus)}).Info("Served concordance request")
 		return
 	}
 	switch updateStatus {
 	case VALID_CONCEPT:
 		if err := enc.Encode(concordance); err != nil {
+			log.WithFields(log.Fields{"trans_id": tid, "UUID": concordance.ConceptUuid, "status": int(updateStatus)}).Error("Unknown backend error")
 			writeJSONError(rw, err.Error(), http.StatusServiceUnavailable)
 			return
 		} else {
+			fmt.Printf("Can we actually get here?\n")
 			rw.WriteHeader(int(updateStatus))
 			rw.Write([]byte(""))
 		}
 	case SYNTACTICALLY_INCORRECT:
+		log.WithError(err).WithFields(log.Fields{"trans_id": tid, "UUID": concordance.ConceptUuid, "status": int(updateStatus)}).Error("Bad request")
 		writeJSONError(rw, err.Error(), http.StatusBadRequest)
 		return
 	case SEMANTICALLY_INCORRECT:
 		writeJSONError(rw, err.Error(), http.StatusUnprocessableEntity)
+		log.WithError(err).WithFields(log.Fields{"trans_id": tid, "UUID": concordance.ConceptUuid, "status": int(updateStatus)}).Error("Bad json")
 		return
 	case DELETED_CONCEPT:
 		writeJSONError(rw, "Concordance request forwarded to writer", http.StatusNoContent)
+		log.WithError(err).WithFields(log.Fields{"trans_id": tid, "UUID": concordance.ConceptUuid, "status": int(updateStatus)}).Error("Concordance record doesnt exist")
 		return
 	default:
 		writeJSONError(rw, err.Error(), http.StatusServiceUnavailable)
+		log.WithError(err).WithFields(log.Fields{"trans_id": tid, "UUID": concordance.ConceptUuid, "status": int(updateStatus)}).Error("Unknown backend error")
 		return
 	}
 }

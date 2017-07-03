@@ -100,8 +100,6 @@ func main() {
 		EnvVar: "LOG_METRICS",
 	})
 
-	log.SetLevel(log.InfoLevel)
-	log.Infof("[Startup] smartlogic-concordance-transformer is starting ")
 	lvl, err := log.ParseLevel(*logLevel)
 	if err != nil {
 		log.Fatalf("Cannot parse log level: %s", *logLevel)
@@ -114,7 +112,7 @@ func main() {
 		"KAFKA_TOPIC":              *topic,
 		"GROUP_NAME":               *groupName,
 		"BROKER_CONNECTION_STRING": *brokerConnectionString,
-	}).Infof("[Startup] smartlogic-concept-transformer is starting ")
+	}).Infof("[Startup] smartlogic-concordance-transformer is starting ")
 
 	app.Action = func() {
 		log.Infof("System code: %s, App Name: %s, Port: %s", *appSystemCode, *appName, *port)
@@ -135,7 +133,7 @@ func main() {
 
 		go func() {
 			if err := http.ListenAndServe(":"+*port, nil); err != nil {
-				log.Fatalf("Unable to start server: %v\n", err)
+				log.WithError(err).Fatal("Unable to start server")
 			}
 		}()
 
