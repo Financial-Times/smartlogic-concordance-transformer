@@ -11,6 +11,7 @@ import (
 	"github.com/Financial-Times/kafka-client-go/kafka"
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
+	"errors"
 )
 
 const (
@@ -55,6 +56,35 @@ func TestAdminHandler_Healthy(t *testing.T) {
 
 }
 
+func TestProcessKafkaMessage(t *testing.T) {
+	mockClient := mockHttpClient{resp: "", statusCode: 200}
+	defaultTransformer := NewTransformerService(TOPIC, WRITER_ADDRESS, &mockClient)
+	h := NewHandler(defaultTransformer, mockConsumer{})
+
+	type testStruct struct {
+		scenarioName       string
+		payload            kafka.FTMessage
+		expectedError      error
+	}
+
+	invalidJsonLd := `{"@graph": [{"@id": "http://www.ft.com/thing/20db1bd6-59f9-4404-adb5-3165a448f8b0"}, {"@id": "http://www.ft.com/thing/20db1bd6-59f9-4404-adb5-3165a448f8b0"}]}`
+	validJsonLdNoConcordance := `{"@graph": [{"@id": "http://www.ft.com/thing/20db1bd6-59f9-4404-adb5-3165a448f8b0"}]}`
+	validJsonLdWithConcordance := `{"@graph": [{"@id": "http://www.ft.com/thing/20db1bd6-59f9-4404-adb5-3165a448f8b0","http://www.ft.com/ontology/TMEIdentifier": [{"@value": "AbCdEfgHiJkLMnOpQrStUvWxYz-0123456789"}]}]}`
+
+	failOnInvalidKafkaMessagePayload := testStruct{scenarioName: "failOnInvalidKafkaMessagePayload", payload: kafka.FTMessage{Body: ""},	expectedError: errors.New("EOF")}
+	failOnInvalidJsonLdInPayload := testStruct{scenarioName: "failOnInvalidJsonLdInPayload", payload: kafka.FTMessage{Body: invalidJsonLd}, expectedError: errors.New("Invalid Request Json: More than 1 concept in smartlogic concept payload which is currently not supported")}
+	failOnWritePayloadToWriter := testStruct{scenarioName: "failOnWritePayloadToWriter", payload: kafka.FTMessage{Body: validJsonLdNoConcordance}, expectedError: errors.New("Internal Error: Delete request to writer returned unexpected status: 200")}
+	successfulRequest := testStruct{scenarioName: "successfulRequest", payload: kafka.FTMessage{Body: validJsonLdWithConcordance}, expectedError: nil}
+
+	scenarios := []testStruct{failOnInvalidKafkaMessagePayload, failOnInvalidJsonLdInPayload, failOnWritePayloadToWriter, successfulRequest}
+
+	for _, scenario := range scenarios {
+		err := h.ProcessKafkaMessage(scenario.payload)
+		assert.Equal(t, scenario.expectedError, err, "Scenario " + scenario.scenarioName + " failed with unexpected error")
+	}
+
+}
+
 func TestTransformAndSendHandlers(t *testing.T) {
 	r := mux.NewRouter()
 	mockClient := mockHttpClient{resp: "", statusCode: 200}
@@ -76,7 +106,7 @@ func TestTransformAndSendHandlers(t *testing.T) {
 	transform_convertsAndReturnsPayload := testStruct{scenarioName: "transform_convertsAndReturnsPayload", filePath: "../resources/sourceJson/multipleTmeIds.json", endpoint: "/transform", expectedStatusCode: 200, expectedResult: "{\"uuid\":\"20db1bd6-59f9-4404-adb5-3165a448f8b0\",\"concordedIds\":[\"e9f4525a-401f-3b23-a68e-e48f314cdce6\",\"83f63c7e-1641-3c7b-81e4-378ae3c6c2ad\",\"e4bc4ac2-0637-3a27-86b1-9589fca6bf2c\",\"e574b21d-9abc-3d82-a6c0-3e08c85181bf\"]}"}
 	send_unprocessibleEntityError := testStruct{scenarioName: "send_unprocessibleEntityError", filePath: "../resources/sourceJson/multipleGraphsInList.json", endpoint: "/transform/send", expectedStatusCode: 422, expectedResult: "Invalid Request Json: More than 1 concept in smartlogic concept payload which is currently not supported"}
 	send_convertingToConcordedJsonError := testStruct{scenarioName: "send_convertingToConcordedJsonError", filePath: "../resources/sourceJson/invalidTmeId.json", endpoint: "/transform/send", expectedStatusCode: 400, expectedResult: "is not a valid TME Id"}
-	send_convertsAndForwardsPayloadWithConcordance := testStruct{scenarioName: "send_convertsAndForwardsPayloadWithConcordance", filePath: "../resources/sourceJson/multipleTmeIds.json", endpoint: "/transform/send", expectedStatusCode: 200, expectedResult: "Concordance record for " + testUuid + " forwarded to writer"}
+	send_convertsAndForwardsPayloadWithConcordance := testStruct{scenarioName: "send_convertsAndForwardsPayloadWithConcordance", filePath: "../resources/sourceJson/multipleTmeIds.json", endpoint: "/transform/send", expectedStatusCode: 200, expectedResult: "{\"uuid\":\"20db1bd6-59f9-4404-adb5-3165a448f8b0\",\"concordedIds\":[\"e9f4525a-401f-3b23-a68e-e48f314cdce6\",\"83f63c7e-1641-3c7b-81e4-378ae3c6c2ad\",\"e4bc4ac2-0637-3a27-86b1-9589fca6bf2c\",\"e574b21d-9abc-3d82-a6c0-3e08c85181bf\"]}"}
 	send_convertsAndFailsForwardToRw := testStruct{scenarioName: "send_convertsAndFailsForwardToRw", filePath: "../resources/sourceJson/noTmeIds.json", endpoint: "/transform/send", expectedStatusCode: 500, expectedResult: "Internal Error: Delete request to writer returned unexpected status:"}
 
 	testScenarios := []testStruct{transform_unprocessibleEntityError, transform_convertingToConcordedJsonError, transform_duplicateTmeIdsError, transform_convertsAndReturnsPayload, send_unprocessibleEntityError, send_convertingToConcordedJsonError, send_convertsAndForwardsPayloadWithConcordance, send_convertsAndFailsForwardToRw}
@@ -106,7 +136,7 @@ func TestSendHandlerSuccessfulDelete(t *testing.T) {
 		expectedResult     string
 	}
 
-	send_convertsAndForwardsPayloadWithoutConcordance := testStruct{scenarioName: "send_convertsAndForwardsPayloadWithoutConcordance", filePath: "../resources/sourceJson/noTmeIds.json", endpoint: "/transform/send", expectedStatusCode: 200, expectedResult: "Concordance record for " + testUuid + " forwarded to writer"}
+	send_convertsAndForwardsPayloadWithoutConcordance := testStruct{scenarioName: "send_convertsAndForwardsPayloadWithoutConcordance", filePath: "../resources/sourceJson/noTmeIds.json", endpoint: "/transform/send", expectedStatusCode: 200, expectedResult: "Concordance record successfuly deleted"}
 
 	testScenarios := []testStruct{send_convertsAndForwardsPayloadWithoutConcordance}
 

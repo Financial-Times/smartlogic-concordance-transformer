@@ -96,9 +96,10 @@ func TestMakeRelevantRequest(t *testing.T) {
 	noConcordance_SuccessfulWrite := testStruct{testName: "noConcordance_SuccessfulWrite", uuid: testUuid, uppConcordance: withConcordance, expectedError: nil, clientResp: "", statusCode: 200, clientErr: nil}
 	noConcordance_WriteError := testStruct{testName: "noConcordance_WriteError", uuid: testUuid, uppConcordance: noConcordance, expectedError: errors.New("Delete request resulted in error"), clientResp: "", statusCode: 200, clientErr: errors.New("Delete request resulted in error")}
 	noConcordance_Status503 := testStruct{testName: "noConcordance_Status503", uuid: testUuid, uppConcordance: noConcordance, expectedError: errors.New("Internal Error: Delete request to writer returned unexpected status:"), clientResp: "", statusCode: 503, clientErr: nil}
+	noConcordance_RecordNotFound := testStruct{testName: "noConcordance_RecordNotFound", uuid: testUuid, uppConcordance: noConcordance, expectedError: nil, clientResp: "", statusCode: 204, clientErr: nil}
 	noConcordance_SuccessfulDelete := testStruct{testName: "noConcordance_SuccessfulDelete", uuid: testUuid, uppConcordance: noConcordance, expectedError: nil, clientResp: "", statusCode: 404, clientErr: nil}
 
-	testScenarios := []testStruct{concordanceFound_WriteError, concordanceFound_Status503, noConcordance_SuccessfulWrite, noConcordance_WriteError, noConcordance_Status503, noConcordance_SuccessfulDelete}
+	testScenarios := []testStruct{concordanceFound_WriteError, concordanceFound_Status503, noConcordance_SuccessfulWrite, noConcordance_WriteError, noConcordance_Status503, noConcordance_SuccessfulDelete, noConcordance_RecordNotFound}
 
 	for _, scenario := range testScenarios {
 		ts := NewTransformerService("", writerUrl, mockHttpClient{resp: scenario.clientResp, statusCode: scenario.statusCode, err: scenario.clientErr})

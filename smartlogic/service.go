@@ -19,7 +19,7 @@ type status int
 
 const (
 	THING_URI_PREFIX        = "http://www.ft.com/thing/"
-	DELETED_CONCEPT  status = iota
+	NOT_FOUND  status = iota
 	SYNTACTICALLY_INCORRECT
 	SEMANTICALLY_INCORRECT
 	VALID_CONCEPT
@@ -52,7 +52,7 @@ func (ts *TransformerService) handleConcordanceEvent(msgBody string, tid string)
 	err := decoder.Decode(&smartLogicConcept)
 	if err != nil {
 		log.WithError(err).WithField("transaction_id", tid).Error("Failed to decode Kafka payload")
-		return errors.New("")
+		return err
 	}
 	_, conceptUuid, uppConcordance, err := convertToUppConcordance(smartLogicConcept, tid)
 	if err != nil {
@@ -146,6 +146,7 @@ func (ts *TransformerService) makeRelevantRequest(uuid string, uppConcordance Up
 		log.WithFields(log.Fields{"transaction_id": tid, "UUID": uuid}).Debug("No concordance found; making delete request")
 		reqStatus, err = ts.makeDeleteRequest(uuid, tid)
 	}
+
 	return reqStatus, err
 }
 
@@ -202,7 +203,7 @@ func (ts *TransformerService) makeDeleteRequest(uuid string, tid string) (status
 	if resp.StatusCode == 204 {
 		return NO_CONTENT, nil
 	}
-	return DELETED_CONCEPT, nil
+	return NOT_FOUND, nil
 }
 
 func extractUuid(url string) string {

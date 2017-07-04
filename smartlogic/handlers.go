@@ -50,11 +50,11 @@ func (h *SmartlogicConcordanceTransformerHandler) TransformHandler(rw http.Respo
 	}
 
 	log.WithField("transaction_id", tid).Debug("Processing concordance transformation")
-	updateStatus, _, uppConcordance, err := convertToUppConcordance(smartLogicConcept, tid)
+	updateStatus, conceptUuid, uppConcordance, err := convertToUppConcordance(smartLogicConcept, tid)
 
 	defer req.Body.Close()
 
-	writeResponse(rw, updateStatus, err, uppConcordance, tid)
+	writeResponse(rw, updateStatus, err, uppConcordance, conceptUuid, tid)
 	return
 }
 
@@ -74,31 +74,36 @@ func (h *SmartlogicConcordanceTransformerHandler) SendHandler(rw http.ResponseWr
 
 	updateStatus, conceptUuid, uppConcordance, err := convertToUppConcordance(smartLogicConcept, tid)
 	if err != nil {
-		writeResponse(rw, updateStatus, err, uppConcordance, tid)
+		writeResponse(rw, updateStatus, err, uppConcordance, conceptUuid, tid)
 	}
 
 	updateStatus, err = h.transformer.makeRelevantRequest(conceptUuid, uppConcordance, tid)
 
-	if err != nil {
-		writeResponse(rw, updateStatus, err, uppConcordance, tid)
-		return
-	}
-
-	rw.WriteHeader(http.StatusOK)
-	rw.Write([]byte("{\"message\":\"Concordance record for " + conceptUuid + " forwarded to writer\"}"))
-
+	writeResponse(rw, updateStatus, err, uppConcordance, conceptUuid, tid)
 	defer req.Body.Close()
 	return
 }
 
-func writeResponse(rw http.ResponseWriter, updateStatus status, err error, concordance UppConcordance, tid string) {
+func writeResponse(rw http.ResponseWriter, updateStatus status, err error, concordance UppConcordance, uuid string, tid string) {
 	enc := json.NewEncoder(rw)
 	if err == nil {
 		rw.WriteHeader(http.StatusOK)
-		bytes, _ := json.Marshal(concordance)
-		rw.Write(bytes)
-		log.WithFields(log.Fields{"transaction_id": tid, "UUID": concordance.ConceptUuid, "status": http.StatusOK}).Info("Served concordance request")
-		return
+		var logMsg string
+		if updateStatus == NO_CONTENT {
+			logMsg = "Concordance record successfuly deleted"
+			rw.Write([]byte("{\"message\":\"" + logMsg + "\"}"))
+			return
+		} else if updateStatus == NOT_FOUND {
+			logMsg = "Concordance record successfuly deleted"
+			rw.Write([]byte("{\"message\":\"" + logMsg + "\"}"))
+			return
+		} else if updateStatus == VALID_CONCEPT {
+			logMsg = "Concordance successfully written to db"
+			bytes, _ := json.Marshal(concordance)
+			rw.Write(bytes)
+			return
+		}
+		log.WithFields(log.Fields{"transaction_id": tid, "UUID": uuid, "status": http.StatusOK}).Info(logMsg)
 	}
 	switch updateStatus {
 	case VALID_CONCEPT:
@@ -112,14 +117,6 @@ func writeResponse(rw http.ResponseWriter, updateStatus status, err error, conco
 	case SEMANTICALLY_INCORRECT:
 		writeJSONError(rw, err.Error(), http.StatusUnprocessableEntity)
 		return
-	case NO_CONTENT:
-		rw.WriteHeader(http.StatusNoContent)
-		rw.Write([]byte("{\"message\":\"Concordance record forwarded to writer\"}"))
-		return
-	case DELETED_CONCEPT:
-		rw.WriteHeader(http.StatusNotFound)
-		rw.Write([]byte("{\"message\":\"Concordance record forwarded to writer\"}"))
-		return
 	case SERVICE_UNAVAILABLE:
 		writeJSONError(rw, err.Error(), http.StatusServiceUnavailable)
 		return
@@ -127,7 +124,7 @@ func writeResponse(rw http.ResponseWriter, updateStatus status, err error, conco
 		writeJSONError(rw, err.Error(), http.StatusInternalServerError)
 		return
 	default:
-		writeJSONError(rw, err.Error(), http.StatusInternalServerError)
+		writeJSONError(rw, "Unknown error", http.StatusInternalServerError)
 		return
 	}
 }
