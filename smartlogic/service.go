@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"bytes"
+	"fmt"
 	log "github.com/Sirupsen/logrus"
 	"github.com/pborman/uuid"
 	"strconv"
@@ -19,7 +20,7 @@ type status int
 
 const (
 	THING_URI_PREFIX        = "http://www.ft.com/thing/"
-	NOT_FOUND  status = iota
+	NOT_FOUND        status = iota
 	SYNTACTICALLY_INCORRECT
 	SEMANTICALLY_INCORRECT
 	VALID_CONCEPT
@@ -47,6 +48,7 @@ func NewTransformerService(topic string, writerAddress string, httpClient httpCl
 }
 
 func (ts *TransformerService) handleConcordanceEvent(msgBody string, tid string) error {
+	log.WithField("transaction_id", tid).Debug("Processing message with body: " + msgBody)
 	var smartLogicConcept = SmartlogicConcept{}
 	decoder := json.NewDecoder(bytes.NewBufferString(msgBody))
 	err := decoder.Decode(&smartLogicConcept)
@@ -62,6 +64,7 @@ func (ts *TransformerService) handleConcordanceEvent(msgBody string, tid string)
 	if err != nil {
 		return err
 	}
+	log.WithFields(log.Fields{"transaction_id": tid, "UUID": conceptUuid}).Info("Forwarded concordance record to rw")
 	return nil
 }
 
@@ -114,6 +117,7 @@ func convertToUppConcordance(smartlogicConcepts SmartlogicConcept, tid string) (
 	uppConcordance := UppConcordance{}
 	uppConcordance.ConceptUuid = conceptUuid
 	uppConcordance.ConcordedIds = concordanceIds
+	log.WithFields(log.Fields{"transaction_id": tid, "UUID": conceptUuid}).Debug(fmt.Sprintf("Concordance record is: %s", uppConcordance))
 	return VALID_CONCEPT, conceptUuid, uppConcordance, nil
 }
 
@@ -159,7 +163,7 @@ func (ts *TransformerService) makeWriteRequest(uuid string, uppConcordance UppCo
 	}
 	request, err := http.NewRequest("PUT", reqURL, strings.NewReader(string(concordedJson)))
 	if err != nil {
-		log.WithError(err).WithFields(log.Fields{"transaction_id": tid, "UUID": uuid}).Error("Internal Error: Failed to create GET request to "+reqURL+" with body " + string(concordedJson))
+		log.WithError(err).WithFields(log.Fields{"transaction_id": tid, "UUID": uuid}).Error("Internal Error: Failed to create GET request to " + reqURL + " with body " + string(concordedJson))
 		return INTERNAL_ERROR, err
 	}
 	request.ContentLength = -1
