@@ -44,10 +44,10 @@ func TestValidateIdAndConvertToUuid(t *testing.T) {
 		expectedError error
 	}
 
-	invalidTmeIdHasNoHyphen := testStruct{testName: "invalidTmeId", tmeId: "YzhlNzZkYTctMDJiNy00NTViLTk3NmYtNmJjYTE5NDEyM2Yw", expectedUuid: "", expectedError: errors.New("YzhlNzZkYTctMDJiNy00NTViLTk3NmYtNmJjYTE5NDEyM2Yw is not a valid TME Id")}
-	invalidTmeIdHasNoTaxonomy := testStruct{testName: "invalidTmeIdHasNoTaxonomy", tmeId: "YzhlNzZkYTctMDJiNy00NTViLTk3NmYtNm-", expectedUuid: "", expectedError: errors.New("YzhlNzZkYTctMDJiNy00NTViLTk3NmYtNm- is not a valid TME Id")}
-	invalidTmeIdHasNoValue := testStruct{testName: "invalidTmeIdHasNoValue", tmeId: "-JjYTE5NDEyM2Yw", expectedUuid: "", expectedError: errors.New("-JjYTE5NDEyM2Yw is not a valid TME Id")}
-	invalidTmeIdHasTooManyParts := testStruct{testName: "invalidTmeIdHasTooManyParts", tmeId: "YzhlNzZkYTctMDJi-Ny00NTViLTk3NmYtNm-JjYTE5NDEyM2Yw", expectedUuid: "", expectedError: errors.New("YzhlNzZkYTctMDJi-Ny00NTViLTk3NmYtNm-JjYTE5NDEyM2Yw is not a valid TME Id")}
+	invalidTmeIdHasNoHyphen := testStruct{testName: "invalidTmeId", tmeId: "YzhlNzZkYTctMDJiNy00NTViLTk3NmYtNmJjYTE5NDEyM2Yw", expectedUuid: "", expectedError: errors.New("Bad Request: Concordance id YzhlNzZkYTctMDJiNy00NTViLTk3NmYtNmJjYTE5NDEyM2Yw is not a valid TME Id")}
+	invalidTmeIdHasNoTaxonomy := testStruct{testName: "invalidTmeIdHasNoTaxonomy", tmeId: "YzhlNzZkYTctMDJiNy00NTViLTk3NmYtNm-", expectedUuid: "", expectedError: errors.New("Bad Request: Concordance id YzhlNzZkYTctMDJiNy00NTViLTk3NmYtNm- is not a valid TME Id")}
+	invalidTmeIdHasNoValue := testStruct{testName: "invalidTmeIdHasNoValue", tmeId: "-JjYTE5NDEyM2Yw", expectedUuid: "", expectedError: errors.New("Bad Request: Concordance id -JjYTE5NDEyM2Yw is not a valid TME Id")}
+	invalidTmeIdHasTooManyParts := testStruct{testName: "invalidTmeIdHasTooManyParts", tmeId: "YzhlNzZkYTctMDJi-Ny00NTViLTk3NmYtNm-JjYTE5NDEyM2Yw", expectedUuid: "", expectedError: errors.New("Bad Request: Concordance id YzhlNzZkYTctMDJi-Ny00NTViLTk3NmYtNm-JjYTE5NDEyM2Yw is not a valid TME Id")}
 	validTmeIdIsConverted := testStruct{testName: "validTmeIdIsConverted", tmeId: "YzhlNzZkYTctMDJiNy00NTViLTk3NmYtNmJ-jYTE5NDEyM2Yw", expectedUuid: "a50ffd61-e9da-3c71-85ad-81ce983bcbf6", expectedError: nil}
 
 	testScenarios := []testStruct{invalidTmeIdHasNoHyphen, invalidTmeIdHasNoTaxonomy, invalidTmeIdHasNoValue, invalidTmeIdHasTooManyParts, validTmeIdIsConverted}
@@ -91,11 +91,11 @@ func TestMakeRelevantRequest(t *testing.T) {
 		clientErr      error
 	}
 
-	concordanceFound_WriteError := testStruct{testName: "concordanceFound_WriteError", uuid: testUuid, uppConcordance: withConcordance, expectedError: errors.New("Get request resulted in error"), clientResp: "", statusCode: 200, clientErr: errors.New("Error")}
-	concordanceFound_Status503 := testStruct{testName: "concordanceFound_Status503", uuid: testUuid, uppConcordance: withConcordance, expectedError: errors.New("Get request returned status"), clientResp: "", statusCode: 503, clientErr: nil}
+	concordanceFound_WriteError := testStruct{testName: "concordanceFound_WriteError", uuid: testUuid, uppConcordance: withConcordance, expectedError: errors.New("Get request resulted in error"), clientResp: "", statusCode: 200, clientErr: errors.New("Get request resulted in error")}
+	concordanceFound_Status503 := testStruct{testName: "concordanceFound_Status503", uuid: testUuid, uppConcordance: withConcordance, expectedError: errors.New("Internal Error: Get request to writer returned unexpected status:"), clientResp: "", statusCode: 503, clientErr: nil}
 	noConcordance_SuccessfulWrite := testStruct{testName: "noConcordance_SuccessfulWrite", uuid: testUuid, uppConcordance: withConcordance, expectedError: nil, clientResp: "", statusCode: 200, clientErr: nil}
-	noConcordance_WriteError := testStruct{testName: "noConcordance_WriteError", uuid: testUuid, uppConcordance: noConcordance, expectedError: errors.New("Delete request resulted in error"), clientResp: "", statusCode: 200, clientErr: errors.New("Error")}
-	noConcordance_Status503 := testStruct{testName: "noConcordance_Status503", uuid: testUuid, uppConcordance: noConcordance, expectedError: errors.New("Delete request returned status"), clientResp: "", statusCode: 503, clientErr: nil}
+	noConcordance_WriteError := testStruct{testName: "noConcordance_WriteError", uuid: testUuid, uppConcordance: noConcordance, expectedError: errors.New("Delete request resulted in error"), clientResp: "", statusCode: 200, clientErr: errors.New("Delete request resulted in error")}
+	noConcordance_Status503 := testStruct{testName: "noConcordance_Status503", uuid: testUuid, uppConcordance: noConcordance, expectedError: errors.New("Internal Error: Delete request to writer returned unexpected status:"), clientResp: "", statusCode: 503, clientErr: nil}
 	noConcordance_SuccessfulDelete := testStruct{testName: "noConcordance_SuccessfulDelete", uuid: testUuid, uppConcordance: noConcordance, expectedError: nil, clientResp: "", statusCode: 404, clientErr: nil}
 
 	testScenarios := []testStruct{concordanceFound_WriteError, concordanceFound_Status503, noConcordance_SuccessfulWrite, noConcordance_WriteError, noConcordance_Status503, noConcordance_SuccessfulDelete}
@@ -139,7 +139,7 @@ func TestConvertToUppConcordance(t *testing.T) {
 		var smartLogicConcept = SmartlogicConcept{}
 		decoder := json.NewDecoder(bytes.NewBufferString(readFile(t, scenario.pathToFile)))
 		err := decoder.Decode(&smartLogicConcept)
-		_, uuid, uppConconcordance, err := convertToUppConcordance(smartLogicConcept)
+		_, uuid, uppConconcordance, err := convertToUppConcordance(smartLogicConcept, "transaction_id")
 		assert.Equal(t, scenario.conceptUuid, uuid, "Scenario: "+scenario.testName+" failed")
 		assert.Equal(t, scenario.uppConcordance, uppConconcordance, "Scenario: "+scenario.testName+" failed. Json output does not match")
 		if scenario.expectedError != nil {

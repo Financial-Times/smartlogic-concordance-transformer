@@ -5,13 +5,12 @@ import (
 	"errors"
 	"net/http"
 	"regexp"
-	"strconv"
 	"strings"
 
 	"bytes"
-	"fmt"
 	log "github.com/Sirupsen/logrus"
 	"github.com/pborman/uuid"
+	"strconv"
 )
 
 var uuidMatcher = regexp.MustCompile("^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$")
@@ -25,6 +24,8 @@ const (
 	SEMANTICALLY_INCORRECT
 	VALID_CONCEPT
 	INTERNAL_ERROR
+	SERVICE_UNAVAILABLE
+	NO_CONTENT
 )
 
 type TransformerService struct {
@@ -50,10 +51,10 @@ func (ts *TransformerService) handleConcordanceEvent(msgBody string, tid string)
 	decoder := json.NewDecoder(bytes.NewBufferString(msgBody))
 	err := decoder.Decode(&smartLogicConcept)
 	if err != nil {
-		log.WithError(err).Error("Failed to decode Kafka payload")
+		log.WithError(err).WithField("transaction_id", tid).Error("Failed to decode Kafka payload")
 		return errors.New("")
 	}
-	_, conceptUuid, uppConcordance, err := convertToUppConcordance(smartLogicConcept)
+	_, conceptUuid, uppConcordance, err := convertToUppConcordance(smartLogicConcept, tid)
 	if err != nil {
 		return err
 	}
@@ -64,35 +65,45 @@ func (ts *TransformerService) handleConcordanceEvent(msgBody string, tid string)
 	return nil
 }
 
-func convertToUppConcordance(smartlogicConcepts SmartlogicConcept) (status, string, UppConcordance, error) {
+func convertToUppConcordance(smartlogicConcepts SmartlogicConcept, tid string) (status, string, UppConcordance, error) {
 	if len(smartlogicConcepts.Concepts) == 0 {
-		return SEMANTICALLY_INCORRECT, "", UppConcordance{}, logAndReturnTheError("Bad Request: Missing/invalid @graph field", smartlogicConcepts)
+		err := errors.New("Invalid Request Json: Missing/invalid @graph field")
+		log.WithField("transaction_id", tid).Error(err)
+		return SEMANTICALLY_INCORRECT, "", UppConcordance{}, err
 	}
 	if len(smartlogicConcepts.Concepts) > 1 {
-		return SEMANTICALLY_INCORRECT, "", UppConcordance{}, logAndReturnTheError("Bad Request: More than 1 concept in smartlogic concept payload which is currently not supported", "")
+		err := errors.New("Invalid Request Json: More than 1 concept in smartlogic concept payload which is currently not supported")
+		log.WithField("transaction_id", tid).Error(err)
+		return SEMANTICALLY_INCORRECT, "", UppConcordance{}, err
 	}
 
 	smartlogicConcept := smartlogicConcepts.Concepts[0]
 
 	conceptUuid := extractUuid(smartlogicConcept.Id)
 	if conceptUuid == "" {
-		return SEMANTICALLY_INCORRECT, conceptUuid, UppConcordance{}, logAndReturnTheError("Bad Request: Missing/invalid @id field", smartlogicConcepts)
+		err := errors.New("Invalid Request Json: Missing/invalid @id field")
+		log.WithFields(log.Fields{"transaction_id": tid, "UUID": conceptUuid}).Error(err)
+		return SEMANTICALLY_INCORRECT, conceptUuid, UppConcordance{}, err
 	}
 
 	concordanceIds := make([]string, 0)
 	for _, id := range smartlogicConcept.TmeIdentifiers {
 		uuidFromTmeId, err := validateIdAndConvertToUuid(id.Value)
-		log.Infof("Conc: %v UUID: %v", conceptUuid, uuidFromTmeId)
 		if conceptUuid == uuidFromTmeId {
-			return SYNTACTICALLY_INCORRECT, conceptUuid, UppConcordance{}, logAndReturnTheError("Payload from smartlogic: %s has a smartlogic uuid that is the same as the uuid generated from the TME id", smartlogicConcept)
+			err := errors.New("Bad Request: Payload from smartlogic has a smartlogic uuid that is the same as the uuid generated from the TME id")
+			log.WithFields(log.Fields{"transaction_id": tid, "UUID": conceptUuid}).Error(err)
+			return SYNTACTICALLY_INCORRECT, conceptUuid, UppConcordance{}, err
 		}
 		if err != nil {
-			return SYNTACTICALLY_INCORRECT, conceptUuid, UppConcordance{}, logAndReturnTheError("Bad Request: Concordance id %s is not a valid TME Id", id.Value)
+			log.WithFields(log.Fields{"transaction_id": tid, "UUID": conceptUuid}).Error(err)
+			return SYNTACTICALLY_INCORRECT, conceptUuid, UppConcordance{}, err
 		}
 		if len(concordanceIds) > 0 {
 			for _, concordedId := range concordanceIds {
 				if concordedId == uuidFromTmeId {
-					return SYNTACTICALLY_INCORRECT, conceptUuid, UppConcordance{}, logAndReturnTheError("Payload from smartlogic: %s contains duplicate TME id values", smartlogicConcept)
+					err := errors.New("Bad Request: Payload from smartlogic contains duplicate TME id values")
+					log.WithFields(log.Fields{"transaction_id": tid, "UUID": conceptUuid}).Error(err)
+					return SYNTACTICALLY_INCORRECT, conceptUuid, UppConcordance{}, err
 				}
 			}
 			concordanceIds = append(concordanceIds, uuidFromTmeId)
@@ -109,7 +120,7 @@ func convertToUppConcordance(smartlogicConcepts SmartlogicConcept) (status, stri
 func validateIdAndConvertToUuid(tmeId string) (string, error) {
 	subStrings := strings.Split(tmeId, "-")
 	if len(subStrings) != 2 || validateSubstrings(subStrings) == true {
-		return "", errors.New(tmeId + " is not a valid TME Id")
+		return "", errors.New("Bad Request: Concordance id " + tmeId + " is not a valid TME Id")
 	} else {
 		return uuid.NewMD5(uuid.UUID{}, []byte(tmeId)).String(), nil
 	}
@@ -129,10 +140,10 @@ func (ts *TransformerService) makeRelevantRequest(uuid string, uppConcordance Up
 	var err error
 	var reqStatus status
 	if len(uppConcordance.ConcordedIds) > 0 {
-		log.WithFields(log.Fields{"Transaction Id": tid, "uuid": uuid}).Info("Concordance found; forwarding request to writer")
+		log.WithFields(log.Fields{"transaction_id": tid, "UUID": uuid}).Debug("Concordance found; forwarding request to writer")
 		reqStatus, err = ts.makeWriteRequest(uuid, uppConcordance, tid)
 	} else {
-		log.WithFields(log.Fields{"Transaction Id": tid, "uuid": uuid}).Info("No concordance found; making delete request")
+		log.WithFields(log.Fields{"transaction_id": tid, "UUID": uuid}).Debug("No concordance found; making delete request")
 		reqStatus, err = ts.makeDeleteRequest(uuid, tid)
 	}
 	return reqStatus, err
@@ -142,44 +153,56 @@ func (ts *TransformerService) makeWriteRequest(uuid string, uppConcordance UppCo
 	reqURL := ts.writerAddress + "concordances/" + uuid
 	concordedJson, err := json.Marshal(uppConcordance)
 	if err != nil {
-		return SYNTACTICALLY_INCORRECT, logAndReturnTheError("Error whilst marshalling upp concordance model to json: %s", err)
+		log.WithError(err).WithFields(log.Fields{"transaction_id": tid, "UUID": uuid}).Error("Bad Request: Could not unmarshall concordance json")
+		return SYNTACTICALLY_INCORRECT, err
 	}
 	request, err := http.NewRequest("PUT", reqURL, strings.NewReader(string(concordedJson)))
 	if err != nil {
-		return INTERNAL_ERROR, logAndReturnTheError("Failed to create GET request to "+reqURL+" with body "+string(concordedJson), "")
+		log.WithError(err).WithFields(log.Fields{"transaction_id": tid, "UUID": uuid}).Error("Internal Error: Failed to create GET request to "+reqURL+" with body " + string(concordedJson))
+		return INTERNAL_ERROR, err
 	}
 	request.ContentLength = -1
 	request.Header.Set("X-Request-Id", tid)
 
-	resp, reqErr := ts.httpClient.Do(request)
-	if reqErr != nil {
-		return INTERNAL_ERROR, logAndReturnTheError("Get request resulted in error: %v", reqErr)
+	resp, err := ts.httpClient.Do(request)
+	if err != nil {
+		log.WithError(err).WithFields(log.Fields{"transaction_id": tid, "UUID": uuid}).Error("Service Unavailable: Get request to writer resulted in error")
+		return SERVICE_UNAVAILABLE, err
 	} else if resp.StatusCode != 200 && resp.StatusCode != 201 {
-		return status(resp.StatusCode), logAndReturnTheError("Get request returned status: %d", strconv.Itoa(resp.StatusCode))
+		err := errors.New("Internal Error: Get request to writer returned unexpected status: " + strconv.Itoa(resp.StatusCode))
+		log.WithFields(log.Fields{"transaction_id": tid, "UUID": uuid, "status": resp.StatusCode}).Error(err)
+		return INTERNAL_ERROR, err
 	}
 
 	defer resp.Body.Close()
-	return status(resp.StatusCode), nil
+	return VALID_CONCEPT, nil
 }
 
 func (ts *TransformerService) makeDeleteRequest(uuid string, tid string) (status, error) {
 	reqURL := ts.writerAddress + "concordances/" + uuid
 	request, err := http.NewRequest("DELETE", reqURL, strings.NewReader(""))
 	if err != nil {
-		return INTERNAL_ERROR, logAndReturnTheError("Failed to create Delete request to %s", reqURL)
+		log.WithError(err).WithFields(log.Fields{"transaction_id": tid, "UUID": uuid}).Error("Internal Error: Failed to create DELETE request to " + reqURL)
+		return INTERNAL_ERROR, err
 	}
 	request.ContentLength = -1
 	request.Header.Set("X-Request-Id", tid)
 
-	resp, reqErr := ts.httpClient.Do(request)
+	resp, err := ts.httpClient.Do(request)
 
-	if reqErr != nil {
-		return INTERNAL_ERROR, logAndReturnTheError("Delete request resulted in error: %v", reqErr)
+	if err != nil {
+		log.WithError(err).WithFields(log.Fields{"transaction_id": tid, "UUID": uuid}).Error("Service Unavailable: Delete request to writer resulted in error")
+		return SERVICE_UNAVAILABLE, err
 	} else if resp.StatusCode != 204 && resp.StatusCode != 404 {
-		return status(resp.StatusCode), logAndReturnTheError("Delete request returned status: %d", resp.StatusCode)
+		err := errors.New("Internal Error: Delete request to writer returned unexpected status: " + strconv.Itoa(resp.StatusCode))
+		log.WithFields(log.Fields{"transaction_id": tid, "UUID": uuid, "status": resp.StatusCode}).Error(err)
+		return INTERNAL_ERROR, err
 	}
 	defer resp.Body.Close()
-	return status(resp.StatusCode), nil
+	if resp.StatusCode == 204 {
+		return NO_CONTENT, nil
+	}
+	return DELETED_CONCEPT, nil
 }
 
 func extractUuid(url string) string {
@@ -191,16 +214,4 @@ func extractUuid(url string) string {
 		return extractedUuid
 	}
 	return ""
-}
-
-func logAndReturnTheError(message string, variable interface{}) error {
-	if variable == "" {
-		simpleErr := errors.New(message)
-		log.WithError(simpleErr)
-		return simpleErr
-	} else {
-		err := fmt.Errorf(message, variable)
-		log.WithError(err)
-		return err
-	}
 }

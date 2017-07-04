@@ -6,7 +6,7 @@
 
 ## Introduction
 
-This service will listen to Kafka for a notification of a change made in Smartlogic, verify whether the change concerns concordance, convert the JSON-LD in the message to a normalised UPP view of a concordance and finally send the JSON to the concordance-rw-dynamo.
+This service will listen to Kafka for a notification of a change made in Smartlogic, verify whether the change concerns concordance, convert the JSON-LD in the message to a normalised UPP view of a concordance and finally send the JSON to the concordances-rw-dynamo.
 
 ## Installation
 
@@ -54,7 +54,7 @@ This endpoint is for testing and help ongoing support. This endpoint only transf
 
 Using curl:
 
-    curl -X POST -i https://user:pass@pub-prod-up.ft.com/__smartlogic-concordance-transformer/transform/send --d @payload.txt --header "Content-Type:application/json"
+    curl -X POST -i https://{user:pass}@{env}-up.ft.com/__smartlogic-concordance-transformer/transform/send --d @payload.txt --header "Content-Type:application/json"
 
 Payload.txt:
 
@@ -145,7 +145,7 @@ Transforms smartlogic payload into the upp representation of concordance and sen
 
 Using curl:
 
-    curl -X POST -i https://user:pass@pub-prod-up.ft.com/__smartlogic-concordance-transformer/transform/send --d @payload.txt --header "Content-Type:application/json"
+    curl -X POST -i https://{user:pass}@{env}-up.ft.com/__smartlogic-concordance-transformer/transform/send --d @payload.txt --header "Content-Type:application/json"
 
 Payload.txt:
 
@@ -230,6 +230,7 @@ Admin endpoints are:
 There are several checks performed:
 
 * Checks that a connection can be made to the concordances-rw-s3 service
+* Due to limitation with currently kafka version the current kafka healthcheck will always return 200
 
 ### Logging
 
