@@ -133,7 +133,7 @@ func TestSendHandlerSuccessfulDelete(t *testing.T) {
 	r.ServeHTTP(rec, newRequest("POST", "/transform/send", readFile(t, "../resources/sourceJson/noTmeIds.json")))
 	assert.Equal(t, 200, rec.Code, "Unexpected status code")
 	assert.Equal(t, rec.HeaderMap["Content-Type"], []string{"application/json"}, "Unexpected Content-Type")
-	assert.Contains(t, rec.Body.String(), "Concordance record not found", "Request had unexpected result")
+	assert.Contains(t, rec.Body.String(), "Concordance record successfuly deleted", "Request had unexpected result")
 }
 
 func TestSendHandlerRecordNotFound(t *testing.T) {
@@ -148,7 +148,7 @@ func TestSendHandlerRecordNotFound(t *testing.T) {
 	r.ServeHTTP(rec, newRequest("POST", "/transform/send", readFile(t, "../resources/sourceJson/noTmeIds.json")))
 	assert.Equal(t, 200, rec.Code, "Unexpected status code")
 	assert.Equal(t, rec.HeaderMap["Content-Type"], []string{"application/json"}, "Unexpected Content-Type")
-	assert.Contains(t, rec.Body.String(), "Concordance record successfuly deleted", "Request had unexpected result")
+	assert.Contains(t, rec.Body.String(), "Concordance record not found", "Request had unexpected result")
 }
 
 func TestSendHandlerUnavailableWriter(t *testing.T) {
