@@ -90,27 +90,25 @@ func writeResponse(rw http.ResponseWriter, updateStatus status, err error, conco
 		rw.WriteHeader(http.StatusOK)
 		var logMsg string
 		if updateStatus == NO_CONTENT {
-			logMsg = "Concordance record successfuly deleted"
+			logMsg = "Concordance record not found"
 			rw.Write([]byte("{\"message\":\"" + logMsg + "\"}"))
-			return
 		} else if updateStatus == NOT_FOUND {
 			logMsg = "Concordance record successfuly deleted"
 			rw.Write([]byte("{\"message\":\"" + logMsg + "\"}"))
-			return
 		} else if updateStatus == VALID_CONCEPT {
 			logMsg = "Concordance successfully written to db"
 			bytes, _ := json.Marshal(concordance)
+			if err := enc.Encode(concordance); err != nil {
+				logMsg = "Concordance record could not be returned"
+				writeJSONError(rw, err.Error(), http.StatusInternalServerError)
+				return
+			}
 			rw.Write(bytes)
-			return
 		}
 		log.WithFields(log.Fields{"transaction_id": tid, "UUID": uuid, "status": http.StatusOK}).Info(logMsg)
+		return
 	}
 	switch updateStatus {
-	case VALID_CONCEPT:
-		if err := enc.Encode(concordance); err != nil {
-			writeJSONError(rw, err.Error(), http.StatusInternalServerError)
-			return
-		}
 	case SYNTACTICALLY_INCORRECT:
 		writeJSONError(rw, err.Error(), http.StatusBadRequest)
 		return

@@ -128,26 +128,42 @@ func TestSendHandlerSuccessfulDelete(t *testing.T) {
 	h := NewHandler(defaultTransformer, mockConsumer{})
 	h.RegisterHandlers(r)
 
-	type testStruct struct {
-		scenarioName       string
-		filePath           string
-		endpoint           string
-		expectedStatusCode int
-		expectedResult     string
-	}
 
-	send_convertsAndForwardsPayloadWithoutConcordance := testStruct{scenarioName: "send_convertsAndForwardsPayloadWithoutConcordance", filePath: "../resources/sourceJson/noTmeIds.json", endpoint: "/transform/send", expectedStatusCode: 200, expectedResult: "Concordance record successfuly deleted"}
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, newRequest("POST", "/transform/send", readFile(t, "../resources/sourceJson/noTmeIds.json")))
+	assert.Equal(t, 200, rec.Code, "Unexpected status code")
+	assert.Equal(t, rec.HeaderMap["Content-Type"], []string{"application/json"}, "Unexpected Content-Type")
+	assert.Contains(t, rec.Body.String(), "Concordance record not found", "Request had unexpected result")
+}
 
-	testScenarios := []testStruct{send_convertsAndForwardsPayloadWithoutConcordance}
+func TestSendHandlerRecordNotFound(t *testing.T) {
+	r := mux.NewRouter()
+	mockClient := mockHttpClient{resp: "", statusCode: 204}
+	defaultTransformer := NewTransformerService(TOPIC, WRITER_ADDRESS, &mockClient)
+	h := NewHandler(defaultTransformer, mockConsumer{})
+	h.RegisterHandlers(r)
 
-	for _, scenario := range testScenarios {
-		rec := httptest.NewRecorder()
-		r.ServeHTTP(rec, newRequest("POST", scenario.endpoint, readFile(t, scenario.filePath)))
-		assert.Equal(t, scenario.expectedStatusCode, rec.Code, scenario.scenarioName)
-		assert.Equal(t, rec.HeaderMap["Content-Type"], []string{"application/json"}, scenario.scenarioName)
-		assert.Contains(t, rec.Body.String(), scenario.expectedResult, "Failed scenario: "+scenario.scenarioName)
-	}
 
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, newRequest("POST", "/transform/send", readFile(t, "../resources/sourceJson/noTmeIds.json")))
+	assert.Equal(t, 200, rec.Code, "Unexpected status code")
+	assert.Equal(t, rec.HeaderMap["Content-Type"], []string{"application/json"}, "Unexpected Content-Type")
+	assert.Contains(t, rec.Body.String(), "Concordance record successfuly deleted", "Request had unexpected result")
+}
+
+func TestSendHandlerUnavailableWriter(t *testing.T) {
+	r := mux.NewRouter()
+	mockClient := mockHttpClient{resp: "", statusCode: 503}
+	defaultTransformer := NewTransformerService(TOPIC, WRITER_ADDRESS, &mockClient)
+	h := NewHandler(defaultTransformer, mockConsumer{})
+	h.RegisterHandlers(r)
+
+
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, newRequest("POST", "/transform/send", readFile(t, "../resources/sourceJson/noTmeIds.json")))
+	assert.Equal(t, 500, rec.Code, "Unexpected status code")
+	assert.Equal(t, rec.HeaderMap["Content-Type"], []string{"application/json"}, "Unexpected Content-Type")
+	assert.Contains(t, rec.Body.String(), "Delete request to writer returned unexpected status: 503", "Request had unexpected result")
 }
 
 func (c mockHttpClient) Do(req *http.Request) (resp *http.Response, err error) {
