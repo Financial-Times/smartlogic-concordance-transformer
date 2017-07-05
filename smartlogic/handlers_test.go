@@ -8,10 +8,10 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"errors"
 	"github.com/Financial-Times/kafka-client-go/kafka"
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
+	"errors"
 )
 
 const (
@@ -62,25 +62,25 @@ func TestProcessKafkaMessage(t *testing.T) {
 	h := NewHandler(defaultTransformer, mockConsumer{})
 
 	type testStruct struct {
-		scenarioName  string
-		payload       kafka.FTMessage
-		expectedError error
+		scenarioName       string
+		payload            kafka.FTMessage
+		expectedError      error
 	}
 
 	invalidJsonLd := `{"@graph": [{"@id": "http://www.ft.com/thing/20db1bd6-59f9-4404-adb5-3165a448f8b0"}, {"@id": "http://www.ft.com/thing/20db1bd6-59f9-4404-adb5-3165a448f8b0"}]}`
 	validJsonLdNoConcordance := `{"@graph": [{"@id": "http://www.ft.com/thing/20db1bd6-59f9-4404-adb5-3165a448f8b0"}]}`
 	validJsonLdWithConcordance := `{"@graph": [{"@id": "http://www.ft.com/thing/20db1bd6-59f9-4404-adb5-3165a448f8b0","http://www.ft.com/ontology/TMEIdentifier": [{"@value": "AbCdEfgHiJkLMnOpQrStUvWxYz-0123456789"}]}]}`
 
-	failOnInvalidKafkaMessagePayload := testStruct{scenarioName: "failOnInvalidKafkaMessagePayload", payload: kafka.FTMessage{Body: ""}, expectedError: errors.New("EOF")}
-	failOnInvalidJsonLdInPayload := testStruct{scenarioName: "failOnInvalidJsonLdInPayload", payload: kafka.FTMessage{Body: invalidJsonLd}, expectedError: errors.New("Invalid Request Json: More than 1 concept in smartlogic concept payload which is currently not supported")}
-	failOnWritePayloadToWriter := testStruct{scenarioName: "failOnWritePayloadToWriter", payload: kafka.FTMessage{Body: validJsonLdNoConcordance}, expectedError: errors.New("Internal Error: Delete request to writer returned unexpected status: 200")}
-	successfulRequest := testStruct{scenarioName: "successfulRequest", payload: kafka.FTMessage{Body: validJsonLdWithConcordance}, expectedError: nil}
+	failOnInvalidKafkaMessagePayload := testStruct{scenarioName: "failOnInvalidKafkaMessagePayload", payload: kafka.FTMessage{Body: ""},	expectedError: errors.New("EOF")}
+	failOnInvalidJsonLdInPayload := testStruct{scenarioName: "failOnInvalidJsonLdInPayload", payload: kafka.FTMessage{Body: invalidJsonLd, Headers: map[string]string{"X-Request-Id":"test_tid"}}, expectedError: errors.New("Invalid Request Json: More than 1 concept in smartlogic concept payload which is currently not supported")}
+	failOnWritePayloadToWriter := testStruct{scenarioName: "failOnWritePayloadToWriter", payload: kafka.FTMessage{Body: validJsonLdNoConcordance, Headers: map[string]string{"X-Request-Id":"test_tid"}}, expectedError: errors.New("Internal Error: Delete request to writer returned unexpected status: 200")}
+	successfulRequest := testStruct{scenarioName: "successfulRequest", payload: kafka.FTMessage{Body: validJsonLdWithConcordance, Headers: map[string]string{"X-Request-Id":"test_tid"}}, expectedError: nil}
 
 	scenarios := []testStruct{failOnInvalidKafkaMessagePayload, failOnInvalidJsonLdInPayload, failOnWritePayloadToWriter, successfulRequest}
 
 	for _, scenario := range scenarios {
 		err := h.ProcessKafkaMessage(scenario.payload)
-		assert.Equal(t, scenario.expectedError, err, "Scenario "+scenario.scenarioName+" failed with unexpected error")
+		assert.Equal(t, scenario.expectedError, err, "Scenario " + scenario.scenarioName + " failed with unexpected error")
 	}
 
 }
@@ -128,6 +128,7 @@ func TestSendHandlerSuccessfulDelete(t *testing.T) {
 	h := NewHandler(defaultTransformer, mockConsumer{})
 	h.RegisterHandlers(r)
 
+
 	rec := httptest.NewRecorder()
 	r.ServeHTTP(rec, newRequest("POST", "/transform/send", readFile(t, "../resources/sourceJson/noTmeIds.json")))
 	assert.Equal(t, 200, rec.Code, "Unexpected status code")
@@ -141,6 +142,7 @@ func TestSendHandlerRecordNotFound(t *testing.T) {
 	defaultTransformer := NewTransformerService(TOPIC, WRITER_ADDRESS, &mockClient)
 	h := NewHandler(defaultTransformer, mockConsumer{})
 	h.RegisterHandlers(r)
+
 
 	rec := httptest.NewRecorder()
 	r.ServeHTTP(rec, newRequest("POST", "/transform/send", readFile(t, "../resources/sourceJson/noTmeIds.json")))
@@ -156,6 +158,7 @@ func TestSendHandlerUnavailableWriter(t *testing.T) {
 	h := NewHandler(defaultTransformer, mockConsumer{})
 	h.RegisterHandlers(r)
 
+
 	rec := httptest.NewRecorder()
 	r.ServeHTTP(rec, newRequest("POST", "/transform/send", readFile(t, "../resources/sourceJson/noTmeIds.json")))
 	assert.Equal(t, 500, rec.Code, "Unexpected status code")
@@ -169,6 +172,7 @@ func TestSendHandlerWriteReturnsError(t *testing.T) {
 	defaultTransformer := NewTransformerService(TOPIC, WRITER_ADDRESS, &mockClient)
 	h := NewHandler(defaultTransformer, mockConsumer{})
 	h.RegisterHandlers(r)
+
 
 	rec := httptest.NewRecorder()
 	r.ServeHTTP(rec, newRequest("POST", "/transform/send", readFile(t, "../resources/sourceJson/noTmeIds.json")))

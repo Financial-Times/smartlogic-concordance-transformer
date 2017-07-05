@@ -31,7 +31,13 @@ func NewHandler(transformer TransformerService, consumer kafka.Consumer) Smartlo
 }
 
 func (h *SmartlogicConcordanceTransformerHandler) ProcessKafkaMessage(msg kafka.FTMessage) error {
-	return h.transformer.handleConcordanceEvent(msg.Body, msg.Headers["X-Request-Id"])
+	var tid string
+	if msg.Headers["X-Request-Id"] == "" {
+		tid = transactionidutils.NewTransactionID()
+	} else {
+		tid = msg.Headers["X-Request-Id"]
+	}
+	return h.transformer.handleConcordanceEvent(msg.Body, tid)
 }
 
 func (h *SmartlogicConcordanceTransformerHandler) TransformHandler(rw http.ResponseWriter, req *http.Request) {
