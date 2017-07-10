@@ -84,9 +84,15 @@ func (h *SmartlogicConcordanceTransformerHandler) SendHandler(rw http.ResponseWr
 	}
 
 	updateStatus, err = h.transformer.makeRelevantRequest(conceptUuid, uppConcordance, tid)
+	defer req.Body.Close()
+
+	if updateStatus == VALID_CONCEPT {
+		rw.WriteHeader(http.StatusOK)
+		rw.Write([]byte("{\"message\":\"Concordance record forwarded to writer\"}"))
+		return
+	}
 
 	writeResponse(rw, updateStatus, err, uppConcordance, conceptUuid, tid)
-	defer req.Body.Close()
 	return
 }
 
@@ -96,10 +102,10 @@ func writeResponse(rw http.ResponseWriter, updateStatus status, err error, conco
 		rw.WriteHeader(http.StatusOK)
 		var logMsg string
 		if updateStatus == NO_CONTENT {
-			logMsg = "Concordance record not found"
+			logMsg = "Concordance record successfuly deleted"
 			rw.Write([]byte("{\"message\":\"" + logMsg + "\"}"))
 		} else if updateStatus == NOT_FOUND {
-			logMsg = "Concordance record successfuly deleted"
+			logMsg = "Concordance record not found"
 			rw.Write([]byte("{\"message\":\"" + logMsg + "\"}"))
 		} else if updateStatus == VALID_CONCEPT {
 			logMsg = "Concordance successfully written to db"
@@ -175,16 +181,15 @@ func (h *SmartlogicConcordanceTransformerHandler) RegisterAdminHandlers(router *
 	monitoringRouter = httphandlers.HTTPMetricsHandler(metrics.DefaultRegistry, monitoringRouter)
 
 	var checks []fthealth.Check = []fthealth.Check{h.concordanceRwDynamoDbHealthCheck(), h.kafkaHealthCheck()}
-	http.HandleFunc("/__health", fthealth.Handler("ConceptIngester Healthchecks", "Checks for accessing writer", checks...))
+	http.HandleFunc("/__health", fthealth.Handler("Smartlogic Concordance Transformer Healthchecks", "Checks for accessing writer and kafka", checks...))
 	http.HandleFunc("/__gtg", h.gtgCheck)
-	http.HandleFunc("/__ping", serviceStatus.PingHandler)
 	http.HandleFunc("/__build-info", serviceStatus.BuildInfoHandler)
 	http.Handle("/", monitoringRouter)
 }
 
 func (h *SmartlogicConcordanceTransformerHandler) kafkaHealthCheck() fthealth.Check {
 	return fthealth.Check{
-		BusinessImpact:   "Editorial updates of concpet concordances will not be written into UPP",
+		BusinessImpact:   "Editorial updates of concept concordances will not be written into UPP",
 		Name:             "Check connectivity to Kafka",
 		PanicGuide:       "https://dewey.ft.com/smartlogic-concordance-transform.html",
 		Severity:         3,
@@ -195,7 +200,7 @@ func (h *SmartlogicConcordanceTransformerHandler) kafkaHealthCheck() fthealth.Ch
 
 func (h *SmartlogicConcordanceTransformerHandler) concordanceRwDynamoDbHealthCheck() fthealth.Check {
 	return fthealth.Check{
-		BusinessImpact:   "Editorial updates of concpet concordances will not be written into UPP",
+		BusinessImpact:   "Editorial updates of concept concordances will not be written into UPP",
 		Name:             "Check connectivity to concordance reader/writer",
 		PanicGuide:       "https://dewey.ft.com/smartlogic-concordance-transform.html",
 		Severity:         3,
