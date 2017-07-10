@@ -225,8 +225,6 @@ Admin endpoints are:
 
 `/__build-info`
 
-`/__ping`
-
 There are several checks performed:
 
 * Checks that a connection can be made to the concordances-rw-s3 service
