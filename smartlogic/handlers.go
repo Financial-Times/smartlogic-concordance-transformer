@@ -109,12 +109,14 @@ func writeResponse(rw http.ResponseWriter, updateStatus status, err error, conco
 			rw.Write([]byte("{\"message\":\"" + logMsg + "\"}"))
 		} else if updateStatus == VALID_CONCEPT {
 			logMsg = "Concordance successfully written to db"
+			fmt.Printf("Concordance record is %s\n", concordance)
 			bytes, _ := json.Marshal(concordance)
 			if err := enc.Encode(concordance); err != nil {
 				logMsg = "Concordance record could not be returned"
 				writeJSONError(rw, err.Error(), http.StatusInternalServerError)
 				return
 			}
+			fmt.Printf("Concordance record as bytes is %s\n", bytes)
 			rw.Write(bytes)
 		}
 		log.WithFields(log.Fields{"transaction_id": tid, "UUID": uuid, "status": http.StatusOK}).Info(logMsg)
