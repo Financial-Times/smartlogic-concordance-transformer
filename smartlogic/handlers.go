@@ -64,14 +64,7 @@ func (h *SmartlogicConcordanceTransformerHandler) TransformHandler(rw http.Respo
 	}
 	defer req.Body.Close()
 
-	enc := json.NewEncoder(rw)
-	bytes, _ := json.Marshal(uppConcordance)
-	err = enc.Encode(uppConcordance)
-	if err != nil {
-		writeJSONError(rw, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	rw.Write(bytes)
+	json.NewEncoder(rw).Encode(uppConcordance)
 	log.WithFields(log.Fields{"transaction_id": tid, "UUID": conceptUuid, "status": http.StatusOK}).Info("Smartlogic payload successfully transformed")
 	return
 }

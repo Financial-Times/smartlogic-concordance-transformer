@@ -1,7 +1,6 @@
 package main
 
 import (
-	standardLog "log"
 	"net"
 	"net/http"
 	"os"
@@ -12,11 +11,9 @@ import (
 	"github.com/Financial-Times/kafka-client-go/kafka"
 	slc "github.com/Financial-Times/smartlogic-concordance-transformer/smartlogic"
 	log "github.com/Sirupsen/logrus"
-	"github.com/cyberdelia/go-metrics-graphite"
 	"github.com/gorilla/mux"
 	"github.com/jawher/mow.cli"
 	_ "github.com/joho/godotenv/autoload"
-	"github.com/rcrowley/go-metrics"
 )
 
 const appDescription = "Service which listens to kafka for concordance updates, transforms smartlogic concordance json and sends updates to concordance-rw-dynamodb"
@@ -81,24 +78,6 @@ func main() {
 		Desc:   "Concordance rw address for routing requests",
 		EnvVar: "WRITER_ADDRESS",
 	})
-	graphiteTCPAddress := app.String(cli.StringOpt{
-		Name:   "graphite-tcp-address",
-		Value:  "",
-		Desc:   "Graphite TCP address, e.g. graphite.ft.com:2003. Leave as default if you do NOT want to output to graphite (e.g. if running locally)",
-		EnvVar: "GRAPHITE_TCP_ADDRESS",
-	})
-	graphitePrefix := app.String(cli.StringOpt{
-		Name:   "graphite-prefix",
-		Value:  "",
-		Desc:   "Prefix to use. Should start with content, include the environment, and the host name. e.g. coco.pre-prod.special-reports-rw-neo4j.1",
-		EnvVar: "GRAPHITE_PREFIX",
-	})
-	logMetrics := app.Bool(cli.BoolOpt{
-		Name:   "log-metrics",
-		Value:  false,
-		Desc:   "Whether to log metrics. Set to true if running locally and you want metrics output",
-		EnvVar: "LOG_METRICS",
-	})
 
 	lvl, err := log.ParseLevel(*logLevel)
 	if err != nil {
@@ -116,8 +95,6 @@ func main() {
 
 	app.Action = func() {
 		log.Infof("System code: %s, App Name: %s, Port: %s", *appSystemCode, *appName, *port)
-
-		outputMetricsIfRequired(*graphiteTCPAddress, *graphitePrefix, *logMetrics)
 
 		consumerConfig := kafka.DefaultConsumerConfig()
 		consumer, err := kafka.NewConsumer(*brokerConnectionString, *groupName, []string{*topic}, consumerConfig)
@@ -149,17 +126,6 @@ func main() {
 	if runErr != nil {
 		log.Errorf("App could not start, error=[%s]\n", runErr)
 		return
-	}
-}
-
-func outputMetricsIfRequired(graphiteTCPAddress string, graphitePrefix string, logMetrics bool) {
-	if graphiteTCPAddress != "" {
-		addr, _ := net.ResolveTCPAddr("tcp", graphiteTCPAddress)
-		go graphite.Graphite(metrics.DefaultRegistry, 5*time.Second, graphitePrefix, addr)
-	}
-	if logMetrics { //useful locally
-		//messy use of the 'standard' log package here as this method takes the log struct, not an interface, so can't use logrus.Logger
-		go metrics.Log(metrics.DefaultRegistry, 60*time.Second, standardLog.New(os.Stdout, "metrics", standardLog.Lmicroseconds))
 	}
 }
 
