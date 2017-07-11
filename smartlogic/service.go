@@ -199,6 +199,7 @@ func (ts *TransformerService) makeDeleteRequest(uuid string, tid string) (status
 		log.WithError(err).WithFields(log.Fields{"transaction_id": tid, "UUID": uuid}).Error("Service Unavailable: Delete request to writer resulted in error")
 		return SERVICE_UNAVAILABLE, err
 	} else if resp.StatusCode != 204 && resp.StatusCode != 404 {
+		fmt.Printf("We got here!\n")
 		err := errors.New("Internal Error: Delete request to writer returned unexpected status: " + strconv.Itoa(resp.StatusCode))
 		log.WithFields(log.Fields{"transaction_id": tid, "UUID": uuid, "status": resp.StatusCode}).Error(err)
 		return INTERNAL_ERROR, err
