@@ -1,10 +1,12 @@
 # smartlogic-concordance-transformer
 
-[![Circle CI](https://circleci.com/gh/Financial-Times/smartlogic-concordance-transformer/tree/master.png?style=shield)](https://circleci.com/gh/Financial-Times/smartlogic-concordance-transformer/tree/master)[![Go Report Card](https://goreportcard.com/badge/github.com/Financial-Times/smartlogic-concordance-transformer)](https://goreportcard.com/report/github.com/Financial-Times/smartlogic-concordance-transformer) [![Coverage Status](https://coveralls.io/repos/github/Financial-Times/smartlogic-concordance-transformer/badge.svg)](https://coveralls.io/github/Financial-Times/smartlogic-concordance-transformer)
+[![Circle CI](https://circleci.com/gh/Financial-Times/smartlogic-concordance-transformer/tree/master.png?style=shield)](https://circleci.com/gh/Financial-Times/smartlogic-concordance-transformer/tree/master)
+[![Go Report Card](https://goreportcard.com/badge/github.com/Financial-Times/smartlogic-concordance-transformer)](https://goreportcard.com/report/github.com/Financial-Times/smartlogic-concordance-transformer)
+[![Coverage Status](https://coveralls.io/repos/github/Financial-Times/smartlogic-concordance-transformer/badge.svg)](https://coveralls.io/github/Financial-Times/smartlogic-concordance-transformer)
 
 ## Introduction
 
-This service will listen to Kafka for a notification of a change made in Smartlogic, verify whether the change concerns concordance, convert the JSON-LD in the message to a normalised UPP view of a concordance and finally send the JSON to the concordance-rw-dynamo.
+This service will listen to Kafka for a notification of a change made in Smartlogic, verify whether the change concerns concordance, convert the JSON-LD in the message to a normalised UPP view of a concordance and finally send the JSON to the concordances-rw-dynamo.
 
 ## Installation
 
@@ -52,7 +54,7 @@ This endpoint is for testing and help ongoing support. This endpoint only transf
 
 Using curl:
 
-    curl -X POST -i https://user:pass@pub-prod-up.ft.com/__smartlogic-concordance-transformer/transform/send --d @payload.txt --header "Content-Type:application/json"
+    curl -X POST -i https://{user:pass}@{env}-up.ft.com/__smartlogic-concordance-transformer/transform/send --d @payload.txt --header "Content-Type:application/json"
 
 Payload.txt:
 
@@ -128,12 +130,14 @@ e.g
     Content-Type: application/json
     X-Request-Id: transaction ID, e.g. tid_etmIWTJVeA
     {
-      "uuid": "2d3e16e0-61cb-4322-8aff-3b01c59f4daa"",
+      "uuid": "2d3e16e0-61cb-4322-8aff-3b01c59f4daa",
       "concordedIds": [
-    	"YzhlNzZkYTctMDJiNy00NTViLTk3NmYtNmJjYTE5NDEyM2Yw-QnJhbmRz"
+    	"70f4732b-7f7d-30a1-9c29-0cceec23760e"
       ]
     }
 
+
+Based on the following [google doc](https://docs.google.com/document/d/1-8Yv1ob6qjAOzfU1ngEOeXJDGq_zP7pLM7F5HnORCoM/edit#).
 
 
 ### POST /transform/send
@@ -141,7 +145,7 @@ Transforms smartlogic payload into the upp representation of concordance and sen
 
 Using curl:
 
-    curl -X POST -i https://user:pass@pub-prod-up.ft.com/__smartlogic-concordance-transformer/transform/send --d @payload.txt --header "Content-Type:application/json"
+    curl -X POST -i https://{user:pass}@{env}-up.ft.com/__smartlogic-concordance-transformer/transform/send --d @payload.txt --header "Content-Type:application/json"
 
 Payload.txt:
 
@@ -224,6 +228,7 @@ Admin endpoints are:
 There are several checks performed:
 
 * Checks that a connection can be made to the concordances-rw-s3 service
+* Due to limitation with currently kafka version the current kafka healthcheck will always return 200
 
 ### Logging
 

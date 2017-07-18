@@ -1,15 +1,32 @@
 package main
 
 import (
-	log "github.com/Sirupsen/logrus"
-	"github.com/jawher/mow.cli"
+	"net"
+	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
+
+	"github.com/Financial-Times/kafka-client-go/kafka"
+	slc "github.com/Financial-Times/smartlogic-concordance-transformer/smartlogic"
+	log "github.com/Sirupsen/logrus"
+	"github.com/gorilla/mux"
+	"github.com/jawher/mow.cli"
+	_ "github.com/joho/godotenv/autoload"
 )
 
-const appDescription = "Service to transform the JSON-LD from Smart Logic to an UPP source system representation of a " +
-	"concordance and send it to the concordances-rw-s3"
+const appDescription = "Service which listens to kafka for concordance updates, transforms smartlogic concordance json and sends updates to concordance-rw-dynamodb"
+
+var httpClient = http.Client{
+	Transport: &http.Transport{
+		MaxIdleConnsPerHost: 128,
+		Dial: (&net.Dialer{
+			Timeout:   30 * time.Second,
+			KeepAlive: 30 * time.Second,
+		}).Dial,
+	},
+}
 
 func main() {
 	app := cli.App("smartlogic-concordance-transformer", appDescription)
@@ -32,35 +49,34 @@ func main() {
 		Desc:   "Port to listen on",
 		EnvVar: "APP_PORT",
 	})
-	//kafkaAddress := app.String(cli.StringOpt{
-	//	Name:   "kafka-address",
-	//	Value:  "http://localhost:9092",
-	//	Desc:   "Kafka broker address",
-	//	EnvVar: "KAFKA_ADDR",
-	//})
-	//kafkaTopic := app.String(cli.StringOpt{
-	//	Name:   "kafka-topic",
-	//	Value:  "SmartLogicChangeEvents",
-	//	Desc:   "Kafka topic subscribed to",
-	//	EnvVar: "TOPIC",
-	//})
-	//kafkaGroup := app.String(cli.StringOpt{
-	//	Name:   "kafka-group",
-	//	Desc:   "Kafka topic subscribed to",
-	//	EnvVar: "TOPIC",
-	//})
-	//writerEndpoint := app.String(cli.StringOpt{
-	//	Name:   "writerEndpoint",
-	//	Value:  "http://localhost:8080",
-	//	Desc:   "Endpoint for the concordance RW app.",
-	//	EnvVar: "WRITER_ENDPOINT",
-	//})
-
 	logLevel := app.String(cli.StringOpt{
 		Name:   "logLevel",
 		Value:  "INFO",
 		Desc:   "Log level",
 		EnvVar: "LOG_LEVEL",
+	})
+	brokerConnectionString := app.String(cli.StringOpt{
+		Name:   "brokerConnectionString",
+		Desc:   "Zookeeper connection string in the form host1:2181,host2:2181/chroot",
+		EnvVar: "BROKER_CONNECTION_STRING",
+	})
+	topic := app.String(cli.StringOpt{
+		Name:   "topic",
+		Value:  "SmartLogicConcepts",
+		Desc:   "Kafka topic subscribed to",
+		EnvVar: "KAFKA_TOPIC",
+	})
+	groupName := app.String(cli.StringOpt{
+		Name:   "groupName",
+		Value:  "SmartlogicConcordanceSemantic",
+		Desc:   "Group name of connection to SmartLogicChangeEvents Topic",
+		EnvVar: "GROUP_NAME",
+	})
+	writerAddress := app.String(cli.StringOpt{
+		Name:   "writerAddress",
+		Value:  "http://localhost:8080/__concordance-rw-dynamodb/",
+		Desc:   "Concordance rw address for routing requests",
+		EnvVar: "WRITER_ADDRESS",
 	})
 
 	lvl, err := log.ParseLevel(*logLevel)
@@ -68,26 +84,53 @@ func main() {
 		log.Fatalf("Cannot parse log level: %s", *logLevel)
 	}
 	log.SetLevel(lvl)
+	log.SetFormatter(&log.JSONFormatter{})
 
-	log.Infof("[Startup] smartlogic-concordance-transformer is starting ")
+	log.WithFields(log.Fields{
+		"WRITER_ADDRESS":           *writerAddress,
+		"KAFKA_TOPIC":              *topic,
+		"GROUP_NAME":               *groupName,
+		"BROKER_CONNECTION_STRING": *brokerConnectionString,
+	}).Infof("[Startup] smartlogic-concordance-transformer is starting ")
 
 	app.Action = func() {
 		log.Infof("System code: %s, App Name: %s, Port: %s", *appSystemCode, *appName, *port)
 
-		// DO stuff
+		consumerConfig := kafka.DefaultConsumerConfig()
+		consumer, err := kafka.NewConsumer(*brokerConnectionString, *groupName, []string{*topic}, consumerConfig)
+		if err != nil {
+			log.WithError(err).Fatal("Cannot create Kafka client")
+		}
+
+		router := mux.NewRouter()
+		transformer := slc.NewTransformerService(*topic, *writerAddress, &httpClient)
+		handler := slc.NewHandler(transformer, consumer)
+		handler.RegisterHandlers(router)
+		handler.RegisterAdminHandlers(router)
+
+		go func() {
+			if err := http.ListenAndServe(":"+*port, nil); err != nil {
+				log.WithError(err).Fatal("Unable to start server")
+			}
+		}()
+
+		consumer.StartListening(handler.ProcessKafkaMessage)
+
 		waitForSignal()
+		log.Info("Shutting down Kafka consumer")
+		consumer.Shutdown()
+		log.Info("Stopping application")
 	}
-	errs := app.Run(os.Args)
-	if errs != nil {
-		log.Errorf("App: smartlogic-concordance-transformer could not start, error=[%s]\n", err)
+
+	runErr := app.Run(os.Args)
+	if runErr != nil {
+		log.Errorf("App could not start, error=[%s]\n", runErr)
 		return
 	}
 }
-
 
 func waitForSignal() {
 	ch := make(chan os.Signal)
 	signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
 	<-ch
 }
-

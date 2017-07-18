@@ -38,7 +38,9 @@ paths:
         400:
           description: Invalid input - invalid JSON-LD or a missing uuid
         405:
-          description: Method not allowed - any method not specified for this endpoint will return a 405 response  
+          description: Method not allowed - any method not specified for this endpoint will return a 405 response
+        422:
+          description: Unprocessable entity - request JSON-LD is unprocessable
         500:
           description: Internal error transforming the Smart Logic JSON-LD
         503:
@@ -46,7 +48,7 @@ paths:
   /transform/send:
     post:
       summary: Transforms smartlogic payload into the upp representation of concordance and sends it to the concordance-rw-dynamodb. 
-      description: Transforms smartlogic payload into the upp representation of concordance and sends it to the concordance-rw-dynamodb.  If no concordance exists, a delete request is sent instead (response outlined in concordance-rw-dynamodb)
+      description: Transforms smartlogic payload into the upp representation of concordance and sends it to the concordance-rw-dynamodb. If no concordance exists, a delete request is sent instead (response outlined in concordance-rw-dynamodb)
       tags:
         - Internal API
       produces:
@@ -61,11 +63,13 @@ paths:
             type: string  
       responses:
         200:
-          description: Successfully transformed and sent onewards the smart logic concept
+          description: Successfully transformed and sent onwards the concordance rw dynamodb
         400:
           description: Invalid input - invalid JSON-LD or a missing uuid
         405:
           description: Method not allowed - any method not specified for this endpoint will return a 405 response
+        422:
+          description: Unprocessable entity - request JSON-LD is unprocessable
         500:
           description: Internal error transforming the Smart Logic JSON-LD
         503:

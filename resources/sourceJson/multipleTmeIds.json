@@ -1,0 +1,21 @@
+{
+  "@graph": [
+    {
+      "@id": "http://www.ft.com/thing/20db1bd6-59f9-4404-adb5-3165a448f8b0",
+      "http://www.ft.com/ontology/TMEIdentifier": [
+        {
+          "@value": "AbCdEfgHiJkLMnOpQrStUvWxYz-0123456789"
+        },
+        {
+          "@value": "ZyXwVuTsRqPoNmLkJiHgFeDcBa-0987654321"
+        },
+        {
+          "@value": "abcdefghijklmnopqrstuvwxyz-0123456789"
+        },
+        {
+          "@value": "ABCDEFGHIJKLMNOPQRSTUVWXYZ-0987654321"
+        }
+      ]
+    }
+  ]
+}
