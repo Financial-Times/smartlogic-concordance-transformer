@@ -10,9 +10,11 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var testUuid = "20db1bd6-59f9-4404-adb5-3165a448f8b0"
-var concordedId = "d83a4dc1-397e-4f99-8ecf-2f1b15febb7f"
-var writerUrl = "http://localhost:8080/"
+const (
+	testUuid    = "20db1bd6-59f9-4404-adb5-3165a448f8b0"
+	concordedId = "d83a4dc1-397e-4f99-8ecf-2f1b15febb7f"
+	writerUrl   = "http://localhost:8080/"
+)
 
 func TestValidateSubstrings(t *testing.T) {
 	type testStruct struct {
@@ -128,13 +130,16 @@ func TestConvertToUppConcordance(t *testing.T) {
 	missingRequiredFieldsJson := testStruct{testName: "missingRequiredFieldsJson", pathToFile: "../resources/missingIdField.json", conceptUuid: "", uppConcordance: noConcordance, expectedError: errors.New("Missing/invalid @graph field")}
 	invalidTmeListInputJson := testStruct{testName: "invalidTmeListInputJson", pathToFile: "../resources/invalidTmeListInput.json", conceptUuid: testUuid, uppConcordance: noConcordance, expectedError: errors.New("is not a valid TME Id")}
 	invalidIdFieldJson := testStruct{testName: "invalidIdFieldJson", pathToFile: "../resources/invalidIdValue.json", conceptUuid: "", uppConcordance: noConcordance, expectedError: errors.New("Missing/invalid @id field")}
+	missingTypesField := testStruct{testName: "missingTypesField", pathToFile: "../resources/noTypes.json", conceptUuid: testUuid, uppConcordance: noConcordance, expectedError: errors.New("Bad Request: Type has not been set for concept: 20db1bd6-59f9-4404-adb5-3165a448f8b0")}
+	errorOnMembershipConcept := testStruct{testName: "errorOnMembershipConcept", pathToFile: "../resources/conceptIsMembership.json", conceptUuid: testUuid, uppConcordance: noConcordance, expectedError: errors.New("Bad Request: Concept type Membership does not support concordance")}
+	errorOnMembershipRoleConcept := testStruct{testName: "errorOnMembershipRoleConcept", pathToFile: "../resources/conceptIsMembershipRole.json", conceptUuid: testUuid, uppConcordance: noConcordance, expectedError: errors.New("Bad Request: Concept type MembershipRole does not support concordance")}
 	invalidTmeId := testStruct{testName: "invalidTmeId", pathToFile: "../resources/invalidTmeId.json", conceptUuid: testUuid, uppConcordance: noConcordance, expectedError: errors.New("is not a valid TME Id")}
 	tmeGeneratedUuidEqualConceptUuid := testStruct{testName: "tmeGeneratedUuidEqualConceptUuid", pathToFile: "../resources/tmeGeneratedUuidEqualConceptUuid.json", conceptUuid: "e9f4525a-401f-3b23-a68e-e48f314cdce6", uppConcordance: noConcordance, expectedError: errors.New("smartlogic uuid that is the same as the uuid generated from the TME id")}
 	errorOnDuplicateTmeIds := testStruct{testName: "errorOnDuplicateTmeIds", pathToFile: "../resources/duplicateTmeIds.json", conceptUuid: testUuid, uppConcordance: noConcordance, expectedError: errors.New("contains duplicate TME id values")}
 	handlesMultipleTmeIds := testStruct{testName: "handlesMultipleTmeIds", pathToFile: "../resources/multipleTmeIds.json", conceptUuid: testUuid, uppConcordance: multiConcordance, expectedError: nil}
 	handlesNoTmeIds := testStruct{testName: "handlesNoTmeIds", pathToFile: "../resources/noTmeIds.json", conceptUuid: testUuid, uppConcordance: emptyConcordance, expectedError: nil}
 
-	testScenarios := []testStruct{missingRequiredFieldsJson, invalidTmeListInputJson, invalidIdFieldJson, invalidTmeId, errorOnDuplicateTmeIds, handlesMultipleTmeIds, handlesNoTmeIds, tmeGeneratedUuidEqualConceptUuid}
+	testScenarios := []testStruct{missingRequiredFieldsJson, invalidTmeListInputJson, invalidIdFieldJson, missingTypesField, errorOnMembershipConcept, errorOnMembershipRoleConcept, invalidTmeId, errorOnDuplicateTmeIds, handlesMultipleTmeIds, handlesNoTmeIds, tmeGeneratedUuidEqualConceptUuid}
 
 	for _, scenario := range testScenarios {
 		var smartLogicConcept = SmartlogicConcept{}

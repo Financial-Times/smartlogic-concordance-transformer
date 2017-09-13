@@ -2,6 +2,9 @@
   "@graph": [
     {
       "@id": "http://www.ft.com/thing/e9f4525a-401f-3b23-a68e-e48f314cdce6",
+      "@type": [
+        "http://www.ft.com/ontology/Brand"
+      ],
       "http://www.ft.com/ontology/TMEIdentifier": [
         {
           "@value": "AbCdEfgHiJkLMnOpQrStUvWxYz-0123456789"

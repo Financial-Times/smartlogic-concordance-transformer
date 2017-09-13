@@ -12,10 +12,10 @@ import (
 	"github.com/Financial-Times/kafka-client-go/kafka"
 	serviceStatus "github.com/Financial-Times/service-status-go/httphandlers"
 	"github.com/Financial-Times/transactionid-utils-go"
-	log "github.com/sirupsen/logrus"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/rcrowley/go-metrics"
+	log "github.com/sirupsen/logrus"
 )
 
 type SmartlogicConcordanceTransformerHandler struct {

@@ -9,8 +9,8 @@ import (
 
 	"bytes"
 	"fmt"
-	log "github.com/sirupsen/logrus"
 	"github.com/pborman/uuid"
+	log "github.com/sirupsen/logrus"
 	"strconv"
 )
 
@@ -49,14 +49,15 @@ func NewTransformerService(topic string, writerAddress string, httpClient httpCl
 
 func (ts *TransformerService) handleConcordanceEvent(msgBody string, tid string) error {
 	log.WithField("transaction_id", tid).Debug("Processing message with body: " + msgBody)
-	var smartLogicConcept = SmartlogicConcept{}
+	var smartLogicConceptPayload = SmartlogicConcept{}
 	decoder := json.NewDecoder(bytes.NewBufferString(msgBody))
-	err := decoder.Decode(&smartLogicConcept)
+	err := decoder.Decode(&smartLogicConceptPayload)
 	if err != nil {
 		log.WithError(err).WithField("transaction_id", tid).Error("Failed to decode Kafka payload")
 		return err
 	}
-	_, conceptUuid, uppConcordance, err := convertToUppConcordance(smartLogicConcept, tid)
+
+	_, conceptUuid, uppConcordance, err := convertToUppConcordance(smartLogicConceptPayload, tid)
 	if err != nil {
 		return err
 	}
@@ -87,6 +88,20 @@ func convertToUppConcordance(smartlogicConcepts SmartlogicConcept, tid string) (
 		err := errors.New("Invalid Request Json: Missing/invalid @id field")
 		log.WithFields(log.Fields{"transaction_id": tid, "UUID": conceptUuid}).Error(err)
 		return SEMANTICALLY_INCORRECT, conceptUuid, UppConcordance{}, err
+	}
+
+	if len(smartlogicConcept.Types) == 0 {
+		err := fmt.Errorf("Bad Request: Type has not been set for concept: %s)", conceptUuid)
+		log.WithFields(log.Fields{"transaction_id": tid, "UUID": conceptUuid}).Error(err)
+		return SYNTACTICALLY_INCORRECT, conceptUuid, UppConcordance{}, err
+	}
+
+	conceptType := smartlogicConcept.Types[0]
+	shortFormType := conceptType[strings.LastIndex(conceptType, "/")+1:]
+	if shortFormType == "Membership" || shortFormType == "MembershipRole" {
+		err := fmt.Errorf("Bad Request: Concept type %s does not support concordance", shortFormType)
+		log.WithFields(log.Fields{"transaction_id": tid, "UUID": conceptUuid}).Error(err)
+		return SYNTACTICALLY_INCORRECT, conceptUuid, UppConcordance{}, err
 	}
 
 	concordanceIds := make([]string, 0)
@@ -199,7 +214,6 @@ func (ts *TransformerService) makeDeleteRequest(uuid string, tid string) (status
 		log.WithError(err).WithFields(log.Fields{"transaction_id": tid, "UUID": uuid}).Error("Service Unavailable: Delete request to writer resulted in error")
 		return SERVICE_UNAVAILABLE, err
 	} else if resp.StatusCode != 204 && resp.StatusCode != 404 {
-		fmt.Printf("We got here!\n")
 		err := errors.New("Internal Error: Delete request to writer returned unexpected status: " + strconv.Itoa(resp.StatusCode))
 		log.WithFields(log.Fields{"transaction_id": tid, "UUID": uuid, "status": resp.StatusCode}).Error(err)
 		return INTERNAL_ERROR, err
