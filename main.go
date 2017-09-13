@@ -10,7 +10,7 @@ import (
 
 	"github.com/Financial-Times/kafka-client-go/kafka"
 	slc "github.com/Financial-Times/smartlogic-concordance-transformer/smartlogic"
-	log "github.com/Sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 	"github.com/gorilla/mux"
 	"github.com/jawher/mow.cli"
 	_ "github.com/joho/godotenv/autoload"

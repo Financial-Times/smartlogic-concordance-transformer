@@ -125,14 +125,14 @@ func TestConvertToUppConcordance(t *testing.T) {
 		expectedError  error
 	}
 
-	missingRequiredFieldsJson := testStruct{testName: "missingRequiredFieldsJson", pathToFile: "../resources/sourceJson/missingIdField.json", conceptUuid: "", uppConcordance: noConcordance, expectedError: errors.New("Missing/invalid @graph field")}
-	invalidTmeListInputJson := testStruct{testName: "invalidTmeListInputJson", pathToFile: "../resources/sourceJson/invalidTmeListInput.json", conceptUuid: testUuid, uppConcordance: noConcordance, expectedError: errors.New("is not a valid TME Id")}
-	invalidIdFieldJson := testStruct{testName: "invalidIdFieldJson", pathToFile: "../resources/sourceJson/invalidIdValue.json", conceptUuid: "", uppConcordance: noConcordance, expectedError: errors.New("Missing/invalid @id field")}
-	invalidTmeId := testStruct{testName: "invalidTmeId", pathToFile: "../resources/sourceJson/invalidTmeId.json", conceptUuid: testUuid, uppConcordance: noConcordance, expectedError: errors.New("is not a valid TME Id")}
-	tmeGeneratedUuidEqualConceptUuid := testStruct{testName: "tmeGeneratedUuidEqualConceptUuid", pathToFile: "../resources/sourceJson/tmeGeneratedUuidEqualConceptUuid.json", conceptUuid: "e9f4525a-401f-3b23-a68e-e48f314cdce6", uppConcordance: noConcordance, expectedError: errors.New("smartlogic uuid that is the same as the uuid generated from the TME id")}
-	errorOnDuplicateTmeIds := testStruct{testName: "errorOnDuplicateTmeIds", pathToFile: "../resources/sourceJson/duplicateTmeIds.json", conceptUuid: testUuid, uppConcordance: noConcordance, expectedError: errors.New("contains duplicate TME id values")}
-	handlesMultipleTmeIds := testStruct{testName: "handlesMultipleTmeIds", pathToFile: "../resources/sourceJson/multipleTmeIds.json", conceptUuid: testUuid, uppConcordance: multiConcordance, expectedError: nil}
-	handlesNoTmeIds := testStruct{testName: "handlesNoTmeIds", pathToFile: "../resources/sourceJson/noTmeIds.json", conceptUuid: testUuid, uppConcordance: emptyConcordance, expectedError: nil}
+	missingRequiredFieldsJson := testStruct{testName: "missingRequiredFieldsJson", pathToFile: "../resources/missingIdField.json", conceptUuid: "", uppConcordance: noConcordance, expectedError: errors.New("Missing/invalid @graph field")}
+	invalidTmeListInputJson := testStruct{testName: "invalidTmeListInputJson", pathToFile: "../resources/invalidTmeListInput.json", conceptUuid: testUuid, uppConcordance: noConcordance, expectedError: errors.New("is not a valid TME Id")}
+	invalidIdFieldJson := testStruct{testName: "invalidIdFieldJson", pathToFile: "../resources/invalidIdValue.json", conceptUuid: "", uppConcordance: noConcordance, expectedError: errors.New("Missing/invalid @id field")}
+	invalidTmeId := testStruct{testName: "invalidTmeId", pathToFile: "../resources/invalidTmeId.json", conceptUuid: testUuid, uppConcordance: noConcordance, expectedError: errors.New("is not a valid TME Id")}
+	tmeGeneratedUuidEqualConceptUuid := testStruct{testName: "tmeGeneratedUuidEqualConceptUuid", pathToFile: "../resources/tmeGeneratedUuidEqualConceptUuid.json", conceptUuid: "e9f4525a-401f-3b23-a68e-e48f314cdce6", uppConcordance: noConcordance, expectedError: errors.New("smartlogic uuid that is the same as the uuid generated from the TME id")}
+	errorOnDuplicateTmeIds := testStruct{testName: "errorOnDuplicateTmeIds", pathToFile: "../resources/duplicateTmeIds.json", conceptUuid: testUuid, uppConcordance: noConcordance, expectedError: errors.New("contains duplicate TME id values")}
+	handlesMultipleTmeIds := testStruct{testName: "handlesMultipleTmeIds", pathToFile: "../resources/multipleTmeIds.json", conceptUuid: testUuid, uppConcordance: multiConcordance, expectedError: nil}
+	handlesNoTmeIds := testStruct{testName: "handlesNoTmeIds", pathToFile: "../resources/noTmeIds.json", conceptUuid: testUuid, uppConcordance: emptyConcordance, expectedError: nil}
 
 	testScenarios := []testStruct{missingRequiredFieldsJson, invalidTmeListInputJson, invalidIdFieldJson, invalidTmeId, errorOnDuplicateTmeIds, handlesMultipleTmeIds, handlesNoTmeIds, tmeGeneratedUuidEqualConceptUuid}
 
