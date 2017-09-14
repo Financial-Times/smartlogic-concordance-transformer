@@ -1,0 +1,10 @@
+{
+  "@graph": [
+    {
+      "@id": "http://www.ft.com/thing/20db1bd6-59f9-4404-adb5-3165a448f8b0",
+      "@type": [
+        "http://www.ft.com/ontology/organisation/Membership"
+      ]
+    }
+  ]
+}
