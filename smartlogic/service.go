@@ -9,9 +9,10 @@ import (
 
 	"bytes"
 	"fmt"
+	"strconv"
+
 	"github.com/pborman/uuid"
 	log "github.com/sirupsen/logrus"
-	"strconv"
 )
 
 var uuidMatcher = regexp.MustCompile("^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$")
@@ -98,7 +99,7 @@ func convertToUppConcordance(smartlogicConcepts SmartlogicConcept, tid string) (
 
 	conceptType := smartlogicConcept.Types[0]
 	shortFormType := conceptType[strings.LastIndex(conceptType, "/")+1:]
-	if shortFormType == "Membership" || shortFormType == "MembershipRole" {
+	if (shortFormType == "Membership" || shortFormType == "MembershipRole") && len(smartlogicConcept.TmeIdentifiers) > 0 {
 		err := fmt.Errorf("Bad Request: Concept type %s does not support concordance", shortFormType)
 		log.WithFields(log.Fields{"transaction_id": tid, "UUID": conceptUuid}).Error(err)
 		return SYNTACTICALLY_INCORRECT, conceptUuid, UppConcordance{}, err
