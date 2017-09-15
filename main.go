@@ -10,10 +10,10 @@ import (
 
 	"github.com/Financial-Times/kafka-client-go/kafka"
 	slc "github.com/Financial-Times/smartlogic-concordance-transformer/smartlogic"
-	log "github.com/Sirupsen/logrus"
 	"github.com/gorilla/mux"
 	"github.com/jawher/mow.cli"
 	_ "github.com/joho/godotenv/autoload"
+	log "github.com/sirupsen/logrus"
 )
 
 const appDescription = "Service which listens to kafka for concordance updates, transforms smartlogic concordance json and sends updates to concordance-rw-dynamodb"

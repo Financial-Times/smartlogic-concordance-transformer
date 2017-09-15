@@ -9,18 +9,16 @@
 			"revisionTime": "2017-05-25T09:50:41Z"
 		},
 		{
-			"checksumSHA1": "zUpINnstJChGK0LAtkt7jBc3RY0=",
+			"checksumSHA1": "dqF1g4reeLPNN10qTXgDJj3fHm4=",
 			"path": "github.com/Financial-Times/http-handlers-go/httphandlers",
-			"revision": "bb69c454da9050fe1c4b92fe1345a01583ee70be",
-			"revisionTime": "2016-08-03T10:40:03Z"
+			"revision": "229ac16f1d9ec9bca485d2dafb9ec14dc7e9ba24",
+			"revisionTime": "2017-08-09T12:10:07Z"
 		},
 		{
-			"checksumSHA1": "rz96XmhISTFCM6S12Mj8PXYjOwg=",
+			"checksumSHA1": "4FoNa1c4xNwIuzokLe37dfC/hBQ=",
 			"path": "github.com/Financial-Times/kafka-client-go/kafka",
-			"revision": "7bbb85fa53cb21090a81da68b914dcb969c75dd9",
-			"revisionTime": "2017-07-04T08:58:55Z",
-			"version": "=0.3.0",
-			"versionExact": "0.3.0"
+			"revision": "cc65f68255d42de893a6d72f31394ad031c54142",
+			"revisionTime": "2017-08-25T10:40:40Z"
 		},
 		{
 			"checksumSHA1": "fqpohN7Qp2qj7TLMbUxh/cK4oH0=",
@@ -44,21 +42,13 @@
 			"checksumSHA1": "+sjiZBzrsk91W1A3Md1azCkZadg=",
 			"path": "github.com/Financial-Times/transactionid-utils-go",
 			"revision": "df2f00c734957c9dd651ce23ab0e0902504c7636",
-			"revisionTime": "2017-03-28T16:39:54Z",
-			"version": "=v0.2.0",
-			"versionExact": "v0.2.0"
+			"revisionTime": "2017-03-28T16:39:54Z"
 		},
 		{
 			"checksumSHA1": "jRUvScAXltFxTRaj1RpBZKyqnEs=",
 			"path": "github.com/Shopify/sarama",
 			"revision": "f7e3024a61603647461f4b40bd8f3db88871bf9d",
 			"revisionTime": "2017-06-15T15:11:31Z"
-		},
-		{
-			"checksumSHA1": "Liv7AJyNinmP3pvwohcXp4R6xY4=",
-			"path": "github.com/Sirupsen/logrus",
-			"revision": "85b1699d505667d13f8ac4478c1debbf85d6c5de",
-			"revisionTime": "2017-06-08T22:14:41Z"
 		},
 		{
 			"checksumSHA1": "/6H1rhQmbq8mEP29pnmLmdwBKUE=",
@@ -171,6 +161,12 @@
 			"revisionTime": "2016-10-28T23:23:40Z"
 		},
 		{
+			"checksumSHA1": "BYvROBsiyAXK4sq6yhDe8RgT4LM=",
+			"path": "github.com/sirupsen/logrus",
+			"revision": "89742aefa4b206dcf400792f3bd35b542998eb3b",
+			"revisionTime": "2017-08-22T13:27:46Z"
+		},
+		{
 			"checksumSHA1": "JXUVA1jky8ZX8w09p2t5KLs97Nc=",
 			"path": "github.com/stretchr/testify/assert",
 			"revision": "4d4bfba8f1d1027c4fdbe371823030df51419987",
@@ -189,10 +185,28 @@
 			"revisionTime": "2016-09-30T07:24:34Z"
 		},
 		{
+			"checksumSHA1": "nqWNlnMmVpt628zzvyo6Yv2CX5Q=",
+			"path": "golang.org/x/crypto/ssh/terminal",
+			"revision": "faadfbdc035307d901e69eea569f5dda451a3ee3",
+			"revisionTime": "2017-09-12T19:17:24Z"
+		},
+		{
 			"checksumSHA1": "Y+HGqEkYM15ir+J93MEaHdyFy0c=",
 			"path": "golang.org/x/net/context",
 			"revision": "236b8f043b920452504e263bc21d354427127473",
 			"revisionTime": "2017-02-06T03:21:01Z"
+		},
+		{
+			"checksumSHA1": "A+9lemYS6e/BXlyFTsm9CeK5dKU=",
+			"path": "golang.org/x/sys/unix",
+			"revision": "062cd7e4e68206d8bab9b18396626e855c992658",
+			"revisionTime": "2017-09-12T16:19:26Z"
+		},
+		{
+			"checksumSHA1": "pBPFzDGt3AVSRffB7ffiUnruFUk=",
+			"path": "golang.org/x/sys/windows",
+			"revision": "062cd7e4e68206d8bab9b18396626e855c992658",
+			"revisionTime": "2017-09-12T16:19:26Z"
 		}
 	],
 	"rootPath": "github.com/Financial-Times/smartlogic-concordance-transformer"

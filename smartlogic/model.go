@@ -5,8 +5,9 @@ type SmartlogicConcept struct {
 }
 
 type Concept struct {
-	Id             string  `json:"@id"`
-	TmeIdentifiers []TmeId `json:"http://www.ft.com/ontology/TMEIdentifier"`
+	Id             string   `json:"@id"`
+	Types          []string `json:"@type,omitempty"`
+	TmeIdentifiers []TmeId  `json:"http://www.ft.com/ontology/TMEIdentifier"`
 }
 
 type TmeId struct {
