@@ -1,0 +1,6 @@
+# Values used for the deployed application.
+replicaCount: 2
+service:
+  name: smartlogic-concordance-transformer
+env:
+  LOG_LEVEL: info
