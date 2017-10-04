@@ -133,7 +133,7 @@ func convertToUppConcordance(smartlogicConcepts SmartlogicConcept, tid string) (
 	uppConcordance := UppConcordance{}
 	uppConcordance.ConceptUuid = conceptUuid
 	uppConcordance.ConcordedIds = concordanceIds
-	log.WithFields(log.Fields{"transaction_id": tid, "UUID": conceptUuid}).Debug(fmt.Sprintf("Concordance record is: %s", uppConcordance))
+	log.WithFields(log.Fields{"transaction_id": tid, "UUID": conceptUuid}).Debugf("Concordance record is %s", uppConcordance)
 	return VALID_CONCEPT, conceptUuid, uppConcordance, nil
 }
 
@@ -160,7 +160,7 @@ func (ts *TransformerService) makeRelevantRequest(uuid string, uppConcordance Up
 	var err error
 	var reqStatus status
 	if len(uppConcordance.ConcordedIds) > 0 {
-		log.WithFields(log.Fields{"transaction_id": tid, "UUID": uuid}).Debug("Concordance found; forwarding request to writer")
+		log.WithFields(log.Fields{"transaction_id": tid, "UUID": uuid}).Infof("Concordance record is: %s; forwarding request to writer", uppConcordance)
 		reqStatus, err = ts.makeWriteRequest(uuid, uppConcordance, tid)
 	} else {
 		log.WithFields(log.Fields{"transaction_id": tid, "UUID": uuid}).Debug("No concordance found; making delete request")
