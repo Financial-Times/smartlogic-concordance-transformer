@@ -133,7 +133,7 @@ func convertToUppConcordance(smartlogicConcepts SmartlogicConcept, tid string) (
 	uppConcordance := UppConcordance{}
 	uppConcordance.ConceptUuid = conceptUuid
 	uppConcordance.ConcordedIds = concordanceIds
-	log.WithFields(log.Fields{"transaction_id": tid, "UUID": conceptUuid}).Debugf("Concordance found: %s", uppConcordance)
+	log.WithFields(log.Fields{"transaction_id": tid, "UUID": conceptUuid}).Debugf("Concordance record is %s", uppConcordance)
 	return VALID_CONCEPT, conceptUuid, uppConcordance, nil
 }
 
