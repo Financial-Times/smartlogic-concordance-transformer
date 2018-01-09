@@ -91,7 +91,7 @@ func main() {
 		"KAFKA_TOPIC":              *topic,
 		"GROUP_NAME":               *groupName,
 		"BROKER_CONNECTION_STRING": *brokerConnectionString,
-	}).Infof("[Startup] smartlogic-concordance-transformer is starting ")
+	}).Infof("[Startup] smartlogic-concordance-transformer is starting")
 
 	app.Action = func() {
 		log.Infof("System code: %s, App Name: %s, Port: %s", *appSystemCode, *appName, *port)
@@ -106,7 +106,7 @@ func main() {
 		transformer := slc.NewTransformerService(*topic, *writerAddress, &httpClient)
 		handler := slc.NewHandler(transformer, consumer)
 		handler.RegisterHandlers(router)
-		handler.RegisterAdminHandlers(router)
+		handler.RegisterAdminHandlers(router, *appSystemCode, *appName, appDescription)
 
 		go func() {
 			if err := http.ListenAndServe(":"+*port, nil); err != nil {

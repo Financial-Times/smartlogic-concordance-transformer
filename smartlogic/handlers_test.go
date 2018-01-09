@@ -31,7 +31,7 @@ func TestAdminHandler_Healthy(t *testing.T) {
 	mockClient := mockHttpClient{resp: "", statusCode: 200}
 	defaultTransformer := NewTransformerService(TOPIC, WRITER_ADDRESS, &mockClient)
 	h := NewHandler(defaultTransformer, mockConsumer{})
-	h.RegisterAdminHandlers(r)
+	h.RegisterAdminHandlers(r, "appy-mcappface", "Appy-McAppface", "My first app")
 
 	type testStruct struct {
 		endpoint           string

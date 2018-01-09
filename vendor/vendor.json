@@ -3,10 +3,10 @@
 	"ignore": "test",
 	"package": [
 		{
-			"checksumSHA1": "6U1V2xI8bHaR95+gN+VfO9TqClE=",
-			"path": "github.com/Financial-Times/go-fthealth",
-			"revision": "e7ccca038327a0091303a52445ec1f0fb66cb97b",
-			"revisionTime": "2017-05-25T09:50:41Z"
+			"checksumSHA1": "G8lW8pPVLieqh/MTJZkvI/i/WyM=",
+			"path": "github.com/Financial-Times/go-fthealth/v1_1",
+			"revision": "1b007e2b37b7936dfb6671fa17e5a29fd35a08ea",
+			"revisionTime": "2017-12-04T12:48:31Z"
 		},
 		{
 			"checksumSHA1": "dqF1g4reeLPNN10qTXgDJj3fHm4=",
@@ -15,10 +15,10 @@
 			"revisionTime": "2017-08-09T12:10:07Z"
 		},
 		{
-			"checksumSHA1": "4FoNa1c4xNwIuzokLe37dfC/hBQ=",
+			"checksumSHA1": "8xgl0z0fzjv0+/0JfFdl9W3UNmg=",
 			"path": "github.com/Financial-Times/kafka-client-go/kafka",
-			"revision": "cc65f68255d42de893a6d72f31394ad031c54142",
-			"revisionTime": "2017-08-25T10:40:40Z"
+			"revision": "4ad8d69b0ab2186062b3dee19107dc3301432a16",
+			"revisionTime": "2017-10-10T13:06:43Z"
 		},
 		{
 			"checksumSHA1": "fqpohN7Qp2qj7TLMbUxh/cK4oH0=",
