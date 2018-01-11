@@ -14,6 +14,8 @@ import (
 	"github.com/jawher/mow.cli"
 	_ "github.com/joho/godotenv/autoload"
 	log "github.com/sirupsen/logrus"
+	standardlog "log"
+	"io/ioutil"
 )
 
 const appDescription = "Service which listens to kafka for concordance updates, transforms smartlogic concordance json and sends updates to concordance-rw-dynamodb"
@@ -97,6 +99,7 @@ func main() {
 		log.Infof("System code: %s, App Name: %s, Port: %s", *appSystemCode, *appName, *port)
 
 		consumerConfig := kafka.DefaultConsumerConfig()
+		consumerConfig.Zookeeper.Logger = standardlog.New(ioutil.Discard, "", 0)
 		consumer, err := kafka.NewConsumer(*brokerConnectionString, *groupName, []string{*topic}, consumerConfig)
 		if err != nil {
 			log.WithError(err).Fatal("Cannot create Kafka client")
