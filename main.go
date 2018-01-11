@@ -14,6 +14,8 @@ import (
 	"github.com/jawher/mow.cli"
 	_ "github.com/joho/godotenv/autoload"
 	log "github.com/sirupsen/logrus"
+	standardlog "log"
+	"io/ioutil"
 )
 
 const appDescription = "Service which listens to kafka for concordance updates, transforms smartlogic concordance json and sends updates to concordance-rw-dynamodb"
@@ -91,12 +93,13 @@ func main() {
 		"KAFKA_TOPIC":              *topic,
 		"GROUP_NAME":               *groupName,
 		"BROKER_CONNECTION_STRING": *brokerConnectionString,
-	}).Infof("[Startup] smartlogic-concordance-transformer is starting ")
+	}).Infof("[Startup] smartlogic-concordance-transformer is starting")
 
 	app.Action = func() {
 		log.Infof("System code: %s, App Name: %s, Port: %s", *appSystemCode, *appName, *port)
 
 		consumerConfig := kafka.DefaultConsumerConfig()
+		consumerConfig.Zookeeper.Logger = standardlog.New(ioutil.Discard, "", 0)
 		consumer, err := kafka.NewConsumer(*brokerConnectionString, *groupName, []string{*topic}, consumerConfig)
 		if err != nil {
 			log.WithError(err).Fatal("Cannot create Kafka client")
@@ -106,7 +109,7 @@ func main() {
 		transformer := slc.NewTransformerService(*topic, *writerAddress, &httpClient)
 		handler := slc.NewHandler(transformer, consumer)
 		handler.RegisterHandlers(router)
-		handler.RegisterAdminHandlers(router)
+		handler.RegisterAdminHandlers(router, *appSystemCode, *appName, appDescription)
 
 		go func() {
 			if err := http.ListenAndServe(":"+*port, nil); err != nil {
