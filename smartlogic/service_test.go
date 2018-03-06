@@ -35,12 +35,12 @@ func TestValidateSubstrings(t *testing.T) {
 		expectedResult bool
 	}
 
-	oneValidSubstring := testStruct{testName: "oneValidSubstring", tmeIdParts: []string{"YzhlNzZkYTctMDJiNy00NTViLTk3NmYtNmJ"}, expectedResult: false}
-	twoValidSubstring := testStruct{testName: "twoValidSubstring", tmeIdParts: []string{"YzhlNzZkYTctMDJiNy00NTViLTk3NmYtNmJ", "jYTE5NDEyM2Yw"}, expectedResult: false}
-	thirdSubstringIsEmpty := testStruct{testName: "thirdSubstringIsEmpty", tmeIdParts: []string{"YzhlNzZkYTctMDJiNy00NTViLTk3NmYtNmJ", "jYTE5NDEyM2Yw", ""}, expectedResult: true}
-	secondSubstringIsEmpty := testStruct{testName: "secondSubstringIsEmpty", tmeIdParts: []string{"YzhlNzZkYTctMDJiNy00NTViLTk3NmYtNmJ", ""}, expectedResult: true}
-	firstSubstringIsEmpty := testStruct{testName: "firstSubstringIsEmpty", tmeIdParts: []string{"", "jYTE5NDEyM2Yw"}, expectedResult: true}
-	onlySubstringIsEmpty := testStruct{testName: "onlySubstringIsEmpty", tmeIdParts: []string{""}, expectedResult: true}
+	oneValidSubstring := testStruct{testName: "oneValidSubstring", tmeIdParts: []string{"YzhlNzZkYTctMDJiNy00NTViLTk3NmYtNmJ"}, expectedResult: true}
+	twoValidSubstring := testStruct{testName: "twoValidSubstring", tmeIdParts: []string{"YzhlNzZkYTctMDJiNy00NTViLTk3NmYtNmJ", "jYTE5NDEyM2Yw"}, expectedResult: true}
+	thirdSubstringIsEmpty := testStruct{testName: "thirdSubstringIsEmpty", tmeIdParts: []string{"YzhlNzZkYTctMDJiNy00NTViLTk3NmYtNmJ", "jYTE5NDEyM2Yw", ""}, expectedResult: false}
+	secondSubstringIsEmpty := testStruct{testName: "secondSubstringIsEmpty", tmeIdParts: []string{"YzhlNzZkYTctMDJiNy00NTViLTk3NmYtNmJ", ""}, expectedResult: false}
+	firstSubstringIsEmpty := testStruct{testName: "firstSubstringIsEmpty", tmeIdParts: []string{"", "jYTE5NDEyM2Yw"}, expectedResult: false}
+	onlySubstringIsEmpty := testStruct{testName: "onlySubstringIsEmpty", tmeIdParts: []string{""}, expectedResult: false}
 
 	testScenarios := []testStruct{oneValidSubstring, twoValidSubstring, thirdSubstringIsEmpty, secondSubstringIsEmpty, firstSubstringIsEmpty, onlySubstringIsEmpty}
 

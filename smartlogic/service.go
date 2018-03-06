@@ -174,7 +174,7 @@ func convertToUppConcordance(smartlogicConcepts SmartlogicConcept, tid string) (
 
 func validateTmeIdAndConvertToUuid(tmeId string) (string, error) {
 	subStrings := strings.Split(tmeId, "-")
-	if len(subStrings) != 2 || validateSubstrings(subStrings) == true {
+	if len(subStrings) != 2 || !validateSubstrings(subStrings) {
 		return "", errors.New("Bad Request: Concordance id " + tmeId + " is not a valid TME Id")
 	} else {
 		return uuid.NewMD5(uuid.UUID{}, []byte(tmeId)).String(), nil
@@ -189,13 +189,12 @@ func validateFactsetIdAndConvertToUuid(factsetId string) (string, error) {
 }
 
 func validateSubstrings(subStrings []string) bool {
-	subStringIsEmpty := false
 	for _, string := range subStrings {
 		if string == "" {
-			subStringIsEmpty = true
+			return false
 		}
 	}
-	return subStringIsEmpty
+	return true
 }
 
 func (ts *TransformerService) makeRelevantRequest(uuid string, uppConcordance UppConcordance, tid string) (status, error) {
