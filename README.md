@@ -70,6 +70,12 @@ Payload.txt:
                         "@value": "YzhlNzZkYTctMDJiNy00NTViLTk3NmYtNmJjYTE5NDEyM2Yw-QnJhbmRz"
                     }
                 ],
+                "http://www.ft.com/ontology/factsetIdentifier": [
+                    {
+                        "@language": "en",
+                        "@value": "000D63-E"
+                    }
+                ],
                 "http://www.ft.com/ontology/_logoURL": [
                     {
                         "@value": "http://im.ft-static.com/content/images/d5ffade2-99ea-11e6-8f9b-70e3cabccfae.png"
@@ -131,8 +137,15 @@ e.g
     X-Request-Id: transaction ID, e.g. tid_etmIWTJVeA
     {
       "uuid": "2d3e16e0-61cb-4322-8aff-3b01c59f4daa",
-      "concordedIds": [
-    	"70f4732b-7f7d-30a1-9c29-0cceec23760e"
+      "concordances": [
+          {
+              "authority": "FT-TME",
+              "uuid": "70f4732b-7f7d-30a1-9c29-0cceec23760e"
+          },
+          {
+              "authority": "FACTSET",
+              "uuid": "8f66ef61-3fbd-4c99-a344-8068e2ba13ad"
+          }
       ]
     }
 
@@ -160,6 +173,12 @@ Payload.txt:
                 "http://www.ft.com/ontology/TMEIdentifier": [
                     {
                         "@value": "YzhlNzZkYTctMDJiNy00NTViLTk3NmYtNmJjYTE5NDEyM2Yw-QnJhbmRz"
+                    }
+                ],
+                "http://www.ft.com/ontology/factsetIdentifier": [
+                    {
+                        "@language": "en",
+                        "@value": "000D63-E"
                     }
                 ],
                 "http://www.ft.com/ontology/_logoURL": [

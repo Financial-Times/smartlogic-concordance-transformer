@@ -20,6 +20,9 @@ var uuidMatcher = regexp.MustCompile("^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a
 type status int
 
 const (
+	CONCORDANCE_AUTHORITY_TME     = "FT-TME"
+	CONCORDANCE_AUTHORITY_FACTSET = "FACTSET"
+
 	THING_URI_PREFIX        = "http://www.ft.com/thing/"
 	NOT_FOUND        status = iota
 	SYNTACTICALLY_INCORRECT
@@ -105,9 +108,9 @@ func convertToUppConcordance(smartlogicConcepts SmartlogicConcept, tid string) (
 		return SYNTACTICALLY_INCORRECT, conceptUuid, UppConcordance{}, err
 	}
 
-	concordanceIds := make([]string, 0)
+	concordanceIds := []ConcordedId{}
 	for _, id := range smartlogicConcept.TmeIdentifiers {
-		uuidFromTmeId, err := validateIdAndConvertToUuid(id.Value)
+		uuidFromTmeId, err := validateTmeIdAndConvertToUuid(id.Value)
 		if conceptUuid == uuidFromTmeId {
 			err := errors.New("Bad Request: Payload from smartlogic has a smartlogic uuid that is the same as the uuid generated from the TME id")
 			log.WithFields(log.Fields{"transaction_id": tid, "UUID": conceptUuid}).Error(err)
@@ -117,17 +120,49 @@ func convertToUppConcordance(smartlogicConcepts SmartlogicConcept, tid string) (
 			log.WithFields(log.Fields{"transaction_id": tid, "UUID": conceptUuid}).Error(err)
 			return SYNTACTICALLY_INCORRECT, conceptUuid, UppConcordance{}, err
 		}
+		concordanceId := ConcordedId{
+			Authority: CONCORDANCE_AUTHORITY_TME,
+			UUID:      uuidFromTmeId,
+		}
 		if len(concordanceIds) > 0 {
-			for _, concordedId := range concordanceIds {
-				if concordedId == uuidFromTmeId {
+			for _, cid := range concordanceIds {
+				if cid.UUID == uuidFromTmeId {
 					err := errors.New("Bad Request: Payload from smartlogic contains duplicate TME id values")
 					log.WithFields(log.Fields{"transaction_id": tid, "UUID": conceptUuid}).Error(err)
 					return SYNTACTICALLY_INCORRECT, conceptUuid, UppConcordance{}, err
 				}
 			}
-			concordanceIds = append(concordanceIds, uuidFromTmeId)
+			concordanceIds = append(concordanceIds, concordanceId)
 		} else {
-			concordanceIds = append(concordanceIds, uuidFromTmeId)
+			concordanceIds = append(concordanceIds, concordanceId)
+		}
+	}
+	for _, id := range smartlogicConcept.FactsetIdentifiers {
+		uuidFromFactsetId, err := validateFactsetIdAndConvertToUuid(id.Value)
+		if conceptUuid == uuidFromFactsetId {
+			err := errors.New("Bad Request: Payload from smartlogic has a smartlogic uuid that is the same as the uuid generated from the FACTSET id")
+			log.WithFields(log.Fields{"transaction_id": tid, "UUID": conceptUuid}).Error(err)
+			return SYNTACTICALLY_INCORRECT, conceptUuid, UppConcordance{}, err
+		}
+		if err != nil {
+			log.WithFields(log.Fields{"transaction_id": tid, "UUID": conceptUuid}).Error(err)
+			return SYNTACTICALLY_INCORRECT, conceptUuid, UppConcordance{}, err
+		}
+		concordanceId := ConcordedId{
+			Authority: CONCORDANCE_AUTHORITY_FACTSET,
+			UUID:      uuidFromFactsetId,
+		}
+		if len(concordanceIds) > 0 {
+			for _, cid := range concordanceIds {
+				if cid.UUID == uuidFromFactsetId {
+					err := errors.New("Bad Request: Payload from smartlogic contains duplicate FACTSET id values")
+					log.WithFields(log.Fields{"transaction_id": tid, "UUID": conceptUuid}).Error(err)
+					return SYNTACTICALLY_INCORRECT, conceptUuid, UppConcordance{}, err
+				}
+			}
+			concordanceIds = append(concordanceIds, concordanceId)
+		} else {
+			concordanceIds = append(concordanceIds, concordanceId)
 		}
 	}
 	uppConcordance := UppConcordance{}
@@ -137,13 +172,20 @@ func convertToUppConcordance(smartlogicConcepts SmartlogicConcept, tid string) (
 	return VALID_CONCEPT, conceptUuid, uppConcordance, nil
 }
 
-func validateIdAndConvertToUuid(tmeId string) (string, error) {
+func validateTmeIdAndConvertToUuid(tmeId string) (string, error) {
 	subStrings := strings.Split(tmeId, "-")
 	if len(subStrings) != 2 || validateSubstrings(subStrings) == true {
 		return "", errors.New("Bad Request: Concordance id " + tmeId + " is not a valid TME Id")
 	} else {
 		return uuid.NewMD5(uuid.UUID{}, []byte(tmeId)).String(), nil
 	}
+}
+
+func validateFactsetIdAndConvertToUuid(factsetId string) (string, error) {
+	if len(factsetId) != 8 || factsetId[0] != '0' || factsetId[6:8] != "-E" {
+		return "", errors.New("Bad Request: Concordance id " + factsetId + " is not a valid FACTSET Id")
+	}
+	return uuid.NewMD5(uuid.UUID{}, []byte(factsetId)).String(), nil
 }
 
 func validateSubstrings(subStrings []string) bool {
