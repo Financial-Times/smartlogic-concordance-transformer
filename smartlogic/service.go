@@ -108,7 +108,7 @@ func convertToUppConcordance(smartlogicConcepts SmartlogicConcept, tid string) (
 		return SYNTACTICALLY_INCORRECT, conceptUuid, UppConcordance{}, err
 	}
 
-	concordanceIds := []ConcordedId{}
+	concordances := []ConcordedId{}
 	for _, id := range smartlogicConcept.TmeIdentifiers {
 		uuidFromTmeId, err := validateTmeIdAndConvertToUuid(id.Value)
 		if conceptUuid == uuidFromTmeId {
@@ -120,21 +120,21 @@ func convertToUppConcordance(smartlogicConcepts SmartlogicConcept, tid string) (
 			log.WithFields(log.Fields{"transaction_id": tid, "UUID": conceptUuid}).Error(err)
 			return SYNTACTICALLY_INCORRECT, conceptUuid, UppConcordance{}, err
 		}
-		concordanceId := ConcordedId{
+		concordedId := ConcordedId{
 			Authority: CONCORDANCE_AUTHORITY_TME,
 			UUID:      uuidFromTmeId,
 		}
-		if len(concordanceIds) > 0 {
-			for _, cid := range concordanceIds {
+		if len(concordances) > 0 {
+			for _, cid := range concordances {
 				if cid.UUID == uuidFromTmeId {
 					err := errors.New("Bad Request: Payload from smartlogic contains duplicate TME id values")
 					log.WithFields(log.Fields{"transaction_id": tid, "UUID": conceptUuid}).Error(err)
 					return SYNTACTICALLY_INCORRECT, conceptUuid, UppConcordance{}, err
 				}
 			}
-			concordanceIds = append(concordanceIds, concordanceId)
+			concordances = append(concordances, concordedId)
 		} else {
-			concordanceIds = append(concordanceIds, concordanceId)
+			concordances = append(concordances, concordedId)
 		}
 	}
 	for _, id := range smartlogicConcept.FactsetIdentifiers {
@@ -148,26 +148,26 @@ func convertToUppConcordance(smartlogicConcepts SmartlogicConcept, tid string) (
 			log.WithFields(log.Fields{"transaction_id": tid, "UUID": conceptUuid}).Error(err)
 			return SYNTACTICALLY_INCORRECT, conceptUuid, UppConcordance{}, err
 		}
-		concordanceId := ConcordedId{
+		concordedId := ConcordedId{
 			Authority: CONCORDANCE_AUTHORITY_FACTSET,
 			UUID:      uuidFromFactsetId,
 		}
-		if len(concordanceIds) > 0 {
-			for _, cid := range concordanceIds {
+		if len(concordances) > 0 {
+			for _, cid := range concordances {
 				if cid.UUID == uuidFromFactsetId {
 					err := errors.New("Bad Request: Payload from smartlogic contains duplicate FACTSET id values")
 					log.WithFields(log.Fields{"transaction_id": tid, "UUID": conceptUuid}).Error(err)
 					return SYNTACTICALLY_INCORRECT, conceptUuid, UppConcordance{}, err
 				}
 			}
-			concordanceIds = append(concordanceIds, concordanceId)
+			concordances = append(concordances, concordedId)
 		} else {
-			concordanceIds = append(concordanceIds, concordanceId)
+			concordances = append(concordances, concordedId)
 		}
 	}
 	uppConcordance := UppConcordance{}
 	uppConcordance.ConceptUuid = conceptUuid
-	uppConcordance.ConcordedIds = concordanceIds
+	uppConcordance.ConcordedIds = concordances
 	log.WithFields(log.Fields{"transaction_id": tid, "UUID": conceptUuid}).Debugf("Concordance record is %s", uppConcordance)
 	return VALID_CONCEPT, conceptUuid, uppConcordance, nil
 }
