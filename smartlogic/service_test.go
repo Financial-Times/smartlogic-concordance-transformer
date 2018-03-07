@@ -84,7 +84,7 @@ func TestValidateFactsetIdAndConvertToUuid(t *testing.T) {
 	invalidFactsetIdNoZeroPrefix := testStruct{testName: "invalidFactsetIdNoZeroPrefix", factsetId: "123456-E", expectedUuid: "", expectedError: errors.New("Bad Request: Concordance id 123456-E is not a valid FACTSET Id")}
 	invalidFactsetINoESuffix := testStruct{testName: "invalidFactsetINoESuffix", factsetId: "023456-A", expectedUuid: "", expectedError: errors.New("Bad Request: Concordance id 023456-A is not a valid FACTSET Id")}
 	invalidFactsetIdNoHyphenSuffix := testStruct{testName: "invalidFactsetIdNoHyphenSuffix", factsetId: "0123456E", expectedUuid: "", expectedError: errors.New("Bad Request: Concordance id 0123456E is not a valid FACTSET Id")}
-	validFactsetIdIsConverted := testStruct{testName: "validFactsetIdIsConverted", factsetId: "012345-E", expectedUuid: "65bd8174-7ea3-3176-aeb7-c9781666d8fb", expectedError: nil}
+	validFactsetIdIsConverted := testStruct{testName: "validFactsetIdIsConverted", factsetId: "012345-E", expectedUuid: "949a7e7f-2516-30c0-9123-f866601ffbe4", expectedError: nil}
 
 	testScenarios := []testStruct{invalidFactsetIdNoZeroPrefix, invalidFactsetINoESuffix, invalidFactsetIdNoHyphenSuffix, validFactsetIdIsConverted}
 
@@ -174,13 +174,13 @@ func TestConvertToUppConcordance(t *testing.T) {
 		ConcordedIds: []ConcordedId{
 			ConcordedId{
 				Authority: CONCORDANCE_AUTHORITY_FACTSET,
-				UUID:      "a554dee7-f59e-3bf0-ae5c-ae86b0a851ca",
+				UUID:      "8d3aba95-02d9-3802-afc0-b99bb9b1139e",
 			}, ConcordedId{
 				Authority: CONCORDANCE_AUTHORITY_FACTSET,
-				UUID:      "717c3fac-8cd5-3271-bee0-b9fe2c2df78c",
+				UUID:      "3bc0ab41-c01f-3a0b-aa78-c76438080b52",
 			}, ConcordedId{
 				Authority: CONCORDANCE_AUTHORITY_FACTSET,
-				UUID:      "a3a59b75-046c-32a4-94ca-1a064e89a782",
+				UUID:      "f777c5af-e0b2-34dc-9102-e346ca2d27aa",
 			},
 		},
 	}

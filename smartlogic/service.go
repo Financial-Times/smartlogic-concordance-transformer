@@ -185,7 +185,7 @@ func validateFactsetIdAndConvertToUuid(factsetId string) (string, error) {
 	if len(factsetId) != 8 || factsetId[0] != '0' || factsetId[6:8] != "-E" {
 		return "", errors.New("Bad Request: Concordance id " + factsetId + " is not a valid FACTSET Id")
 	}
-	return uuid.NewMD5(uuid.UUID{}, []byte(factsetId)).String(), nil
+	return convertFactsetIDToUUID(factsetId), nil
 }
 
 func validateSubstrings(subStrings []string) bool {
