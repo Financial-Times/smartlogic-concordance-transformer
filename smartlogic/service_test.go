@@ -11,9 +11,21 @@ import (
 )
 
 const (
-	testUuid    = "20db1bd6-59f9-4404-adb5-3165a448f8b0"
-	concordedId = "d83a4dc1-397e-4f99-8ecf-2f1b15febb7f"
-	writerUrl   = "http://localhost:8080/"
+	testUuid             = "20db1bd6-59f9-4404-adb5-3165a448f8b0"
+	concordedTmeUuid     = "d83a4dc1-397e-4f99-8ecf-2f1b15febb7f"
+	concordedFactsetUuid = "asdf"
+	writerUrl            = "http://localhost:8080/"
+)
+
+var (
+	concordedTmeId = ConcordedId{
+		Authority: CONCORDANCE_AUTHORITY_TME,
+		UUID:      concordedTmeUuid,
+	}
+	concordedFactsetId = ConcordedId{
+		Authority: CONCORDANCE_AUTHORITY_FACTSET,
+		UUID:      concordedFactsetUuid,
+	}
 )
 
 func TestValidateSubstrings(t *testing.T) {
@@ -23,12 +35,12 @@ func TestValidateSubstrings(t *testing.T) {
 		expectedResult bool
 	}
 
-	oneValidSubstring := testStruct{testName: "oneValidSubstring", tmeIdParts: []string{"YzhlNzZkYTctMDJiNy00NTViLTk3NmYtNmJ"}, expectedResult: false}
-	twoValidSubstring := testStruct{testName: "twoValidSubstring", tmeIdParts: []string{"YzhlNzZkYTctMDJiNy00NTViLTk3NmYtNmJ", "jYTE5NDEyM2Yw"}, expectedResult: false}
-	thirdSubstringIsEmpty := testStruct{testName: "thirdSubstringIsEmpty", tmeIdParts: []string{"YzhlNzZkYTctMDJiNy00NTViLTk3NmYtNmJ", "jYTE5NDEyM2Yw", ""}, expectedResult: true}
-	secondSubstringIsEmpty := testStruct{testName: "secondSubstringIsEmpty", tmeIdParts: []string{"YzhlNzZkYTctMDJiNy00NTViLTk3NmYtNmJ", ""}, expectedResult: true}
-	firstSubstringIsEmpty := testStruct{testName: "firstSubstringIsEmpty", tmeIdParts: []string{"", "jYTE5NDEyM2Yw"}, expectedResult: true}
-	onlySubstringIsEmpty := testStruct{testName: "onlySubstringIsEmpty", tmeIdParts: []string{""}, expectedResult: true}
+	oneValidSubstring := testStruct{testName: "oneValidSubstring", tmeIdParts: []string{"YzhlNzZkYTctMDJiNy00NTViLTk3NmYtNmJ"}, expectedResult: true}
+	twoValidSubstring := testStruct{testName: "twoValidSubstring", tmeIdParts: []string{"YzhlNzZkYTctMDJiNy00NTViLTk3NmYtNmJ", "jYTE5NDEyM2Yw"}, expectedResult: true}
+	thirdSubstringIsEmpty := testStruct{testName: "thirdSubstringIsEmpty", tmeIdParts: []string{"YzhlNzZkYTctMDJiNy00NTViLTk3NmYtNmJ", "jYTE5NDEyM2Yw", ""}, expectedResult: false}
+	secondSubstringIsEmpty := testStruct{testName: "secondSubstringIsEmpty", tmeIdParts: []string{"YzhlNzZkYTctMDJiNy00NTViLTk3NmYtNmJ", ""}, expectedResult: false}
+	firstSubstringIsEmpty := testStruct{testName: "firstSubstringIsEmpty", tmeIdParts: []string{"", "jYTE5NDEyM2Yw"}, expectedResult: false}
+	onlySubstringIsEmpty := testStruct{testName: "onlySubstringIsEmpty", tmeIdParts: []string{""}, expectedResult: false}
 
 	testScenarios := []testStruct{oneValidSubstring, twoValidSubstring, thirdSubstringIsEmpty, secondSubstringIsEmpty, firstSubstringIsEmpty, onlySubstringIsEmpty}
 
@@ -38,7 +50,7 @@ func TestValidateSubstrings(t *testing.T) {
 	}
 }
 
-func TestValidateIdAndConvertToUuid(t *testing.T) {
+func TestValidateTmeIdAndConvertToUuid(t *testing.T) {
 	type testStruct struct {
 		testName      string
 		tmeId         string
@@ -55,7 +67,29 @@ func TestValidateIdAndConvertToUuid(t *testing.T) {
 	testScenarios := []testStruct{invalidTmeIdHasNoHyphen, invalidTmeIdHasNoTaxonomy, invalidTmeIdHasNoValue, invalidTmeIdHasTooManyParts, validTmeIdIsConverted}
 
 	for _, scenario := range testScenarios {
-		uuid, err := validateIdAndConvertToUuid(scenario.tmeId)
+		uuid, err := validateTmeIdAndConvertToUuid(scenario.tmeId)
+		assert.Equal(t, scenario.expectedUuid, uuid, "Scenario: "+scenario.testName+" failed")
+		assert.Equal(t, scenario.expectedError, err, "Scenario: "+scenario.testName+" failed")
+	}
+}
+
+func TestValidateFactsetIdAndConvertToUuid(t *testing.T) {
+	type testStruct struct {
+		testName      string
+		factsetId     string
+		expectedUuid  string
+		expectedError error
+	}
+
+	invalidFactsetIdNoZeroPrefix := testStruct{testName: "invalidFactsetIdNoZeroPrefix", factsetId: "123456-E", expectedUuid: "", expectedError: errors.New("Bad Request: Concordance id 123456-E is not a valid FACTSET Id")}
+	invalidFactsetINoESuffix := testStruct{testName: "invalidFactsetINoESuffix", factsetId: "023456-A", expectedUuid: "", expectedError: errors.New("Bad Request: Concordance id 023456-A is not a valid FACTSET Id")}
+	invalidFactsetIdNoHyphenSuffix := testStruct{testName: "invalidFactsetIdNoHyphenSuffix", factsetId: "0123456E", expectedUuid: "", expectedError: errors.New("Bad Request: Concordance id 0123456E is not a valid FACTSET Id")}
+	validFactsetIdIsConverted := testStruct{testName: "validFactsetIdIsConverted", factsetId: "012345-E", expectedUuid: "949a7e7f-2516-30c0-9123-f866601ffbe4", expectedError: nil}
+
+	testScenarios := []testStruct{invalidFactsetIdNoZeroPrefix, invalidFactsetINoESuffix, invalidFactsetIdNoHyphenSuffix, validFactsetIdIsConverted}
+
+	for _, scenario := range testScenarios {
+		uuid, err := validateFactsetIdAndConvertToUuid(scenario.factsetId)
 		assert.Equal(t, scenario.expectedUuid, uuid, "Scenario: "+scenario.testName+" failed")
 		assert.Equal(t, scenario.expectedError, err, "Scenario: "+scenario.testName+" failed")
 	}
@@ -81,8 +115,8 @@ func TestExtractUuid(t *testing.T) {
 }
 
 func TestMakeRelevantRequest(t *testing.T) {
-	withConcordance := UppConcordance{ConceptUuid: testUuid, ConcordedIds: []string{concordedId}}
-	noConcordance := UppConcordance{ConceptUuid: testUuid, ConcordedIds: make([]string, 0)}
+	withConcordance := UppConcordance{ConceptUuid: testUuid, ConcordedIds: []ConcordedId{concordedTmeId}}
+	noConcordance := UppConcordance{ConceptUuid: testUuid, ConcordedIds: []ConcordedId{}}
 	type testStruct struct {
 		testName       string
 		uuid           string
@@ -116,8 +150,40 @@ func TestMakeRelevantRequest(t *testing.T) {
 
 func TestConvertToUppConcordance(t *testing.T) {
 	noConcordance := UppConcordance{ConceptUuid: ""}
-	emptyConcordance := UppConcordance{ConceptUuid: testUuid, ConcordedIds: make([]string, 0)}
-	multiConcordance := UppConcordance{ConceptUuid: testUuid, ConcordedIds: []string{"e9f4525a-401f-3b23-a68e-e48f314cdce6", "83f63c7e-1641-3c7b-81e4-378ae3c6c2ad", "e4bc4ac2-0637-3a27-86b1-9589fca6bf2c", "e574b21d-9abc-3d82-a6c0-3e08c85181bf"}}
+	emptyConcordance := UppConcordance{ConceptUuid: testUuid, ConcordedIds: []ConcordedId{}}
+	multiConcordance := UppConcordance{
+		ConceptUuid: testUuid,
+		ConcordedIds: []ConcordedId{
+			ConcordedId{
+				Authority: CONCORDANCE_AUTHORITY_TME,
+				UUID:      "e9f4525a-401f-3b23-a68e-e48f314cdce6",
+			}, ConcordedId{
+				Authority: CONCORDANCE_AUTHORITY_TME,
+				UUID:      "83f63c7e-1641-3c7b-81e4-378ae3c6c2ad",
+			}, ConcordedId{
+				Authority: CONCORDANCE_AUTHORITY_TME,
+				UUID:      "e4bc4ac2-0637-3a27-86b1-9589fca6bf2c",
+			}, ConcordedId{
+				Authority: CONCORDANCE_AUTHORITY_TME,
+				UUID:      "e574b21d-9abc-3d82-a6c0-3e08c85181bf",
+			},
+		},
+	}
+	multiFactsetConcordance := UppConcordance{
+		ConceptUuid: testUuid,
+		ConcordedIds: []ConcordedId{
+			ConcordedId{
+				Authority: CONCORDANCE_AUTHORITY_FACTSET,
+				UUID:      "8d3aba95-02d9-3802-afc0-b99bb9b1139e",
+			}, ConcordedId{
+				Authority: CONCORDANCE_AUTHORITY_FACTSET,
+				UUID:      "3bc0ab41-c01f-3a0b-aa78-c76438080b52",
+			}, ConcordedId{
+				Authority: CONCORDANCE_AUTHORITY_FACTSET,
+				UUID:      "f777c5af-e0b2-34dc-9102-e346ca2d27aa",
+			},
+		},
+	}
 
 	type testStruct struct {
 		testName       string
@@ -140,7 +206,53 @@ func TestConvertToUppConcordance(t *testing.T) {
 	handlesMultipleTmeIds := testStruct{testName: "handlesMultipleTmeIds", pathToFile: "../resources/multipleTmeIds.json", conceptUuid: testUuid, uppConcordance: multiConcordance, expectedError: nil}
 	handlesNoTmeIds := testStruct{testName: "handlesNoTmeIds", pathToFile: "../resources/noTmeIds.json", conceptUuid: testUuid, uppConcordance: emptyConcordance, expectedError: nil}
 
-	testScenarios := []testStruct{missingRequiredFieldsJson, invalidTmeListInputJson, invalidIdFieldJson, missingTypesField, membershipNoConcordanceNoError, errorOnMembershipConcept, errorOnMembershipRoleConcept, invalidTmeId, errorOnDuplicateTmeIds, handlesMultipleTmeIds, handlesNoTmeIds, tmeGeneratedUuidEqualConceptUuid}
+	invalidFactsetId := testStruct{
+		testName:       "invalidFactsetId",
+		pathToFile:     "../resources/invalidFactsetId.json",
+		conceptUuid:    testUuid,
+		uppConcordance: noConcordance,
+		expectedError:  errors.New("is not a valid FACTSET Id"),
+	}
+	errorOnDuplicateFactsetIds := testStruct{
+		testName:       "errorOnDuplicateFactsetIds",
+		pathToFile:     "../resources/duplicateFactsetIds.json",
+		conceptUuid:    testUuid,
+		uppConcordance: noConcordance,
+		expectedError:  errors.New("contains duplicate FACTSET id values"),
+	}
+	handlesMultipleFactsetIds := testStruct{
+		testName:       "handlesMultipleFactsetIds",
+		pathToFile:     "../resources/multipleFactsetIds.json",
+		conceptUuid:    testUuid,
+		uppConcordance: multiFactsetConcordance,
+		expectedError:  nil,
+	}
+	handlesNoFactsetIds := testStruct{
+		testName:       "handlesNoFactsetIds",
+		pathToFile:     "../resources/noFactsetIds.json",
+		conceptUuid:    testUuid,
+		uppConcordance: emptyConcordance,
+		expectedError:  nil,
+	}
+
+	testScenarios := []testStruct{
+		missingRequiredFieldsJson,
+		invalidTmeListInputJson,
+		invalidIdFieldJson,
+		missingTypesField,
+		membershipNoConcordanceNoError,
+		errorOnMembershipConcept,
+		errorOnMembershipRoleConcept,
+		invalidTmeId,
+		errorOnDuplicateTmeIds,
+		handlesMultipleTmeIds,
+		handlesNoTmeIds,
+		tmeGeneratedUuidEqualConceptUuid,
+		invalidFactsetId,
+		errorOnDuplicateFactsetIds,
+		handlesMultipleFactsetIds,
+		handlesNoFactsetIds,
+	}
 
 	for _, scenario := range testScenarios {
 		var smartLogicConcept = SmartlogicConcept{}
