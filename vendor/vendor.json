@@ -45,6 +45,12 @@
 			"revisionTime": "2017-03-28T16:39:54Z"
 		},
 		{
+			"checksumSHA1": "v4U1hEDE9QPeTP+tOBWu5vpJ6sk=",
+			"path": "github.com/Financial-Times/uuid-utils-go",
+			"revision": "a9db2d97524262a99960012d62b817cfee284a60",
+			"revisionTime": "2018-03-07T11:01:05Z"
+		},
+		{
 			"checksumSHA1": "FSV7EBu5vzmLEOAmeF0dW5P1ciA=",
 			"path": "github.com/Shopify/sarama",
 			"revision": "f0c32558d5e8d914b3de1a6f504e2ca88aaa40c4",
@@ -219,6 +225,12 @@
 			"revisionTime": "2017-12-31T12:27:32Z"
 		},
 		{
+			"checksumSHA1": "5amfcgkpgnDTPxm8yPfdeHUW9KQ=",
+			"path": "github.com/willf/bitset",
+			"revision": "1a37ad96e8c1a11b20900a232874843b5174221f",
+			"revisionTime": "2017-09-05T00:26:39Z"
+		},
+		{
 			"checksumSHA1": "8t3z6wSkl91Jf+d9wNHXBC3XtFk=",
 			"path": "github.com/wvanbergen/kafka/consumergroup",
 			"revision": "e2edea948ddfee841ea9a263b32ccca15f7d6c2f",
@@ -243,7 +255,7 @@
 			"revisionTime": "2017-09-25T09:26:47Z"
 		},
 		{
-			"checksumSHA1": "++MsxaBN30inOcAz7KvFGddE7ic=",
+			"checksumSHA1": "gRu2kYXXhEN+A+NpuAuMrjuiud0=",
 			"path": "golang.org/x/sys/unix",
 			"revision": "810d7000345868fc619eb81f46307107118f4ae1",
 			"revisionTime": "2018-01-09T14:25:55Z"

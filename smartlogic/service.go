@@ -1,17 +1,18 @@
 package smartlogic
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"regexp"
+	"strconv"
 	"strings"
 
-	"bytes"
-	"fmt"
-	"strconv"
-
 	"github.com/pborman/uuid"
+
+	uuidutils "github.com/Financial-Times/uuid-utils-go"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -185,7 +186,7 @@ func validateFactsetIdAndConvertToUuid(factsetId string) (string, error) {
 	if len(factsetId) != 8 || factsetId[0] != '0' || factsetId[6:8] != "-E" {
 		return "", errors.New("Bad Request: Concordance id " + factsetId + " is not a valid FACTSET Id")
 	}
-	return convertFactsetIDToUUID(factsetId), nil
+	return uuidutils.DeriveFactsetUUID(factsetId), nil
 }
 
 func validateSubstrings(subStrings []string) bool {
