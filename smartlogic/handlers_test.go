@@ -16,7 +16,7 @@ import (
 
 const (
 	ExpectedContentType = "application/json"
-	WRITER_ADDRESS      = "http://localhost:8080/__concordance-rw-dynamodb/"
+	WRITER_ADDRESS      = "http://localhost:8080/__concordance-rw-neo4j/"
 	TOPIC               = "TestTopic"
 )
 

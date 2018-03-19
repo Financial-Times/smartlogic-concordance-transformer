@@ -8,17 +8,18 @@ import (
 	"syscall"
 	"time"
 
+	"io/ioutil"
+	standardlog "log"
+
 	"github.com/Financial-Times/kafka-client-go/kafka"
 	slc "github.com/Financial-Times/smartlogic-concordance-transformer/smartlogic"
 	"github.com/gorilla/mux"
 	"github.com/jawher/mow.cli"
 	_ "github.com/joho/godotenv/autoload"
 	log "github.com/sirupsen/logrus"
-	standardlog "log"
-	"io/ioutil"
 )
 
-const appDescription = "Service which listens to kafka for concordance updates, transforms smartlogic concordance json and sends updates to concordance-rw-dynamodb"
+const appDescription = "Service which listens to kafka for concordance updates, transforms smartlogic concordance json and sends updates to concordance-rw-neo4j"
 
 var httpClient = http.Client{
 	Transport: &http.Transport{
@@ -76,7 +77,7 @@ func main() {
 	})
 	writerAddress := app.String(cli.StringOpt{
 		Name:   "writerAddress",
-		Value:  "http://localhost:8080/__concordance-rw-dynamodb/",
+		Value:  "http://localhost:8080/__concordance-rw-neo4j/",
 		Desc:   "Concordance rw address for routing requests",
 		EnvVar: "WRITER_ADDRESS",
 	})

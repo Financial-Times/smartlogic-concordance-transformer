@@ -28,7 +28,7 @@ func (h *SmartlogicConcordanceTransformerHandler) RegisterAdminHandlers(router *
 	monitoringRouter = httphandlers.TransactionAwareRequestLoggingHandler(log.StandardLogger(), monitoringRouter)
 	monitoringRouter = httphandlers.HTTPMetricsHandler(metrics.DefaultRegistry, monitoringRouter)
 
-	var checks = []fthealth.Check{h.concordanceRwDynamoDbHealthCheck(), h.kafkaHealthCheck()}
+	var checks = []fthealth.Check{h.concordanceRwNeo4jHealthCheck(), h.kafkaHealthCheck()}
 
 	timedHC := fthealth.TimedHealthCheck{
 		HealthCheck: fthealth.HealthCheck{
@@ -81,7 +81,7 @@ func (h *SmartlogicConcordanceTransformerHandler) kafkaHealthCheck() fthealth.Ch
 	}
 }
 
-func (h *SmartlogicConcordanceTransformerHandler) concordanceRwDynamoDbHealthCheck() fthealth.Check {
+func (h *SmartlogicConcordanceTransformerHandler) concordanceRwNeo4jHealthCheck() fthealth.Check {
 	return fthealth.Check{
 		BusinessImpact:   businessImpact,
 		Name:             "Check connectivity to concordance reader/writer ",
@@ -112,7 +112,7 @@ func (h *SmartlogicConcordanceTransformerHandler) checkConcordanceRwConnectivity
 		log.WithError(err).Error(clientError)
 		return clientError, errors.New("Unable to verify availibility of concordances-rw-neo4j")
 	}
-	return "Successfully connected to Concordances Rw DynamoDB", nil
+	return "Successfully connected to Concordances Rw Neo4j", nil
 }
 
 func (h *SmartlogicConcordanceTransformerHandler) checkKafkaConnectivity() (string, error) {
