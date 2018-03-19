@@ -86,7 +86,7 @@ func (h *SmartlogicConcordanceTransformerHandler) concordanceRwDynamoDbHealthChe
 		Name:             "Check connectivity to concordance reader/writer ",
 		PanicGuide:       deweyURL,
 		Severity:         3,
-		TechnicalSummary: `Check health of concordances-rw-dynamodb`,
+		TechnicalSummary: `Check health of concordances-rw-neo4j`,
 		Checker:          h.checkConcordanceRwConnectivity,
 	}
 }
@@ -97,19 +97,19 @@ func (h *SmartlogicConcordanceTransformerHandler) checkConcordanceRwConnectivity
 	if err != nil {
 		clientError := fmt.Sprintf("Error creating request to writer %s : %v", urlToCheck, err)
 		log.WithError(err).Error(clientError)
-		return clientError, errors.New("Unable to verify availibility of concordances-rw-dynamodb")
+		return clientError, errors.New("Unable to verify availibility of concordances-rw-neo4j")
 	}
 	resp, err := h.transformer.httpClient.Do(request)
 	if err != nil {
 		clientError := fmt.Sprintf("Error calling writer at %s : %v", urlToCheck, err)
 		log.WithError(err).Error(clientError)
-		return clientError, errors.New("Unable to verify availibility of concordances-rw-dynamodb")
+		return clientError, errors.New("Unable to verify availibility of concordances-rw-neo4j")
 	}
 	defer resp.Body.Close()
 	if resp != nil && resp.StatusCode != http.StatusOK {
 		clientError := fmt.Sprintf("Writer %v returned status %d", urlToCheck, resp.StatusCode)
 		log.WithError(err).Error(clientError)
-		return clientError, errors.New("Unable to verify availibility of concordances-rw-dynamodb")
+		return clientError, errors.New("Unable to verify availibility of concordances-rw-neo4j")
 	}
 	return "Successfully connected to Concordances Rw DynamoDB", nil
 }
