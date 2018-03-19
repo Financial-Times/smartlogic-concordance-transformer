@@ -89,21 +89,21 @@ func TestTransformAndSendHandlers(t *testing.T) {
 		filePath:           "../resources/multipleTmeIds.json",
 		endpoint:           "/transform",
 		expectedStatusCode: 200,
-		expectedResult:     `{"uuid":"20db1bd6-59f9-4404-adb5-3165a448f8b0","concordances":[{"authority":"FT-TME","uuid":"e9f4525a-401f-3b23-a68e-e48f314cdce6"},{"authority":"FT-TME","uuid":"83f63c7e-1641-3c7b-81e4-378ae3c6c2ad"},{"authority":"FT-TME","uuid":"e4bc4ac2-0637-3a27-86b1-9589fca6bf2c"},{"authority":"FT-TME","uuid":"e574b21d-9abc-3d82-a6c0-3e08c85181bf"}]}`,
+		expectedResult:     `{"authority":"SmartLogic","uuid":"20db1bd6-59f9-4404-adb5-3165a448f8b0","concordances":[{"authority":"FT-TME","uuid":"e9f4525a-401f-3b23-a68e-e48f314cdce6"},{"authority":"FT-TME","uuid":"83f63c7e-1641-3c7b-81e4-378ae3c6c2ad"},{"authority":"FT-TME","uuid":"e4bc4ac2-0637-3a27-86b1-9589fca6bf2c"},{"authority":"FT-TME","uuid":"e574b21d-9abc-3d82-a6c0-3e08c85181bf"}]}`,
 	}
 	transform_convertsFactsetsAndReturnsPayload := testStruct{
 		scenarioName:       "transform_convertsFactsetsAndReturnsPayload",
 		filePath:           "../resources/multipleFactsetIds.json",
 		endpoint:           "/transform",
 		expectedStatusCode: 200,
-		expectedResult:     `{"uuid":"20db1bd6-59f9-4404-adb5-3165a448f8b0","concordances":[{"authority":"FACTSET","uuid":"8d3aba95-02d9-3802-afc0-b99bb9b1139e"},{"authority":"FACTSET","uuid":"3bc0ab41-c01f-3a0b-aa78-c76438080b52"},{"authority":"FACTSET","uuid":"f777c5af-e0b2-34dc-9102-e346ca2d27aa"}]}`,
+		expectedResult:     `{"authority":"SmartLogic","uuid":"20db1bd6-59f9-4404-adb5-3165a448f8b0","concordances":[{"authority":"FACTSET","uuid":"8d3aba95-02d9-3802-afc0-b99bb9b1139e"},{"authority":"FACTSET","uuid":"3bc0ab41-c01f-3a0b-aa78-c76438080b52"},{"authority":"FACTSET","uuid":"f777c5af-e0b2-34dc-9102-e346ca2d27aa"}]}`,
 	}
 	transform_convertsTmeAndFactsetsAndReturnsPayload := testStruct{
 		scenarioName:       "transform_convertsTmeAndFactsetsAndReturnsPayload",
 		filePath:           "../resources/multipleTmeAndFactsetIds.json",
 		endpoint:           "/transform",
 		expectedStatusCode: 200,
-		expectedResult:     `{"uuid":"20db1bd6-59f9-4404-adb5-3165a448f8b0","concordances":[{"authority":"FT-TME","uuid":"e9f4525a-401f-3b23-a68e-e48f314cdce6"},{"authority":"FT-TME","uuid":"83f63c7e-1641-3c7b-81e4-378ae3c6c2ad"},{"authority":"FT-TME","uuid":"e4bc4ac2-0637-3a27-86b1-9589fca6bf2c"},{"authority":"FACTSET","uuid":"8d3aba95-02d9-3802-afc0-b99bb9b1139e"},{"authority":"FACTSET","uuid":"3bc0ab41-c01f-3a0b-aa78-c76438080b52"},{"authority":"FACTSET","uuid":"f777c5af-e0b2-34dc-9102-e346ca2d27aa"}]}`,
+		expectedResult:     `{"authority":"SmartLogic","uuid":"20db1bd6-59f9-4404-adb5-3165a448f8b0","concordances":[{"authority":"FT-TME","uuid":"e9f4525a-401f-3b23-a68e-e48f314cdce6"},{"authority":"FT-TME","uuid":"83f63c7e-1641-3c7b-81e4-378ae3c6c2ad"},{"authority":"FT-TME","uuid":"e4bc4ac2-0637-3a27-86b1-9589fca6bf2c"},{"authority":"FACTSET","uuid":"8d3aba95-02d9-3802-afc0-b99bb9b1139e"},{"authority":"FACTSET","uuid":"3bc0ab41-c01f-3a0b-aa78-c76438080b52"},{"authority":"FACTSET","uuid":"f777c5af-e0b2-34dc-9102-e346ca2d27aa"}]}`,
 	}
 	send_convertsAndForwardsPayloadWithConcordance := testStruct{
 		scenarioName:       "send_convertsAndForwardsPayloadWithConcordance",

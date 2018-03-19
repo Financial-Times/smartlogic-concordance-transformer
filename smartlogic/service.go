@@ -21,8 +21,9 @@ var uuidMatcher = regexp.MustCompile("^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a
 type status int
 
 const (
-	CONCORDANCE_AUTHORITY_TME     = "FT-TME"
-	CONCORDANCE_AUTHORITY_FACTSET = "FACTSET"
+	CONCORDANCE_AUTHORITY_TME        = "FT-TME"
+	CONCORDANCE_AUTHORITY_FACTSET    = "FACTSET"
+	CONCORDANCE_AUTHORITY_SMARTLOGIC = "SmartLogic"
 
 	THING_URI_PREFIX        = "http://www.ft.com/thing/"
 	NOT_FOUND        status = iota
@@ -168,6 +169,7 @@ func convertToUppConcordance(smartlogicConcepts SmartlogicConcept, tid string) (
 	}
 	uppConcordance := UppConcordance{}
 	uppConcordance.ConceptUuid = conceptUuid
+	uppConcordance.Authority = CONCORDANCE_AUTHORITY_SMARTLOGIC
 	uppConcordance.ConcordedIds = concordances
 	log.WithFields(log.Fields{"transaction_id": tid, "UUID": conceptUuid}).Debugf("Concordance record is %s", uppConcordance)
 	return VALID_CONCEPT, conceptUuid, uppConcordance, nil
@@ -213,7 +215,7 @@ func (ts *TransformerService) makeRelevantRequest(uuid string, uppConcordance Up
 }
 
 func (ts *TransformerService) makeWriteRequest(uuid string, uppConcordance UppConcordance, tid string) (status, error) {
-	reqURL := ts.writerAddress + "concordances/" + uuid
+	reqURL := ts.writerAddress + "branches/" + uuid
 	concordedJson, err := json.Marshal(uppConcordance)
 	if err != nil {
 		log.WithError(err).WithFields(log.Fields{"transaction_id": tid, "UUID": uuid}).Error("Bad Request: Could not unmarshall concordance json")
@@ -242,7 +244,7 @@ func (ts *TransformerService) makeWriteRequest(uuid string, uppConcordance UppCo
 }
 
 func (ts *TransformerService) makeDeleteRequest(uuid string, tid string) (status, error) {
-	reqURL := ts.writerAddress + "concordances/" + uuid
+	reqURL := ts.writerAddress + "branches/" + uuid
 	request, err := http.NewRequest("DELETE", reqURL, strings.NewReader(""))
 	if err != nil {
 		log.WithError(err).WithFields(log.Fields{"transaction_id": tid, "UUID": uuid}).Error("Internal Error: Failed to create DELETE request to " + reqURL)

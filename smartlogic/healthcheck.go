@@ -1,22 +1,23 @@
 package smartlogic
 
 import (
-	"github.com/gorilla/mux"
-	fthealth "github.com/Financial-Times/go-fthealth/v1_1"
-	log "github.com/sirupsen/logrus"
-	"net/http"
-	"github.com/Financial-Times/http-handlers-go/httphandlers"
-	"github.com/rcrowley/go-metrics"
-	serviceStatus "github.com/Financial-Times/service-status-go/httphandlers"
 	"errors"
-	"time"
-	"github.com/gorilla/handlers"
-	"github.com/Financial-Times/service-status-go/gtg"
 	"fmt"
+	"net/http"
+	"time"
+
+	fthealth "github.com/Financial-Times/go-fthealth/v1_1"
+	"github.com/Financial-Times/http-handlers-go/httphandlers"
+	"github.com/Financial-Times/service-status-go/gtg"
+	serviceStatus "github.com/Financial-Times/service-status-go/httphandlers"
+	"github.com/gorilla/handlers"
+	"github.com/gorilla/mux"
+	"github.com/rcrowley/go-metrics"
+	log "github.com/sirupsen/logrus"
 )
 
 const (
-	deweyURL = "https://dewey.ft.com/smartlogic-concordance-transform.html"
+	deweyURL       = "https://dewey.ft.com/smartlogic-concordance-transform.html"
 	businessImpact = "Editorial updates of concordance records in smartlogic will not be ingested into UPP"
 )
 
@@ -31,10 +32,10 @@ func (h *SmartlogicConcordanceTransformerHandler) RegisterAdminHandlers(router *
 
 	timedHC := fthealth.TimedHealthCheck{
 		HealthCheck: fthealth.HealthCheck{
-			SystemCode: appSystemCode,
+			SystemCode:  appSystemCode,
 			Description: appDescription,
-			Name: appName,
-			Checks: checks,
+			Name:        appName,
+			Checks:      checks,
 		},
 		Timeout: 10 * time.Second,
 	}
