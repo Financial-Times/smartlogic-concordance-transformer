@@ -150,9 +150,14 @@ func TestMakeRelevantRequest(t *testing.T) {
 
 func TestConvertToUppConcordance(t *testing.T) {
 	noConcordance := UppConcordance{ConceptUuid: ""}
-	emptyConcordance := UppConcordance{ConceptUuid: testUuid, ConcordedIds: []ConcordedId{}}
+	emptyConcordance := UppConcordance{
+		ConceptUuid:  testUuid,
+		ConcordedIds: []ConcordedId{},
+		Authority:    "SmartLogic",
+	}
 	multiConcordance := UppConcordance{
 		ConceptUuid: testUuid,
+		Authority:   "SmartLogic",
 		ConcordedIds: []ConcordedId{
 			ConcordedId{
 				Authority: CONCORDANCE_AUTHORITY_TME,
@@ -171,6 +176,7 @@ func TestConvertToUppConcordance(t *testing.T) {
 	}
 	multiFactsetConcordance := UppConcordance{
 		ConceptUuid: testUuid,
+		Authority:   "SmartLogic",
 		ConcordedIds: []ConcordedId{
 			ConcordedId{
 				Authority: CONCORDANCE_AUTHORITY_FACTSET,

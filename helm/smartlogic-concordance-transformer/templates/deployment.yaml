@@ -39,7 +39,7 @@ spec:
         - name: GROUP_NAME
           value: "SmartlogicConcordanceTransformer"
         - name: WRITER_ADDRESS
-          value: "http://concordances-rw-dynamodb:8080/"
+          value: "http://concordances-rw-neo4j:8080/"
         - name: BROKER_CONNECTION_STRING
           valueFrom: 
             configMapKeyRef: 

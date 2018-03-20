@@ -21,6 +21,7 @@ type FactsetId struct {
 }
 
 type UppConcordance struct {
+	Authority    string        `json:"authority"`
 	ConceptUuid  string        `json:"uuid"`
 	ConcordedIds []ConcordedId `json:"concordances"`
 }

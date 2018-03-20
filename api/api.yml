@@ -45,11 +45,11 @@ paths:
         500:
           description: Internal error transforming the Smart Logic JSON-LD
         503:
-          description: Service cannot connect to Kafka or the concordances-rw-dynamodb service
+          description: Service cannot connect to Kafka or the concordances-rw-neo4j service
   /transform/send:
     post:
-      summary: Transforms smartlogic payload into the upp representation of concordance and sends it to the concordance-rw-dynamodb. 
-      description: Transforms smartlogic payload into the upp representation of concordance and sends it to the concordance-rw-dynamodb. If no concordance exists, a delete request is sent instead (response outlined in concordance-rw-dynamodb)
+      summary: Transforms smartlogic payload into the upp representation of concordance and sends it to the concordance-rw-neo4j. 
+      description: Transforms smartlogic payload into the upp representation of concordance and sends it to the concordance-rw-neo4j. If no concordance exists, a delete request is sent instead (response outlined in concordance-rw-neo4j)
       tags:
         - Internal API
       produces:
@@ -64,7 +64,7 @@ paths:
             type: string  
       responses:
         200:
-          description: Successfully transformed and sent onwards the concordance rw dynamodb
+          description: Successfully transformed and sent onwards the concordance rw neo4j
         400:
           description: Invalid input - invalid JSON-LD or a missing uuid
         405:
@@ -74,7 +74,7 @@ paths:
         500:
           description: Internal error transforming the Smart Logic JSON-LD
         503:
-          description: Service cannot connect to Kafka or the concordances-rw-dynamodb service
+          description: Service cannot connect to Kafka or the concordances-rw-neo4j service
   
     
   /__ping:

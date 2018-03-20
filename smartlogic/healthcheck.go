@@ -1,22 +1,23 @@
 package smartlogic
 
 import (
-	"github.com/gorilla/mux"
-	fthealth "github.com/Financial-Times/go-fthealth/v1_1"
-	log "github.com/sirupsen/logrus"
-	"net/http"
-	"github.com/Financial-Times/http-handlers-go/httphandlers"
-	"github.com/rcrowley/go-metrics"
-	serviceStatus "github.com/Financial-Times/service-status-go/httphandlers"
 	"errors"
-	"time"
-	"github.com/gorilla/handlers"
-	"github.com/Financial-Times/service-status-go/gtg"
 	"fmt"
+	"net/http"
+	"time"
+
+	fthealth "github.com/Financial-Times/go-fthealth/v1_1"
+	"github.com/Financial-Times/http-handlers-go/httphandlers"
+	"github.com/Financial-Times/service-status-go/gtg"
+	serviceStatus "github.com/Financial-Times/service-status-go/httphandlers"
+	"github.com/gorilla/handlers"
+	"github.com/gorilla/mux"
+	"github.com/rcrowley/go-metrics"
+	log "github.com/sirupsen/logrus"
 )
 
 const (
-	deweyURL = "https://dewey.ft.com/smartlogic-concordance-transform.html"
+	deweyURL       = "https://dewey.ft.com/smartlogic-concordance-transform.html"
 	businessImpact = "Editorial updates of concordance records in smartlogic will not be ingested into UPP"
 )
 
@@ -27,14 +28,14 @@ func (h *SmartlogicConcordanceTransformerHandler) RegisterAdminHandlers(router *
 	monitoringRouter = httphandlers.TransactionAwareRequestLoggingHandler(log.StandardLogger(), monitoringRouter)
 	monitoringRouter = httphandlers.HTTPMetricsHandler(metrics.DefaultRegistry, monitoringRouter)
 
-	var checks = []fthealth.Check{h.concordanceRwDynamoDbHealthCheck(), h.kafkaHealthCheck()}
+	var checks = []fthealth.Check{h.concordanceRwNeo4jHealthCheck(), h.kafkaHealthCheck()}
 
 	timedHC := fthealth.TimedHealthCheck{
 		HealthCheck: fthealth.HealthCheck{
-			SystemCode: appSystemCode,
+			SystemCode:  appSystemCode,
 			Description: appDescription,
-			Name: appName,
-			Checks: checks,
+			Name:        appName,
+			Checks:      checks,
 		},
 		Timeout: 10 * time.Second,
 	}
@@ -80,13 +81,13 @@ func (h *SmartlogicConcordanceTransformerHandler) kafkaHealthCheck() fthealth.Ch
 	}
 }
 
-func (h *SmartlogicConcordanceTransformerHandler) concordanceRwDynamoDbHealthCheck() fthealth.Check {
+func (h *SmartlogicConcordanceTransformerHandler) concordanceRwNeo4jHealthCheck() fthealth.Check {
 	return fthealth.Check{
 		BusinessImpact:   businessImpact,
 		Name:             "Check connectivity to concordance reader/writer ",
 		PanicGuide:       deweyURL,
 		Severity:         3,
-		TechnicalSummary: `Check health of concordances-rw-dynamodb`,
+		TechnicalSummary: `Check health of concordances-rw-neo4j`,
 		Checker:          h.checkConcordanceRwConnectivity,
 	}
 }
@@ -97,21 +98,21 @@ func (h *SmartlogicConcordanceTransformerHandler) checkConcordanceRwConnectivity
 	if err != nil {
 		clientError := fmt.Sprintf("Error creating request to writer %s : %v", urlToCheck, err)
 		log.WithError(err).Error(clientError)
-		return clientError, errors.New("Unable to verify availibility of concordances-rw-dynamodb")
+		return clientError, errors.New("Unable to verify availibility of concordances-rw-neo4j")
 	}
 	resp, err := h.transformer.httpClient.Do(request)
 	if err != nil {
 		clientError := fmt.Sprintf("Error calling writer at %s : %v", urlToCheck, err)
 		log.WithError(err).Error(clientError)
-		return clientError, errors.New("Unable to verify availibility of concordances-rw-dynamodb")
+		return clientError, errors.New("Unable to verify availibility of concordances-rw-neo4j")
 	}
 	defer resp.Body.Close()
 	if resp != nil && resp.StatusCode != http.StatusOK {
 		clientError := fmt.Sprintf("Writer %v returned status %d", urlToCheck, resp.StatusCode)
 		log.WithError(err).Error(clientError)
-		return clientError, errors.New("Unable to verify availibility of concordances-rw-dynamodb")
+		return clientError, errors.New("Unable to verify availibility of concordances-rw-neo4j")
 	}
-	return "Successfully connected to Concordances Rw DynamoDB", nil
+	return "Successfully connected to Concordances Rw Neo4j", nil
 }
 
 func (h *SmartlogicConcordanceTransformerHandler) checkKafkaConnectivity() (string, error) {
