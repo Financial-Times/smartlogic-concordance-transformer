@@ -233,7 +233,7 @@ func (ts *TransformerService) makeWriteRequest(uuid string, uppConcordance UppCo
 	if err != nil {
 		log.WithError(err).WithFields(log.Fields{"transaction_id": tid, "UUID": uuid}).Error("Service Unavailable: Get request to writer resulted in error")
 		return SERVICE_UNAVAILABLE, err
-	} else if resp.StatusCode != 200 && resp.StatusCode != 201 {
+	} else if resp.StatusCode != 200 && resp.StatusCode != 201 && resp.StatusCode != 304 {
 		err := errors.New("Internal Error: Get request to writer returned unexpected status: " + strconv.Itoa(resp.StatusCode))
 		log.WithFields(log.Fields{"transaction_id": tid, "UUID": uuid, "status": resp.StatusCode}).Error(err)
 		return INTERNAL_ERROR, err
