@@ -77,6 +77,13 @@ func TestTransformAndSendHandlers(t *testing.T) {
 	send_convertingToConcordedJsonError := testStruct{scenarioName: "send_convertingToConcordedJsonError", filePath: "../resources/invalidTmeId.json", endpoint: "/transform/send", expectedStatusCode: 400, expectedResult: "is not a valid TME Id"}
 	send_convertsAndFailsForwardToRw := testStruct{scenarioName: "send_convertsAndFailsForwardToRw", filePath: "../resources/noTmeIds.json", endpoint: "/transform/send", expectedStatusCode: 500, expectedResult: "Internal Error: Delete request to writer returned unexpected status:"}
 
+	transform_unprocessibleEntityNotAllowedConceptTypeError := testStruct{
+		scenarioName:       "transform_unprocessibleEntityNotAllowedConceptTypeError",
+		filePath:           "../resources/notAllowedType.json",
+		endpoint:           "/transform",
+		expectedStatusCode: 422,
+		expectedResult:     "concept type not allowed",
+	}
 	transform_duplicateFactsetIdsError := testStruct{
 		scenarioName:       "transform_duplicateFactsetIdsError",
 		filePath:           "../resources/duplicateFactsetIds.json",
@@ -125,6 +132,7 @@ func TestTransformAndSendHandlers(t *testing.T) {
 		send_convertingToConcordedJsonError,
 		send_convertsAndForwardsPayloadWithConcordance,
 		send_convertsAndFailsForwardToRw,
+		transform_unprocessibleEntityNotAllowedConceptTypeError,
 	}
 
 	for _, scenario := range testScenarios {

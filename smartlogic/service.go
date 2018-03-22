@@ -33,6 +33,16 @@ const (
 	INTERNAL_ERROR
 	SERVICE_UNAVAILABLE
 	NO_CONTENT
+
+	alertTagConceptTypeNotAllowed = "SmartlogicConcordanceTransformerConceptTypeNotAllowed"
+)
+
+var (
+	notAllowedConceptTypes = [...]string{
+		"skos:Concept",
+	}
+
+	errConceptTypeNotAllowed = errors.New("concept type not allowed")
 )
 
 type TransformerService struct {
@@ -103,6 +113,20 @@ func convertToUppConcordance(smartlogicConcepts SmartlogicConcept, tid string) (
 	}
 
 	conceptType := smartlogicConcept.Types[0]
+
+	for _, bannedConceptType := range notAllowedConceptTypes {
+		if conceptType != bannedConceptType {
+			continue
+		}
+		log.WithFields(log.Fields{
+			"transaction_id": tid,
+			"UUID":           conceptUuid,
+			"concept_type":   bannedConceptType,
+			"alert_tag":      alertTagConceptTypeNotAllowed,
+		}).Error(errConceptTypeNotAllowed)
+		return SEMANTICALLY_INCORRECT, conceptUuid, UppConcordance{}, errConceptTypeNotAllowed
+	}
+
 	shortFormType := conceptType[strings.LastIndex(conceptType, "/")+1:]
 	if (shortFormType == "Membership" || shortFormType == "MembershipRole") && len(smartlogicConcept.TmeIdentifiers) > 0 {
 		err := fmt.Errorf("Bad Request: Concept type %s does not support concordance", shortFormType)
@@ -233,7 +257,7 @@ func (ts *TransformerService) makeWriteRequest(uuid string, uppConcordance UppCo
 	if err != nil {
 		log.WithError(err).WithFields(log.Fields{"transaction_id": tid, "UUID": uuid}).Error("Service Unavailable: Get request to writer resulted in error")
 		return SERVICE_UNAVAILABLE, err
-	} else if resp.StatusCode != 200 && resp.StatusCode != 201 {
+	} else if resp.StatusCode != 200 && resp.StatusCode != 201 && resp.StatusCode != 304 {
 		err := errors.New("Internal Error: Get request to writer returned unexpected status: " + strconv.Itoa(resp.StatusCode))
 		log.WithFields(log.Fields{"transaction_id": tid, "UUID": uuid, "status": resp.StatusCode}).Error(err)
 		return INTERNAL_ERROR, err
