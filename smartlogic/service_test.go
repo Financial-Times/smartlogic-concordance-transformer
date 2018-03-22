@@ -226,6 +226,13 @@ func TestConvertToUppConcordance(t *testing.T) {
 		uppConcordance: noConcordance,
 		expectedError:  errors.New("contains duplicate FACTSET id values"),
 	}
+	noErrorOnNotAllowedConceptType := testStruct{
+		testName:       "noErrorOnNotAllowedConceptType",
+		pathToFile:     "../resources/notAllowedType.json",
+		conceptUuid:    testUuid,
+		uppConcordance: noConcordance,
+		expectedError:  errConceptTypeNotAllowed,
+	}
 	handlesMultipleFactsetIds := testStruct{
 		testName:       "handlesMultipleFactsetIds",
 		pathToFile:     "../resources/multipleFactsetIds.json",
@@ -258,6 +265,7 @@ func TestConvertToUppConcordance(t *testing.T) {
 		errorOnDuplicateFactsetIds,
 		handlesMultipleFactsetIds,
 		handlesNoFactsetIds,
+		noErrorOnNotAllowedConceptType,
 	}
 
 	for _, scenario := range testScenarios {

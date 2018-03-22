@@ -33,6 +33,16 @@ const (
 	INTERNAL_ERROR
 	SERVICE_UNAVAILABLE
 	NO_CONTENT
+
+	alertTagConceptTypeNotAllowed = "SmartlogicConcordanceTransformerConceptTypeNotAllowed"
+)
+
+var (
+	notAllowedConceptTypes = [...]string{
+		"skos:Concept",
+	}
+
+	errConceptTypeNotAllowed = errors.New("concept type not allowed")
 )
 
 type TransformerService struct {
@@ -103,6 +113,20 @@ func convertToUppConcordance(smartlogicConcepts SmartlogicConcept, tid string) (
 	}
 
 	conceptType := smartlogicConcept.Types[0]
+
+	for _, bannedConceptType := range notAllowedConceptTypes {
+		if conceptType != bannedConceptType {
+			continue
+		}
+		log.WithFields(log.Fields{
+			"transaction_id": tid,
+			"UUID":           conceptUuid,
+			"concept_type":   bannedConceptType,
+			"alert_tag":      alertTagConceptTypeNotAllowed,
+		}).Error(errConceptTypeNotAllowed)
+		return SEMANTICALLY_INCORRECT, conceptUuid, UppConcordance{}, errConceptTypeNotAllowed
+	}
+
 	shortFormType := conceptType[strings.LastIndex(conceptType, "/")+1:]
 	if (shortFormType == "Membership" || shortFormType == "MembershipRole") && len(smartlogicConcept.TmeIdentifiers) > 0 {
 		err := fmt.Errorf("Bad Request: Concept type %s does not support concordance", shortFormType)
