@@ -109,7 +109,7 @@ func TestExtractUuid(t *testing.T) {
 	testScenarios := []testStruct{invalidUrlMissingFtPrefix, invalidUrlWithInvalidUuid, ValidUrlIsConvertedToUuid}
 
 	for _, scenario := range testScenarios {
-		uuid := extractUuid(scenario.url)
+		uuid, _ := extractUuidAndConcordanceAuthority(scenario.url)
 		assert.Equal(t, scenario.expectedResult, uuid, "Scenario: "+scenario.testName+" failed")
 	}
 }
