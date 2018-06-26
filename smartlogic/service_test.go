@@ -95,7 +95,7 @@ func TestValidateFactsetIdAndConvertToUuid(t *testing.T) {
 	}
 }
 
-func TestExtractUuid(t *testing.T) {
+func TestExtractUuidAndConcordanceAuthority(t *testing.T) {
 	type testStruct struct {
 		testName       string
 		url            string
@@ -190,6 +190,25 @@ func TestConvertToUppConcordance(t *testing.T) {
 			},
 		},
 	}
+	locationsConcordance := UppConcordance{
+		ConceptUuid: testUuid,
+		Authority:   "ManagedLocation",
+		ConcordedIds: []ConcordedId{
+			ConcordedId{
+				Authority: CONCORDANCE_AUTHORITY_TME,
+				UUID:      "3f494231-9dc6-3181-8baa-dc9d1cad730f",
+			}, ConcordedId{
+				Authority: CONCORDANCE_AUTHORITY_DBPEDIA,
+				UUID:      "9567fbd6-f6f3-34f4-9b31-53856d5428a3",
+			}, ConcordedId{
+				Authority: CONCORDANCE_AUTHORITY_GEONAMES,
+				UUID:      "ed78ef90-a160-30d0-8a3b-472a966c5664",
+			}, ConcordedId{
+				Authority: CONCORDANCE_AUTHORITY_WIKIDATA,
+				UUID:      "76754d1e-11f6-3d4f-8e3a-59a5b4e6bdcd",
+			},
+		},
+	}
 
 	type testStruct struct {
 		testName       string
@@ -211,6 +230,7 @@ func TestConvertToUppConcordance(t *testing.T) {
 	errorOnDuplicateTmeIds := testStruct{testName: "errorOnDuplicateTmeIds", pathToFile: "../resources/duplicateTmeIds.json", conceptUuid: testUuid, uppConcordance: noConcordance, expectedError: errors.New("contains duplicate TME id values")}
 	handlesMultipleTmeIds := testStruct{testName: "handlesMultipleTmeIds", pathToFile: "../resources/multipleTmeIds.json", conceptUuid: testUuid, uppConcordance: multiConcordance, expectedError: nil}
 	handlesNoTmeIds := testStruct{testName: "handlesNoTmeIds", pathToFile: "../resources/noTmeIds.json", conceptUuid: testUuid, uppConcordance: emptyConcordance, expectedError: nil}
+	managedLocationIds := testStruct{testName: "managedLocationIds", pathToFile: "../resources/managedLocationIds.json", conceptUuid: testUuid, uppConcordance: locationsConcordance, expectedError: nil}
 
 	invalidFactsetId := testStruct{
 		testName:       "invalidFactsetId",
@@ -266,6 +286,7 @@ func TestConvertToUppConcordance(t *testing.T) {
 		handlesMultipleFactsetIds,
 		handlesNoFactsetIds,
 		noErrorOnNotAllowedConceptType,
+		managedLocationIds,
 	}
 
 	for _, scenario := range testScenarios {
