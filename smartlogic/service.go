@@ -21,7 +21,7 @@ var uuidMatcher = regexp.MustCompile("^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a
 type status int
 
 const (
-	CONCORDANCE_AUTHORITY_TME              = "TMEIdentifier"
+	CONCORDANCE_AUTHORITY_TME              = "FT-TME"
 	CONCORDANCE_AUTHORITY_FACTSET          = "FACTSET"
 	CONCORDANCE_AUTHORITY_DBPEDIA          = "DBPediaID"
 	CONCORDANCE_AUTHORITY_GEONAMES         = "GeoNamesID"
@@ -311,9 +311,6 @@ func (ts *TransformerService) makeWriteRequest(uuid string, uppConcordance UppCo
 		log.WithError(err).WithFields(log.Fields{"transaction_id": tid, "UUID": uuid}).Error("Bad Request: Could not unmarshall concordance json")
 		return SYNTACTICALLY_INCORRECT, err
 	}
-
-	//fmt.Printf("\n\n\n%+v")
-	fmt.Printf("\n\n\n%s\n\n\n", concordedJson)
 
 	request, err := http.NewRequest("PUT", reqURL, strings.NewReader(string(concordedJson)))
 	if err != nil {
