@@ -23,9 +23,9 @@ type status int
 const (
 	CONCORDANCE_AUTHORITY_TME              = "FT-TME"
 	CONCORDANCE_AUTHORITY_FACTSET          = "FACTSET"
-	CONCORDANCE_AUTHORITY_DBPEDIA          = "DBPediaID"
-	CONCORDANCE_AUTHORITY_GEONAMES         = "GeoNamesID"
-	CONCORDANCE_AUTHORITY_WIKIDATA         = "WikiDataID"
+	CONCORDANCE_AUTHORITY_DBPEDIA          = "DBPedia"
+	CONCORDANCE_AUTHORITY_GEONAMES         = "GeoNames"
+	CONCORDANCE_AUTHORITY_WIKIDATA         = "WikiData"
 	CONCORDANCE_AUTHORITY_SMARTLOGIC       = "SmartLogic"
 	CONCORDANCE_AUTHORITY_MANAGED_LOCATION = "ManagedLocation"
 
@@ -157,10 +157,11 @@ func convertToUppConcordance(smartlogicConcepts SmartlogicConcept, tid string) (
 	concordances, err = appendLocationConcordances(concordances, smartlogicConcept.GeonamesIdentifiers, conceptUuid, CONCORDANCE_AUTHORITY_GEONAMES, tid)
 	concordances, err = appendLocationConcordances(concordances, smartlogicConcept.WikidataIdentifiers, conceptUuid, CONCORDANCE_AUTHORITY_WIKIDATA, tid)
 
-	uppConcordance := UppConcordance{}
-	uppConcordance.ConceptUuid = conceptUuid
-	uppConcordance.Authority = uppAuthority
-	uppConcordance.ConcordedIds = concordances
+	uppConcordance := UppConcordance{
+		ConceptUuid: conceptUuid,
+		Authority: uppAuthority,
+		ConcordedIds: concordances,
+	}
 	log.WithFields(log.Fields{"transaction_id": tid, "UUID": conceptUuid}).Debugf("Concordance record is %s", uppConcordance)
 
 	return VALID_CONCEPT, conceptUuid, uppConcordance, nil

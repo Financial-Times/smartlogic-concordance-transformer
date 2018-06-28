@@ -7,7 +7,7 @@ type SmartlogicConcept struct {
 type Concept struct {
 	Id                  string         `json:"@id"`
 	Types               []string       `json:"@type,omitempty"`
-	TmeIdentifiers      []TmeId        `json:"http://www.ft.com/ontology/TMEIdentifier"`
+	TmeIdentifiers      []TmeId        `json:"http://www.ft.com/ontology/TMEIdentifier,omitempty"`
 	FactsetIdentifiers  []FactsetId    `json:"http://www.ft.com/ontology/factsetIdentifier,omitempty"`
 	DbpediaIdentifiers  []LocationType `json:"http://www.ft.com/ontology/dbpediaId,omitempty"`
 	GeonamesIdentifiers []LocationType `json:"http://www.ft.com/ontology/geonamesId,omitempty"`
