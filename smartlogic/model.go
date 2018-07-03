@@ -5,10 +5,13 @@ type SmartlogicConcept struct {
 }
 
 type Concept struct {
-	Id                 string      `json:"@id"`
-	Types              []string    `json:"@type,omitempty"`
-	TmeIdentifiers     []TmeId     `json:"http://www.ft.com/ontology/TMEIdentifier"`
-	FactsetIdentifiers []FactsetId `json:"http://www.ft.com/ontology/factsetIdentifier"`
+	Id                  string         `json:"@id"`
+	Types               []string       `json:"@type,omitempty"`
+	TmeIdentifiers      []TmeId        `json:"http://www.ft.com/ontology/TMEIdentifier,omitempty"`
+	FactsetIdentifiers  []FactsetId    `json:"http://www.ft.com/ontology/factsetIdentifier,omitempty"`
+	DbpediaIdentifiers  []LocationType `json:"http://www.ft.com/ontology/dbpediaId,omitempty"`
+	GeonamesIdentifiers []LocationType `json:"http://www.ft.com/ontology/geonamesId,omitempty"`
+	WikidataIdentifiers []LocationType `json:"http://www.ft.com/ontology/wikidataId,omitempty"`
 }
 
 type TmeId struct {
@@ -29,4 +32,9 @@ type UppConcordance struct {
 type ConcordedId struct {
 	Authority string `json:"authority"`
 	UUID      string `json:"uuid"`
+}
+
+type LocationType struct {
+	Type  string `json:"@type"`
+	Value string `json:"@value"`
 }

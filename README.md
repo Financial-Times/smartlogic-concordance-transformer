@@ -54,7 +54,7 @@ This endpoint is for testing and help ongoing support. This endpoint only transf
 
 Using curl:
 
-    curl -X POST -i https://{user:pass}@{env}-up.ft.com/__smartlogic-concordance-transformer/transform/send --d @payload.txt --header "Content-Type:application/json"
+    curl -X POST -i https://{user:pass}@{env}-up.ft.com/__smartlogic-concordance-transformer/transform --d @payload.txt --header "Content-Type:application/json"
 
 Payload.txt:
 

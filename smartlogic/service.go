@@ -12,7 +12,7 @@ import (
 
 	"github.com/pborman/uuid"
 
-	uuidutils "github.com/Financial-Times/uuid-utils-go"
+	"github.com/Financial-Times/uuid-utils-go"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -21,12 +21,17 @@ var uuidMatcher = regexp.MustCompile("^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a
 type status int
 
 const (
-	CONCORDANCE_AUTHORITY_TME        = "FT-TME"
-	CONCORDANCE_AUTHORITY_FACTSET    = "FACTSET"
-	CONCORDANCE_AUTHORITY_SMARTLOGIC = "SmartLogic"
+	CONCORDANCE_AUTHORITY_TME              = "FT-TME"
+	CONCORDANCE_AUTHORITY_FACTSET          = "FACTSET"
+	CONCORDANCE_AUTHORITY_DBPEDIA          = "DBPedia"
+	CONCORDANCE_AUTHORITY_GEONAMES         = "Geonames"
+	CONCORDANCE_AUTHORITY_WIKIDATA         = "Wikidata"
+	CONCORDANCE_AUTHORITY_SMARTLOGIC       = "SmartLogic"
+	CONCORDANCE_AUTHORITY_MANAGED_LOCATION = "ManagedLocation"
 
-	THING_URI_PREFIX        = "http://www.ft.com/thing/"
-	NOT_FOUND        status = iota
+	THING_URI_PREFIX               = "http://www.ft.com/thing/"
+	LOCATION_URI_PREFIX            = "http://www.ft.com/managedlocation/"
+	NOT_FOUND               status = iota
 	SYNTACTICALLY_INCORRECT
 	SEMANTICALLY_INCORRECT
 	VALID_CONCEPT
@@ -99,7 +104,7 @@ func convertToUppConcordance(smartlogicConcepts SmartlogicConcept, tid string) (
 
 	smartlogicConcept := smartlogicConcepts.Concepts[0]
 
-	conceptUuid := extractUuid(smartlogicConcept.Id)
+	conceptUuid, uppAuthority := extractUuidAndConcordanceAuthority(smartlogicConcept.Id)
 	if conceptUuid == "" {
 		err := errors.New("Invalid Request Json: Missing/invalid @id field")
 		log.WithFields(log.Fields{"transaction_id": tid, "UUID": conceptUuid}).Error(err)
@@ -135,16 +140,44 @@ func convertToUppConcordance(smartlogicConcepts SmartlogicConcept, tid string) (
 	}
 
 	concordances := []ConcordedId{}
-	for _, id := range smartlogicConcept.TmeIdentifiers {
+
+	concordances, err := appendTmeConcordances(concordances, smartlogicConcept, conceptUuid, tid)
+
+	if err != nil {
+		return SYNTACTICALLY_INCORRECT, conceptUuid, UppConcordance{}, err
+	}
+
+	concordances, err = appendFactsetConcordances(concordances, smartlogicConcept, conceptUuid, tid)
+
+	if err != nil {
+		return SYNTACTICALLY_INCORRECT, conceptUuid, UppConcordance{}, err
+	}
+
+	concordances, err = appendLocationConcordances(concordances, smartlogicConcept.DbpediaIdentifiers, conceptUuid, CONCORDANCE_AUTHORITY_DBPEDIA, tid)
+	concordances, err = appendLocationConcordances(concordances, smartlogicConcept.GeonamesIdentifiers, conceptUuid, CONCORDANCE_AUTHORITY_GEONAMES, tid)
+	concordances, err = appendLocationConcordances(concordances, smartlogicConcept.WikidataIdentifiers, conceptUuid, CONCORDANCE_AUTHORITY_WIKIDATA, tid)
+
+	uppConcordance := UppConcordance{
+		ConceptUuid: conceptUuid,
+		Authority: uppAuthority,
+		ConcordedIds: concordances,
+	}
+	log.WithFields(log.Fields{"transaction_id": tid, "UUID": conceptUuid}).Debugf("Concordance record is %s", uppConcordance)
+
+	return VALID_CONCEPT, conceptUuid, uppConcordance, nil
+}
+
+func appendTmeConcordances(concordances []ConcordedId, concept Concept, conceptUuid string, tid string) ([]ConcordedId, error) {
+	for _, id := range concept.TmeIdentifiers {
 		uuidFromTmeId, err := validateTmeIdAndConvertToUuid(id.Value)
 		if conceptUuid == uuidFromTmeId {
 			err := errors.New("Bad Request: Payload from smartlogic has a smartlogic uuid that is the same as the uuid generated from the TME id")
 			log.WithFields(log.Fields{"transaction_id": tid, "UUID": conceptUuid}).Error(err)
-			return SYNTACTICALLY_INCORRECT, conceptUuid, UppConcordance{}, err
+			return nil, err
 		}
 		if err != nil {
 			log.WithFields(log.Fields{"transaction_id": tid, "UUID": conceptUuid}).Error(err)
-			return SYNTACTICALLY_INCORRECT, conceptUuid, UppConcordance{}, err
+			return nil, err
 		}
 		concordedId := ConcordedId{
 			Authority: CONCORDANCE_AUTHORITY_TME,
@@ -155,7 +188,7 @@ func convertToUppConcordance(smartlogicConcepts SmartlogicConcept, tid string) (
 				if cid.UUID == uuidFromTmeId {
 					err := errors.New("Bad Request: Payload from smartlogic contains duplicate TME id values")
 					log.WithFields(log.Fields{"transaction_id": tid, "UUID": conceptUuid}).Error(err)
-					return SYNTACTICALLY_INCORRECT, conceptUuid, UppConcordance{}, err
+					return nil, err
 				}
 			}
 			concordances = append(concordances, concordedId)
@@ -163,16 +196,21 @@ func convertToUppConcordance(smartlogicConcepts SmartlogicConcept, tid string) (
 			concordances = append(concordances, concordedId)
 		}
 	}
-	for _, id := range smartlogicConcept.FactsetIdentifiers {
+
+	return concordances, nil
+}
+
+func appendFactsetConcordances(concordances []ConcordedId, concept Concept, conceptUuid string, tid string) ([]ConcordedId, error) {
+	for _, id := range concept.FactsetIdentifiers {
 		uuidFromFactsetId, err := validateFactsetIdAndConvertToUuid(id.Value)
 		if conceptUuid == uuidFromFactsetId {
 			err := errors.New("Bad Request: Payload from smartlogic has a smartlogic uuid that is the same as the uuid generated from the FACTSET id")
 			log.WithFields(log.Fields{"transaction_id": tid, "UUID": conceptUuid}).Error(err)
-			return SYNTACTICALLY_INCORRECT, conceptUuid, UppConcordance{}, err
+			return nil, err
 		}
 		if err != nil {
 			log.WithFields(log.Fields{"transaction_id": tid, "UUID": conceptUuid}).Error(err)
-			return SYNTACTICALLY_INCORRECT, conceptUuid, UppConcordance{}, err
+			return nil, err
 		}
 		concordedId := ConcordedId{
 			Authority: CONCORDANCE_AUTHORITY_FACTSET,
@@ -183,7 +221,7 @@ func convertToUppConcordance(smartlogicConcepts SmartlogicConcept, tid string) (
 				if cid.UUID == uuidFromFactsetId {
 					err := errors.New("Bad Request: Payload from smartlogic contains duplicate FACTSET id values")
 					log.WithFields(log.Fields{"transaction_id": tid, "UUID": conceptUuid}).Error(err)
-					return SYNTACTICALLY_INCORRECT, conceptUuid, UppConcordance{}, err
+					return nil, err
 				}
 			}
 			concordances = append(concordances, concordedId)
@@ -191,12 +229,37 @@ func convertToUppConcordance(smartlogicConcepts SmartlogicConcept, tid string) (
 			concordances = append(concordances, concordedId)
 		}
 	}
-	uppConcordance := UppConcordance{}
-	uppConcordance.ConceptUuid = conceptUuid
-	uppConcordance.Authority = CONCORDANCE_AUTHORITY_SMARTLOGIC
-	uppConcordance.ConcordedIds = concordances
-	log.WithFields(log.Fields{"transaction_id": tid, "UUID": conceptUuid}).Debugf("Concordance record is %s", uppConcordance)
-	return VALID_CONCEPT, conceptUuid, uppConcordance, nil
+
+	return concordances, nil
+}
+
+func appendLocationConcordances(concordances []ConcordedId, conceptIdentifiers []LocationType, conceptUuid string, authority string, tid string) ([]ConcordedId, error) {
+	for _, id := range conceptIdentifiers {
+		uuidFromConceptIdentifier := convertToUuid(id.Value)
+		if conceptUuid == uuidFromConceptIdentifier {
+			err := errors.New("Bad Request: Payload from smartlogic has a smartlogic uuid that is the same as the uuid generated from " + authority + " id")
+			log.WithFields(log.Fields{"transaction_id": tid, "UUID": conceptUuid}).Error(err)
+			return nil, err
+		}
+		concordedId := ConcordedId{
+			Authority: authority,
+			UUID:      uuidFromConceptIdentifier,
+		}
+		if len(concordances) > 0 {
+			for _, cid := range concordances {
+				if cid.UUID == uuidFromConceptIdentifier {
+					err := errors.New("Bad Request: Payload from smartlogic contains duplicate " + authority + " id values")
+					log.WithFields(log.Fields{"transaction_id": tid, "UUID": conceptUuid}).Error(err)
+					return nil, err
+				}
+			}
+			concordances = append(concordances, concordedId)
+		} else {
+			concordances = append(concordances, concordedId)
+		}
+	}
+
+	return concordances, nil
 }
 
 func validateTmeIdAndConvertToUuid(tmeId string) (string, error) {
@@ -213,6 +276,10 @@ func validateFactsetIdAndConvertToUuid(factsetId string) (string, error) {
 		return "", errors.New("Bad Request: Concordance id " + factsetId + " is not a valid FACTSET Id")
 	}
 	return uuidutils.DeriveFactsetUUID(factsetId), nil
+}
+
+func convertToUuid(id string) string {
+	return uuid.NewMD5(uuid.UUID{}, []byte(id)).String()
 }
 
 func validateSubstrings(subStrings []string) bool {
@@ -245,6 +312,7 @@ func (ts *TransformerService) makeWriteRequest(uuid string, uppConcordance UppCo
 		log.WithError(err).WithFields(log.Fields{"transaction_id": tid, "UUID": uuid}).Error("Bad Request: Could not unmarshall concordance json")
 		return SYNTACTICALLY_INCORRECT, err
 	}
+
 	request, err := http.NewRequest("PUT", reqURL, strings.NewReader(string(concordedJson)))
 	if err != nil {
 		log.WithError(err).WithFields(log.Fields{"transaction_id": tid, "UUID": uuid}).Error("Internal Error: Failed to create GET request to " + reqURL + " with body " + string(concordedJson))
@@ -294,13 +362,20 @@ func (ts *TransformerService) makeDeleteRequest(uuid string, tid string) (status
 	return NOT_FOUND, nil
 }
 
-func extractUuid(url string) string {
+func extractUuidAndConcordanceAuthority(url string) (string, string) {
 	if strings.HasPrefix(url, THING_URI_PREFIX) {
 		extractedUuid := strings.TrimPrefix(url, THING_URI_PREFIX)
 		if uuidMatcher.MatchString(extractedUuid) != true {
-			return ""
+			return "", ""
 		}
-		return extractedUuid
+		return extractedUuid, CONCORDANCE_AUTHORITY_SMARTLOGIC
+	} else if strings.HasPrefix(url, LOCATION_URI_PREFIX) {
+		extractedUuid := strings.TrimPrefix(url, LOCATION_URI_PREFIX)
+		if uuidMatcher.MatchString(extractedUuid) != true {
+			return "", ""
+		}
+		return extractedUuid, CONCORDANCE_AUTHORITY_MANAGED_LOCATION
+
 	}
-	return ""
+	return "", ""
 }
