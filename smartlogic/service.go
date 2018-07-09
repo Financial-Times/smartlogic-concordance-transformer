@@ -158,8 +158,8 @@ func convertToUppConcordance(smartlogicConcepts SmartlogicConcept, tid string) (
 	concordances, err = appendLocationConcordances(concordances, smartlogicConcept.WikidataIdentifiers, conceptUuid, CONCORDANCE_AUTHORITY_WIKIDATA, tid)
 
 	uppConcordance := UppConcordance{
-		ConceptUuid: conceptUuid,
-		Authority: uppAuthority,
+		ConceptUuid:  conceptUuid,
+		Authority:    uppAuthority,
 		ConcordedIds: concordances,
 	}
 	log.WithFields(log.Fields{"transaction_id": tid, "UUID": conceptUuid}).Debugf("Concordance record is %s", uppConcordance)
@@ -180,8 +180,9 @@ func appendTmeConcordances(concordances []ConcordedId, concept Concept, conceptU
 			return nil, err
 		}
 		concordedId := ConcordedId{
-			Authority: CONCORDANCE_AUTHORITY_TME,
-			UUID:      uuidFromTmeId,
+			Authority:      CONCORDANCE_AUTHORITY_TME,
+			AuthorityValue: id.Value,
+			UUID:           uuidFromTmeId,
 		}
 		if len(concordances) > 0 {
 			for _, cid := range concordances {
@@ -213,8 +214,9 @@ func appendFactsetConcordances(concordances []ConcordedId, concept Concept, conc
 			return nil, err
 		}
 		concordedId := ConcordedId{
-			Authority: CONCORDANCE_AUTHORITY_FACTSET,
-			UUID:      uuidFromFactsetId,
+			Authority:      CONCORDANCE_AUTHORITY_FACTSET,
+			AuthorityValue: id.Value,
+			UUID:           uuidFromFactsetId,
 		}
 		if len(concordances) > 0 {
 			for _, cid := range concordances {
@@ -242,8 +244,9 @@ func appendLocationConcordances(concordances []ConcordedId, conceptIdentifiers [
 			return nil, err
 		}
 		concordedId := ConcordedId{
-			Authority: authority,
-			UUID:      uuidFromConceptIdentifier,
+			Authority:      authority,
+			AuthorityValue: id.Value,
+			UUID:           uuidFromConceptIdentifier,
 		}
 		if len(concordances) > 0 {
 			for _, cid := range concordances {

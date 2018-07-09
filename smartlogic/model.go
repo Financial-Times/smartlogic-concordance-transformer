@@ -30,8 +30,9 @@ type UppConcordance struct {
 }
 
 type ConcordedId struct {
-	Authority string `json:"authority"`
-	UUID      string `json:"uuid"`
+	Authority      string `json:"authority"`
+	AuthorityValue string `json:"authorityValue"`
+	UUID           string `json:"uuid"`
 }
 
 type LocationType struct {
