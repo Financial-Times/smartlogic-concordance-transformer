@@ -31,7 +31,7 @@ type UppConcordance struct {
 
 type ConcordedId struct {
 	Authority      string `json:"authority"`
-	AuthorityValue string `json:"authorityValue"`
+	AuthorityValue string `json:"authorityValue,omitempty"`
 	UUID           string `json:"uuid"`
 }
 
