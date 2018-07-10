@@ -160,17 +160,21 @@ func TestConvertToUppConcordance(t *testing.T) {
 		Authority:   "SmartLogic",
 		ConcordedIds: []ConcordedId{
 			ConcordedId{
-				Authority: CONCORDANCE_AUTHORITY_TME,
-				UUID:      "e9f4525a-401f-3b23-a68e-e48f314cdce6",
+				Authority:      CONCORDANCE_AUTHORITY_TME,
+				AuthorityValue: "AbCdEfgHiJkLMnOpQrStUvWxYz-0123456789",
+				UUID:           "e9f4525a-401f-3b23-a68e-e48f314cdce6",
 			}, ConcordedId{
-				Authority: CONCORDANCE_AUTHORITY_TME,
-				UUID:      "83f63c7e-1641-3c7b-81e4-378ae3c6c2ad",
+				Authority:      CONCORDANCE_AUTHORITY_TME,
+				AuthorityValue: "ZyXwVuTsRqPoNmLkJiHgFeDcBa-0987654321",
+				UUID:           "83f63c7e-1641-3c7b-81e4-378ae3c6c2ad",
 			}, ConcordedId{
-				Authority: CONCORDANCE_AUTHORITY_TME,
-				UUID:      "e4bc4ac2-0637-3a27-86b1-9589fca6bf2c",
+				Authority:      CONCORDANCE_AUTHORITY_TME,
+				AuthorityValue: "abcdefghijklmnopqrstuvwxyz-0123456789",
+				UUID:           "e4bc4ac2-0637-3a27-86b1-9589fca6bf2c",
 			}, ConcordedId{
-				Authority: CONCORDANCE_AUTHORITY_TME,
-				UUID:      "e574b21d-9abc-3d82-a6c0-3e08c85181bf",
+				Authority:      CONCORDANCE_AUTHORITY_TME,
+				AuthorityValue: "ABCDEFGHIJKLMNOPQRSTUVWXYZ-0987654321",
+				UUID:           "e574b21d-9abc-3d82-a6c0-3e08c85181bf",
 			},
 		},
 	}
@@ -179,14 +183,17 @@ func TestConvertToUppConcordance(t *testing.T) {
 		Authority:   "SmartLogic",
 		ConcordedIds: []ConcordedId{
 			ConcordedId{
-				Authority: CONCORDANCE_AUTHORITY_FACTSET,
-				UUID:      "8d3aba95-02d9-3802-afc0-b99bb9b1139e",
+				Authority:      CONCORDANCE_AUTHORITY_FACTSET,
+				AuthorityValue: "000D63-E",
+				UUID:           "8d3aba95-02d9-3802-afc0-b99bb9b1139e",
 			}, ConcordedId{
-				Authority: CONCORDANCE_AUTHORITY_FACTSET,
-				UUID:      "3bc0ab41-c01f-3a0b-aa78-c76438080b52",
+				Authority:      CONCORDANCE_AUTHORITY_FACTSET,
+				AuthorityValue: "023456-E",
+				UUID:           "3bc0ab41-c01f-3a0b-aa78-c76438080b52",
 			}, ConcordedId{
-				Authority: CONCORDANCE_AUTHORITY_FACTSET,
-				UUID:      "f777c5af-e0b2-34dc-9102-e346ca2d27aa",
+				Authority:      CONCORDANCE_AUTHORITY_FACTSET,
+				AuthorityValue: "023411-E",
+				UUID:           "f777c5af-e0b2-34dc-9102-e346ca2d27aa",
 			},
 		},
 	}
@@ -195,17 +202,21 @@ func TestConvertToUppConcordance(t *testing.T) {
 		Authority:   "ManagedLocation",
 		ConcordedIds: []ConcordedId{
 			ConcordedId{
-				Authority: CONCORDANCE_AUTHORITY_TME,
-				UUID:      "3f494231-9dc6-3181-8baa-dc9d1cad730f",
+				Authority:      CONCORDANCE_AUTHORITY_TME,
+				AuthorityValue: "TnN0ZWluX0dMX0dCX0VOR19HX0Vzc2V4-R0w=",
+				UUID:           "3f494231-9dc6-3181-8baa-dc9d1cad730f",
 			}, ConcordedId{
-				Authority: CONCORDANCE_AUTHORITY_DBPEDIA,
-				UUID:      "9567fbd6-f6f3-34f4-9b31-53856d5428a3",
+				Authority:      CONCORDANCE_AUTHORITY_DBPEDIA,
+				AuthorityValue: "http://dbpedia.org/resource/Essex",
+				UUID:           "9567fbd6-f6f3-34f4-9b31-53856d5428a3",
 			}, ConcordedId{
-				Authority: CONCORDANCE_AUTHORITY_GEONAMES,
-				UUID:      "ed78ef90-a160-30d0-8a3b-472a966c5664",
+				Authority:      CONCORDANCE_AUTHORITY_GEONAMES,
+				AuthorityValue: "http://sws.geonames.org/2649889/",
+				UUID:           "ed78ef90-a160-30d0-8a3b-472a966c5664",
 			}, ConcordedId{
-				Authority: CONCORDANCE_AUTHORITY_WIKIDATA,
-				UUID:      "76754d1e-11f6-3d4f-8e3a-59a5b4e6bdcd",
+				Authority:      CONCORDANCE_AUTHORITY_WIKIDATA,
+				AuthorityValue: "http://www.wikidata.org/entity/Q23240",
+				UUID:           "76754d1e-11f6-3d4f-8e3a-59a5b4e6bdcd",
 			},
 		},
 	}
