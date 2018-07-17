@@ -237,12 +237,24 @@ func appendFactsetConcordances(concordances []ConcordedId, concept Concept, conc
 
 func appendLocationConcordances(concordances []ConcordedId, conceptIdentifiers []LocationType, conceptUuid string, authority string, tid string) ([]ConcordedId, error) {
 	for _, id := range conceptIdentifiers {
+		if len(strings.TrimSpace(id.Value)) == 0 {
+			err := errors.New("Bad Request: Payload from Smartlogic contains one or more empty " + authority + " values")
+			log.WithFields(log.Fields{"transaction_id": tid, "UUID": conceptUuid}).Error(err)
+			return nil, err
+		}
+
 		uuidFromConceptIdentifier := convertToUuid(id.Value)
 		if conceptUuid == uuidFromConceptIdentifier {
 			err := errors.New("Bad Request: Payload from smartlogic has a smartlogic uuid that is the same as the uuid generated from " + authority + " id")
 			log.WithFields(log.Fields{"transaction_id": tid, "UUID": conceptUuid}).Error(err)
 			return nil, err
 		}
+		if concordancesContainValue(concordances, uuidFromConceptIdentifier) {
+			err := errors.New("Bad Request: Payload from Smartlogic contains duplicate " + authority + " values")
+			log.WithFields(log.Fields{"transaction_id": tid, "UUID": conceptUuid}).Error(err)
+			return nil, err
+		}
+
 		concordedId := ConcordedId{
 			Authority:      authority,
 			AuthorityValue: id.Value,
@@ -381,4 +393,13 @@ func extractUuidAndConcordanceAuthority(url string) (string, string) {
 
 	}
 	return "", ""
+}
+
+func concordancesContainValue(concordances []ConcordedId, value string) bool  {
+	for _, concordance := range concordances {
+		if concordance.UUID == value {
+			return true
+		}
+	}
+	return false
 }
