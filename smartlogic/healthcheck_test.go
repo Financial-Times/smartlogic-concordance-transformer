@@ -3,10 +3,11 @@ package smartlogic
 import (
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
-	"testing"
-	"net/http/httptest"
 	"net/http"
+	"net/http/httptest"
+	"testing"
 )
+
 func TestAdminHandler_Healthy(t *testing.T) {
 	r := mux.NewRouter()
 	mockClient := mockHttpClient{resp: "", statusCode: 200}

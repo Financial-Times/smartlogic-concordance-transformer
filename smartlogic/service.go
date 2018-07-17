@@ -29,9 +29,9 @@ const (
 	CONCORDANCE_AUTHORITY_SMARTLOGIC       = "SmartLogic"
 	CONCORDANCE_AUTHORITY_MANAGED_LOCATION = "ManagedLocation"
 
-	THING_URI_PREFIX               = "http://www.ft.com/thing/"
-	LOCATION_URI_PREFIX            = "http://www.ft.com/managedlocation/"
-	NOT_FOUND               status = iota
+	THING_URI_PREFIX           = "http://www.ft.com/thing/"
+	LOCATION_URI_PREFIX        = "http://www.ft.com/managedlocation/"
+	NOT_FOUND           status = iota
 	SYNTACTICALLY_INCORRECT
 	SEMANTICALLY_INCORRECT
 	VALID_CONCEPT
@@ -395,7 +395,7 @@ func extractUuidAndConcordanceAuthority(url string) (string, string) {
 	return "", ""
 }
 
-func concordancesContainValue(concordances []ConcordedId, value string) bool  {
+func concordancesContainValue(concordances []ConcordedId, value string) bool {
 	for _, concordance := range concordances {
 		if concordance.UUID == value {
 			return true
