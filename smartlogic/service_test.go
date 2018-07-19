@@ -242,6 +242,8 @@ func TestConvertToUppConcordance(t *testing.T) {
 	handlesMultipleTmeIds := testStruct{testName: "handlesMultipleTmeIds", pathToFile: "../resources/multipleTmeIds.json", conceptUuid: testUuid, uppConcordance: multiConcordance, expectedError: nil}
 	handlesNoTmeIds := testStruct{testName: "handlesNoTmeIds", pathToFile: "../resources/noTmeIds.json", conceptUuid: testUuid, uppConcordance: emptyConcordance, expectedError: nil}
 	managedLocationIds := testStruct{testName: "managedLocationIds", pathToFile: "../resources/managedLocationIds.json", conceptUuid: testUuid, uppConcordance: locationsConcordance, expectedError: nil}
+	managedLocationDuplicateIds := testStruct{testName: "managedLocationDuplicateIds", pathToFile: "../resources/managedLocationDuplicateIds.json", conceptUuid: testUuid, uppConcordance: noConcordance, expectedError: errors.New("Bad Request: Payload from Smartlogic contains duplicate DBPedia values")}
+	managedLocationBlankId := testStruct{testName: "managedLocationBlankId", pathToFile: "../resources/managedLocationBlankId.json", conceptUuid: testUuid, uppConcordance: noConcordance, expectedError: errors.New("Bad Request: Payload from Smartlogic contains one or more empty DBPedia values")}
 
 	invalidFactsetId := testStruct{
 		testName:       "invalidFactsetId",
@@ -298,6 +300,8 @@ func TestConvertToUppConcordance(t *testing.T) {
 		handlesNoFactsetIds,
 		noErrorOnNotAllowedConceptType,
 		managedLocationIds,
+		managedLocationDuplicateIds,
+		managedLocationBlankId,
 	}
 
 	for _, scenario := range testScenarios {
@@ -311,7 +315,7 @@ func TestConvertToUppConcordance(t *testing.T) {
 			assert.Error(t, err, "Scenario: "+scenario.testName+"should have returned error")
 			assert.Contains(t, err.Error(), scenario.expectedError.Error(), "Scenario: "+scenario.testName+" returned unexpected output")
 		} else {
-			assert.Equal(t, err, scenario.expectedError, "Scenario: "+scenario.testName+" failed")
+			assert.Equal(t, scenario.expectedError, err, "Scenario: "+scenario.testName+" failed")
 		}
 	}
 }

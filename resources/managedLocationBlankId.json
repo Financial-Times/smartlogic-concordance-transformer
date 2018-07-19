@@ -1,0 +1,126 @@
+{
+  "@graph": [
+    {
+      "@id": "http://www.ft.com/managedlocation/20db1bd6-59f9-4404-adb5-3165a448f8b0",
+      "@type": [
+        "http://www.ft.com/ontology/Location"
+      ],
+      "http://www.ft.com/ontology/TMEIdentifier": [
+        {
+          "@value": "TnN0ZWluX0dMX0dCX0VOR19HX0Vzc2V4-R0w="
+        }
+      ],
+      "http://www.ft.com/ontology/dbpediaId": [
+        {
+          "@type": "xsd:anyURI",
+          "@value": "http://dbpedia.org/resource/Essex"
+        },
+        {
+          "@type": "xsd:anyURI",
+          "@value": " "
+        }
+      ],
+      "http://www.ft.com/ontology/geonamesId": [
+        {
+          "@type": "xsd:anyURI",
+          "@value": "http://sws.geonames.org/2649889/"
+        }
+      ],
+      "http://www.ft.com/ontology/wikidataId": [
+        {
+          "@type": "xsd:anyURI",
+          "@value": "http://www.wikidata.org/entity/Q23240"
+        }
+      ],
+      "sem:guid": [
+        {
+          "@value": "1a96ee7a-a4af-3a56-852c-60420b0b8da6"
+        }
+      ],
+      "skosxl:prefLabel": [
+        {
+          "@id": "http://www.ft.com/ontology/managedlocation/1a96ee7a-a4af-3a56-852c-60420b0b8da6/Essex_en",
+          "skosxl:literalForm": [
+            {
+              "@language": "en",
+              "@value": "Essex"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "@context": {
+    "@language": "",
+    "semord": "http://www.smartlogic.com/2018/03/semaphore-ordering#",
+    "semordfun": "http://www.smartlogic.com/2018/03/semaphore-ordering-functions#",
+    "semordrules": "http://www.smartlogic.com/2018/03/semaphore-ordering-rules#",
+    "semshfun": "http://www.smartlogic.com/2018/03/semaphore-shacl-functions#",
+    "model": "urn:x-evn-master:",
+    "tchmodel": "urn:x-evn-tch-union:",
+    "evntask": "urn:x-evn-tag:",
+    "task": "urn:x-ort-tag:",
+    "temp": "urn:x-temp:",
+    "tempgraph": "urn:x-temp-graph:",
+    "specialgraph": "urn:x-special-graph:",
+    "user": "urn:x-tb-users:",
+    "role": "urn:x-tb-role:",
+    "tag": "urn:x-tags:",
+    "evnimport": "urn:x-tb:evnimport#",
+    "meta": "http://www.smartlogic.com/2014/10/semaphore-meta#",
+    "sys": "http://www.smartlogic.com/2014/10/semaphore-sys#",
+    "sem": "http://www.smartlogic.com/2014/08/semaphore-core#",
+    "semlang": "http://www.smartlogic.com/2015/03/semaphore-languages#",
+    "semfun": "http://www.smartlogic.com/2015/02/semaphore-functions#",
+    "semspin": "http://www.smartlogic.com/2015/02/semaphore-spin-functions#",
+    "semspinmap": "http://www.smartlogic.com/2016/04/semaphore-spinMap#",
+    "semspinx": "http://www.smartlogic.com/2015/11/semaphore-spin#",
+    "semutils": "http://www.smartlogic.com/2015/09/semaphore-utils#",
+    "sempermissions": "http://www.smartlogic.com/2015/11/semaphore-permissions#",
+    "semwidgets": "http://www.smartlogic.com/2016/02/semaphore-widgets#",
+    "semreports": "http://www.smartlogic.com/2017/06/semaphore-reports#",
+    "semui": "http://www.smartlogic.com/2017/12/semaphore-ui#",
+    "semlisteners": "http://www.smartlogic.com/2016/10/semaphore-listeners#",
+    "semtemplates": "http://www.smartlogic.com/2016/04/semaphore-templates#",
+    "teamworkrulesx": "http://www.smartlogic.com/2016/05/semaphore-teamworkrulesx#",
+    "semvar": "http://www.smartlogic.com/2015/10/semaphore-var#",
+    "sempath": "http://www.smartlogic.com/2016/01/semaphore-path#",
+    "example": "http://proto.smartlogic.com/example#",
+    "smf": "http://topbraid.org/sparqlmotionfunctions#",
+    "teamwork": "http://topbraid.org/teamwork#",
+    "taxonomies": "http://evn.topbraidlive.org/evnprojects#",
+    "swa": "http://topbraid.org/swa#",
+    "tables": "http://topbraid.org/tables#",
+    "sh": "http://www.w3.org/ns/shacl#",
+    "sp": "http://spinrdf.org/sp#",
+    "spin": "http://spinrdf.org/spin#",
+    "spinmap": "http://spinrdf.org/spinmap#",
+    "spl": "http://spinrdf.org/spl#",
+    "afn": "http://jena.apache.org/ARQ/function#",
+    "ui": "http://uispin.org/ui#",
+    "foaf": "http://xmlns.com/foaf/0.1/",
+    "fn": "http://www.w3.org/2005/xpath-functions#",
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "list": "http://jena.hpl.hp.com/ARQ/list#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "skos": "http://www.w3.org/2004/02/skos/core#",
+    "skosxl": "http://www.w3.org/2008/05/skos-xl#",
+    "xsd": "http://www.w3.org/2001/XMLSchema#",
+    "owl": "http://www.w3.org/2002/07/owl#",
+    "sioc": "http://rdfs.org/sioc/ns#",
+    "dc": "http://purl.org/dc/elements/1.1/",
+    "dcterms": "http://purl.org/dc/terms/",
+    "lang": "http://id.loc.gov/vocabulary/iso639-1/",
+    "spif": "http://spinrdf.org/spif#",
+    "arg": "http://spinrdf.org/arg#",
+    "sys:Model": "owl:Ontology",
+    "sys:Task": "teamwork:Tag",
+    "graph:teamwork": "http://topbraid.org/teamwork",
+    "graph:users": "http://server.topbraidlive.org/dynamic/users",
+    "graph:sempermissions": "http://www.smartlogic.com/2015/11/semaphore-permissions",
+    "graph:semrolemappings": "http://www.smartlogic.com/2018/01/semaphore-role-mappings",
+    "meta:transitiveType": {
+      "@type": "@id"
+    }
+  }
+}
