@@ -154,8 +154,19 @@ func convertToUppConcordance(smartlogicConcepts SmartlogicConcept, tid string) (
 	}
 
 	concordances, err = appendLocationConcordances(concordances, smartlogicConcept.DbpediaIdentifiers, conceptUuid, CONCORDANCE_AUTHORITY_DBPEDIA, tid)
+	if err != nil {
+		return SYNTACTICALLY_INCORRECT, conceptUuid, UppConcordance{}, err
+	}
+
 	concordances, err = appendLocationConcordances(concordances, smartlogicConcept.GeonamesIdentifiers, conceptUuid, CONCORDANCE_AUTHORITY_GEONAMES, tid)
+	if err != nil {
+		return SYNTACTICALLY_INCORRECT, conceptUuid, UppConcordance{}, err
+	}
+	
 	concordances, err = appendLocationConcordances(concordances, smartlogicConcept.WikidataIdentifiers, conceptUuid, CONCORDANCE_AUTHORITY_WIKIDATA, tid)
+	if err != nil {
+		return SYNTACTICALLY_INCORRECT, conceptUuid, UppConcordance{}, err
+	}
 
 	uppConcordance := UppConcordance{
 		ConceptUuid:  conceptUuid,
