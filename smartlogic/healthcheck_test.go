@@ -1,11 +1,12 @@
 package smartlogic
 
 import (
-	"github.com/gorilla/mux"
-	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/gorilla/mux"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestAdminHandler_Healthy(t *testing.T) {

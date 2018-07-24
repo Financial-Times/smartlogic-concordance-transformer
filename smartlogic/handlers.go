@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"fmt"
+
 	"github.com/Financial-Times/kafka-client-go/kafka"
 	"github.com/Financial-Times/transactionid-utils-go"
 	"github.com/gorilla/handlers"

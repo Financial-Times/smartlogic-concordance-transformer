@@ -242,8 +242,8 @@ func TestConvertToUppConcordance(t *testing.T) {
 	handlesMultipleTmeIds := testStruct{testName: "handlesMultipleTmeIds", pathToFile: "../resources/multipleTmeIds.json", conceptUuid: testUuid, uppConcordance: multiConcordance, expectedError: nil}
 	handlesNoTmeIds := testStruct{testName: "handlesNoTmeIds", pathToFile: "../resources/noTmeIds.json", conceptUuid: testUuid, uppConcordance: emptyConcordance, expectedError: nil}
 	managedLocationIds := testStruct{testName: "managedLocationIds", pathToFile: "../resources/managedLocationIds.json", conceptUuid: testUuid, uppConcordance: locationsConcordance, expectedError: nil}
-	managedLocationDuplicateIds := testStruct{testName: "managedLocationDuplicateIds", pathToFile: "../resources/managedLocationDuplicateIds.json", conceptUuid: testUuid, uppConcordance: noConcordance, expectedError: errors.New("Bad Request: Payload from Smartlogic contains duplicate DBPedia values")}
-	managedLocationBlankId := testStruct{testName: "managedLocationBlankId", pathToFile: "../resources/managedLocationBlankId.json", conceptUuid: testUuid, uppConcordance: noConcordance, expectedError: errors.New("Bad Request: Payload from Smartlogic contains one or more empty DBPedia values")}
+	managedLocationDuplicateIds := testStruct{testName: "managedLocationDuplicateIds", pathToFile: "../resources/managedLocationDuplicateIds.json", conceptUuid: testUuid, uppConcordance: locationsConcordance, expectedError: nil}
+	managedLocationBlankId := testStruct{testName: "managedLocationBlankId", pathToFile: "../resources/managedLocationBlankId.json", conceptUuid: testUuid, uppConcordance: locationsConcordance, expectedError: nil}
 
 	invalidFactsetId := testStruct{
 		testName:       "invalidFactsetId",
