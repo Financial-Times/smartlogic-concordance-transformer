@@ -5,13 +5,29 @@ type SmartlogicConcept struct {
 }
 
 type Concept struct {
-	Id                  string         `json:"@id"`
-	Types               []string       `json:"@type,omitempty"`
-	TmeIdentifiers      []TmeId        `json:"http://www.ft.com/ontology/TMEIdentifier,omitempty"`
-	FactsetIdentifiers  []FactsetId    `json:"http://www.ft.com/ontology/factsetIdentifier,omitempty"`
-	DbpediaIdentifiers  []LocationType `json:"http://www.ft.com/ontology/dbpediaId,omitempty"`
-	GeonamesIdentifiers []LocationType `json:"http://www.ft.com/ontology/geonamesId,omitempty"`
-	WikidataIdentifiers []LocationType `json:"http://www.ft.com/ontology/wikidataId,omitempty"`
+	Id                                string         `json:"@id"`
+	Types                             []string       `json:"@type,omitempty"`
+	TmeIdentifiersEditorial           []TmeId        `json:"http://www.ft.com/ontology/TMEIdentifier,omitempty"`
+	TmeIdentifiersManagedLocation     []TmeId        `json:"http://www.ft.com/ontology/managedlocation/TMEIdentifier,omitempty"`
+	FactsetIdentifiersEditorial       []FactsetId    `json:"http://www.ft.com/ontology/factsetIdentifier,omitempty"`
+	FactsetIdentifiersManagedLocation []FactsetId    `json:"http://www.ft.com/ontology/managedlocation/factsetIdentifier,omitempty"`
+	DbpediaIdentifiers                []LocationType `json:"http://www.ft.com/ontology/managedlocation/dbpediaId,omitempty"`
+	GeonamesIdentifiers               []LocationType `json:"http://www.ft.com/ontology/managedlocation/geonamesId,omitempty"`
+	WikidataIdentifiers               []LocationType `json:"http://www.ft.com/ontology/managedlocation/wikidataId,omitempty"`
+}
+
+func (c Concept) TmeIdentifiers() []TmeId {
+	if c.TmeIdentifiersEditorial != nil {
+		return c.TmeIdentifiersEditorial
+	}
+	return c.TmeIdentifiersManagedLocation
+}
+
+func (c Concept) FactsetIdentifiers() []FactsetId {
+	if c.FactsetIdentifiersEditorial != nil {
+		return c.FactsetIdentifiersEditorial
+	}
+	return c.FactsetIdentifiersManagedLocation
 }
 
 type TmeId struct {

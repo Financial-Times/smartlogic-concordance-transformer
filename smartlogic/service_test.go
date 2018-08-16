@@ -197,6 +197,22 @@ func TestConvertToUppConcordance(t *testing.T) {
 			},
 		},
 	}
+	multiTmeFactsetConcordance := UppConcordance{
+		ConceptUuid: testUuid,
+		Authority:   "ManagedLocation",
+		ConcordedIds: []ConcordedId{
+			ConcordedId{
+				Authority:      CONCORDANCE_AUTHORITY_TME,
+				AuthorityValue: "AbCdEfgHiJkLMnOpQrStUvWxYz-0123456789",
+				UUID:           "e9f4525a-401f-3b23-a68e-e48f314cdce6",
+			},
+			ConcordedId{
+				Authority:      CONCORDANCE_AUTHORITY_FACTSET,
+				AuthorityValue: "000D63-E",
+				UUID:           "8d3aba95-02d9-3802-afc0-b99bb9b1139e",
+			},
+		},
+	}
 	locationsConcordance := UppConcordance{
 		ConceptUuid: testUuid,
 		Authority:   "ManagedLocation",
@@ -244,6 +260,7 @@ func TestConvertToUppConcordance(t *testing.T) {
 	managedLocationIds := testStruct{testName: "managedLocationIds", pathToFile: "../resources/managedLocationIds.json", conceptUuid: testUuid, uppConcordance: locationsConcordance, expectedError: nil}
 	managedLocationDuplicateIds := testStruct{testName: "managedLocationDuplicateIds", pathToFile: "../resources/managedLocationDuplicateIds.json", conceptUuid: testUuid, uppConcordance: locationsConcordance, expectedError: nil}
 	managedLocationBlankId := testStruct{testName: "managedLocationBlankId", pathToFile: "../resources/managedLocationBlankId.json", conceptUuid: testUuid, uppConcordance: locationsConcordance, expectedError: nil}
+	managedLocationMutuallyExclusiveFields := testStruct{testName: "managedLocationMutuallyExclusiveFields", pathToFile: "../resources/managedLocationMutuallyExclusiveFields.json", conceptUuid: testUuid, uppConcordance: multiTmeFactsetConcordance, expectedError: nil}
 
 	invalidFactsetId := testStruct{
 		testName:       "invalidFactsetId",
@@ -302,6 +319,7 @@ func TestConvertToUppConcordance(t *testing.T) {
 		managedLocationIds,
 		managedLocationDuplicateIds,
 		managedLocationBlankId,
+		managedLocationMutuallyExclusiveFields,
 	}
 
 	for _, scenario := range testScenarios {

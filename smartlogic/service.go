@@ -30,7 +30,7 @@ const (
 	CONCORDANCE_AUTHORITY_MANAGED_LOCATION = "ManagedLocation"
 
 	THING_URI_PREFIX           = "http://www.ft.com/thing/"
-	LOCATION_URI_PREFIX        = "http://www.ft.com/managedlocation/"
+	LOCATION_URI_PREFIX        = "http://www.ft.com/ontology/managedlocation/"
 	NOT_FOUND           status = iota
 	SYNTACTICALLY_INCORRECT
 	SEMANTICALLY_INCORRECT
@@ -133,10 +133,20 @@ func convertToUppConcordance(smartlogicConcepts SmartlogicConcept, tid string) (
 	}
 
 	shortFormType := conceptType[strings.LastIndex(conceptType, "/")+1:]
-	if (shortFormType == "Membership" || shortFormType == "MembershipRole") && len(smartlogicConcept.TmeIdentifiers) > 0 {
+	if (shortFormType == "Membership" || shortFormType == "MembershipRole") && len(smartlogicConcept.TmeIdentifiers()) > 0 {
 		err := fmt.Errorf("Bad Request: Concept type %s does not support concordance", shortFormType)
 		log.WithFields(log.Fields{"transaction_id": tid, "UUID": conceptUuid}).Error(err)
 		return SYNTACTICALLY_INCORRECT, conceptUuid, UppConcordance{}, err
+	}
+
+	if smartlogicConcept.TmeIdentifiersManagedLocation != nil && smartlogicConcept.TmeIdentifiersEditorial != nil {
+		//log as warning as this should not happen
+		log.WithFields(log.Fields{"transaction_id": tid, "UUID": conceptUuid}).Warning("Fields 'http://www.ft.com/ontology/TMEIdentifier' and 'http://www.ft.com/ontology/managedlocation/TMEIdentifier' should be mutually exclusive. Using by default 'http://www.ft.com/ontology/TMEIdentifier'")
+	}
+
+	if smartlogicConcept.FactsetIdentifiersManagedLocation != nil && smartlogicConcept.FactsetIdentifiersEditorial != nil {
+		//log as warning as this should not happen
+		log.WithFields(log.Fields{"transaction_id": tid, "UUID": conceptUuid}).Warning("Fields 'http://www.ft.com/ontology/factsetIdentifier' and 'http://www.ft.com/ontology/managedlocation/factsetIdentifier' should be mutually exclusive. Using by default 'http://www.ft.com/ontology/factsetIdentifier'")
 	}
 
 	concordances := []ConcordedId{}
@@ -179,7 +189,7 @@ func convertToUppConcordance(smartlogicConcepts SmartlogicConcept, tid string) (
 }
 
 func appendTmeConcordances(concordances []ConcordedId, concept Concept, conceptUuid string, tid string) ([]ConcordedId, error) {
-	for _, id := range concept.TmeIdentifiers {
+	for _, id := range concept.TmeIdentifiers() {
 		uuidFromTmeId, err := validateTmeIdAndConvertToUuid(id.Value)
 		if conceptUuid == uuidFromTmeId {
 			err := errors.New("Bad Request: Payload from smartlogic has a smartlogic uuid that is the same as the uuid generated from the TME id")
@@ -213,7 +223,7 @@ func appendTmeConcordances(concordances []ConcordedId, concept Concept, conceptU
 }
 
 func appendFactsetConcordances(concordances []ConcordedId, concept Concept, conceptUuid string, tid string) ([]ConcordedId, error) {
-	for _, id := range concept.FactsetIdentifiers {
+	for _, id := range concept.FactsetIdentifiers() {
 		uuidFromFactsetId, err := validateFactsetIdAndConvertToUuid(id.Value)
 		if conceptUuid == uuidFromFactsetId {
 			err := errors.New("Bad Request: Payload from smartlogic has a smartlogic uuid that is the same as the uuid generated from the FACTSET id")

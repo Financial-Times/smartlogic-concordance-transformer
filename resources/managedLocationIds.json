@@ -1,7 +1,7 @@
 {
   "@graph": [
     {
-      "@id": "http://www.ft.com/managedlocation/20db1bd6-59f9-4404-adb5-3165a448f8b0",
+      "@id": "http://www.ft.com/ontology/managedlocation/20db1bd6-59f9-4404-adb5-3165a448f8b0",
       "@type": [
         "http://www.ft.com/ontology/Location"
       ],
@@ -10,19 +10,19 @@
           "@value": "TnN0ZWluX0dMX0dCX0VOR19HX0Vzc2V4-R0w="
         }
       ],
-      "http://www.ft.com/ontology/dbpediaId": [
+      "http://www.ft.com/ontology/managedlocation/dbpediaId": [
         {
           "@type": "xsd:anyURI",
           "@value": "http://dbpedia.org/resource/Essex"
         }
       ],
-      "http://www.ft.com/ontology/geonamesId": [
+      "http://www.ft.com/ontology/managedlocation/geonamesId": [
         {
           "@type": "xsd:anyURI",
           "@value": "http://sws.geonames.org/2649889/"
         }
       ],
-      "http://www.ft.com/ontology/wikidataId": [
+      "http://www.ft.com/ontology/managedlocation/wikidataId": [
         {
           "@type": "xsd:anyURI",
           "@value": "http://www.wikidata.org/entity/Q23240"
