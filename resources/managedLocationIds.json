@@ -5,7 +5,7 @@
       "@type": [
         "http://www.ft.com/ontology/Location"
       ],
-      "http://www.ft.com/ontology/TMEIdentifier": [
+      "http://www.ft.com/ontology/managedlocation/TMEIdentifier": [
         {
           "@value": "TnN0ZWluX0dMX0dCX0VOR19HX0Vzc2V4-R0w="
         }

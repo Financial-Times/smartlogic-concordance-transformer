@@ -104,7 +104,7 @@ func convertToUppConcordance(smartlogicConcepts SmartlogicConcept, tid string) (
 
 	smartlogicConcept := smartlogicConcepts.Concepts[0]
 
-	conceptUuid, uppAuthority := extractUuidAndConcordanceAuthority(smartlogicConcept.Id)
+	conceptUuid, uppAuthority := extractUuidAndConcordanceAuthority(smartlogicConcept.ID)
 	if conceptUuid == "" {
 		err := errors.New("Invalid Request Json: Missing/invalid @id field")
 		log.WithFields(log.Fields{"transaction_id": tid, "UUID": conceptUuid}).Error(err)
@@ -139,16 +139,6 @@ func convertToUppConcordance(smartlogicConcepts SmartlogicConcept, tid string) (
 		return SYNTACTICALLY_INCORRECT, conceptUuid, UppConcordance{}, err
 	}
 
-	if smartlogicConcept.TmeIdentifiersManagedLocation != nil && smartlogicConcept.TmeIdentifiersEditorial != nil {
-		//log as warning as this should not happen
-		log.WithFields(log.Fields{"transaction_id": tid, "UUID": conceptUuid}).Warning("Fields 'http://www.ft.com/ontology/TMEIdentifier' and 'http://www.ft.com/ontology/managedlocation/TMEIdentifier' should be mutually exclusive. Using by default 'http://www.ft.com/ontology/TMEIdentifier'")
-	}
-
-	if smartlogicConcept.FactsetIdentifiersManagedLocation != nil && smartlogicConcept.FactsetIdentifiersEditorial != nil {
-		//log as warning as this should not happen
-		log.WithFields(log.Fields{"transaction_id": tid, "UUID": conceptUuid}).Warning("Fields 'http://www.ft.com/ontology/factsetIdentifier' and 'http://www.ft.com/ontology/managedlocation/factsetIdentifier' should be mutually exclusive. Using by default 'http://www.ft.com/ontology/factsetIdentifier'")
-	}
-
 	concordances := []ConcordedId{}
 
 	concordances, err := appendTmeConcordances(concordances, smartlogicConcept, conceptUuid, tid)
@@ -163,17 +153,17 @@ func convertToUppConcordance(smartlogicConcepts SmartlogicConcept, tid string) (
 		return SYNTACTICALLY_INCORRECT, conceptUuid, UppConcordance{}, err
 	}
 
-	concordances, err = appendLocationConcordances(concordances, smartlogicConcept.DbpediaIdentifiers, conceptUuid, CONCORDANCE_AUTHORITY_DBPEDIA, tid)
+	concordances, err = appendLocationConcordances(concordances, smartlogicConcept.DbpediaIdentifiers(), conceptUuid, CONCORDANCE_AUTHORITY_DBPEDIA, tid)
 	if err != nil {
 		return SYNTACTICALLY_INCORRECT, conceptUuid, UppConcordance{}, err
 	}
 
-	concordances, err = appendLocationConcordances(concordances, smartlogicConcept.GeonamesIdentifiers, conceptUuid, CONCORDANCE_AUTHORITY_GEONAMES, tid)
+	concordances, err = appendLocationConcordances(concordances, smartlogicConcept.GeonamesIdentifiers(), conceptUuid, CONCORDANCE_AUTHORITY_GEONAMES, tid)
 	if err != nil {
 		return SYNTACTICALLY_INCORRECT, conceptUuid, UppConcordance{}, err
 	}
 
-	concordances, err = appendLocationConcordances(concordances, smartlogicConcept.WikidataIdentifiers, conceptUuid, CONCORDANCE_AUTHORITY_WIKIDATA, tid)
+	concordances, err = appendLocationConcordances(concordances, smartlogicConcept.WikidataIdentifiers(), conceptUuid, CONCORDANCE_AUTHORITY_WIKIDATA, tid)
 	if err != nil {
 		return SYNTACTICALLY_INCORRECT, conceptUuid, UppConcordance{}, err
 	}

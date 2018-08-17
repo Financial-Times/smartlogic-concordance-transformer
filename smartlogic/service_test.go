@@ -203,13 +203,13 @@ func TestConvertToUppConcordance(t *testing.T) {
 		ConcordedIds: []ConcordedId{
 			ConcordedId{
 				Authority:      CONCORDANCE_AUTHORITY_TME,
-				AuthorityValue: "AbCdEfgHiJkLMnOpQrStUvWxYz-0123456789",
-				UUID:           "e9f4525a-401f-3b23-a68e-e48f314cdce6",
+				AuthorityValue: "ZyXwVuTsRqPoNmLkJiHgFeDcBa-0987654321",
+				UUID:           "83f63c7e-1641-3c7b-81e4-378ae3c6c2ad",
 			},
 			ConcordedId{
 				Authority:      CONCORDANCE_AUTHORITY_FACTSET,
-				AuthorityValue: "000D63-E",
-				UUID:           "8d3aba95-02d9-3802-afc0-b99bb9b1139e",
+				AuthorityValue: "023456-E",
+				UUID:           "3bc0ab41-c01f-3a0b-aa78-c76438080b52",
 			},
 		},
 	}
