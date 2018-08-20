@@ -29,9 +29,9 @@ const (
 	CONCORDANCE_AUTHORITY_SMARTLOGIC       = "SmartLogic"
 	CONCORDANCE_AUTHORITY_MANAGED_LOCATION = "ManagedLocation"
 
-	THING_URI_PREFIX               = "http://www.ft.com/thing/"
-	LOCATION_URI_PREFIX            = "http://www.ft.com/managedlocation/"
-	NOT_FOUND               status = iota
+	THING_URI_PREFIX           = "http://www.ft.com/thing/"
+	LOCATION_URI_PREFIX        = "http://www.ft.com/ontology/managedlocation/"
+	NOT_FOUND           status = iota
 	SYNTACTICALLY_INCORRECT
 	SEMANTICALLY_INCORRECT
 	VALID_CONCEPT
@@ -104,7 +104,7 @@ func convertToUppConcordance(smartlogicConcepts SmartlogicConcept, tid string) (
 
 	smartlogicConcept := smartlogicConcepts.Concepts[0]
 
-	conceptUuid, uppAuthority := extractUuidAndConcordanceAuthority(smartlogicConcept.Id)
+	conceptUuid, uppAuthority := extractUuidAndConcordanceAuthority(smartlogicConcept.ID)
 	if conceptUuid == "" {
 		err := errors.New("Invalid Request Json: Missing/invalid @id field")
 		log.WithFields(log.Fields{"transaction_id": tid, "UUID": conceptUuid}).Error(err)
@@ -133,7 +133,7 @@ func convertToUppConcordance(smartlogicConcepts SmartlogicConcept, tid string) (
 	}
 
 	shortFormType := conceptType[strings.LastIndex(conceptType, "/")+1:]
-	if (shortFormType == "Membership" || shortFormType == "MembershipRole") && len(smartlogicConcept.TmeIdentifiers) > 0 {
+	if (shortFormType == "Membership" || shortFormType == "MembershipRole") && len(smartlogicConcept.TmeIdentifiers()) > 0 {
 		err := fmt.Errorf("Bad Request: Concept type %s does not support concordance", shortFormType)
 		log.WithFields(log.Fields{"transaction_id": tid, "UUID": conceptUuid}).Error(err)
 		return SYNTACTICALLY_INCORRECT, conceptUuid, UppConcordance{}, err
@@ -153,9 +153,20 @@ func convertToUppConcordance(smartlogicConcepts SmartlogicConcept, tid string) (
 		return SYNTACTICALLY_INCORRECT, conceptUuid, UppConcordance{}, err
 	}
 
-	concordances, err = appendLocationConcordances(concordances, smartlogicConcept.DbpediaIdentifiers, conceptUuid, CONCORDANCE_AUTHORITY_DBPEDIA, tid)
-	concordances, err = appendLocationConcordances(concordances, smartlogicConcept.GeonamesIdentifiers, conceptUuid, CONCORDANCE_AUTHORITY_GEONAMES, tid)
-	concordances, err = appendLocationConcordances(concordances, smartlogicConcept.WikidataIdentifiers, conceptUuid, CONCORDANCE_AUTHORITY_WIKIDATA, tid)
+	concordances, err = appendLocationConcordances(concordances, smartlogicConcept.DbpediaIdentifiers(), conceptUuid, CONCORDANCE_AUTHORITY_DBPEDIA, tid)
+	if err != nil {
+		return SYNTACTICALLY_INCORRECT, conceptUuid, UppConcordance{}, err
+	}
+
+	concordances, err = appendLocationConcordances(concordances, smartlogicConcept.GeonamesIdentifiers(), conceptUuid, CONCORDANCE_AUTHORITY_GEONAMES, tid)
+	if err != nil {
+		return SYNTACTICALLY_INCORRECT, conceptUuid, UppConcordance{}, err
+	}
+
+	concordances, err = appendLocationConcordances(concordances, smartlogicConcept.WikidataIdentifiers(), conceptUuid, CONCORDANCE_AUTHORITY_WIKIDATA, tid)
+	if err != nil {
+		return SYNTACTICALLY_INCORRECT, conceptUuid, UppConcordance{}, err
+	}
 
 	uppConcordance := UppConcordance{
 		ConceptUuid:  conceptUuid,
@@ -168,7 +179,7 @@ func convertToUppConcordance(smartlogicConcepts SmartlogicConcept, tid string) (
 }
 
 func appendTmeConcordances(concordances []ConcordedId, concept Concept, conceptUuid string, tid string) ([]ConcordedId, error) {
-	for _, id := range concept.TmeIdentifiers {
+	for _, id := range concept.TmeIdentifiers() {
 		uuidFromTmeId, err := validateTmeIdAndConvertToUuid(id.Value)
 		if conceptUuid == uuidFromTmeId {
 			err := errors.New("Bad Request: Payload from smartlogic has a smartlogic uuid that is the same as the uuid generated from the TME id")
@@ -202,7 +213,7 @@ func appendTmeConcordances(concordances []ConcordedId, concept Concept, conceptU
 }
 
 func appendFactsetConcordances(concordances []ConcordedId, concept Concept, conceptUuid string, tid string) ([]ConcordedId, error) {
-	for _, id := range concept.FactsetIdentifiers {
+	for _, id := range concept.FactsetIdentifiers() {
 		uuidFromFactsetId, err := validateFactsetIdAndConvertToUuid(id.Value)
 		if conceptUuid == uuidFromFactsetId {
 			err := errors.New("Bad Request: Payload from smartlogic has a smartlogic uuid that is the same as the uuid generated from the FACTSET id")
@@ -237,12 +248,22 @@ func appendFactsetConcordances(concordances []ConcordedId, concept Concept, conc
 
 func appendLocationConcordances(concordances []ConcordedId, conceptIdentifiers []LocationType, conceptUuid string, authority string, tid string) ([]ConcordedId, error) {
 	for _, id := range conceptIdentifiers {
+		if len(strings.TrimSpace(id.Value)) == 0 {
+			log.WithFields(log.Fields{"transaction_id": tid, "uuid": conceptUuid}).Warn(fmt.Sprintf("Payload from Smartlogic contains one or more empty %v values. Skipping it", authority))
+			continue
+		}
+
 		uuidFromConceptIdentifier := convertToUuid(id.Value)
 		if conceptUuid == uuidFromConceptIdentifier {
-			err := errors.New("Bad Request: Payload from smartlogic has a smartlogic uuid that is the same as the uuid generated from " + authority + " id")
-			log.WithFields(log.Fields{"transaction_id": tid, "UUID": conceptUuid}).Error(err)
+			err := fmt.Errorf("Bad Request: Payload from Smartlogic has a Smartlogic uuid that is the same as the uuid generated from %v id", authority)
+			log.WithFields(log.Fields{"transaction_id": tid, "uuid": conceptUuid}).Error(err)
 			return nil, err
 		}
+		if concordancesContainValue(concordances, uuidFromConceptIdentifier) {
+			log.WithFields(log.Fields{"transaction_id": tid, "uuid": conceptUuid}).Warn(fmt.Sprintf("Payload from Smartlogic contains duplicate %v values. Skipping it", authority))
+			continue
+		}
+
 		concordedId := ConcordedId{
 			Authority:      authority,
 			AuthorityValue: id.Value,
@@ -381,4 +402,13 @@ func extractUuidAndConcordanceAuthority(url string) (string, string) {
 
 	}
 	return "", ""
+}
+
+func concordancesContainValue(concordances []ConcordedId, value string) bool {
+	for _, concordance := range concordances {
+		if concordance.UUID == value {
+			return true
+		}
+	}
+	return false
 }

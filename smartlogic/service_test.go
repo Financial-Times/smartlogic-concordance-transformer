@@ -197,6 +197,22 @@ func TestConvertToUppConcordance(t *testing.T) {
 			},
 		},
 	}
+	multiTmeFactsetConcordance := UppConcordance{
+		ConceptUuid: testUuid,
+		Authority:   "ManagedLocation",
+		ConcordedIds: []ConcordedId{
+			ConcordedId{
+				Authority:      CONCORDANCE_AUTHORITY_TME,
+				AuthorityValue: "ZyXwVuTsRqPoNmLkJiHgFeDcBa-0987654321",
+				UUID:           "83f63c7e-1641-3c7b-81e4-378ae3c6c2ad",
+			},
+			ConcordedId{
+				Authority:      CONCORDANCE_AUTHORITY_FACTSET,
+				AuthorityValue: "023456-E",
+				UUID:           "3bc0ab41-c01f-3a0b-aa78-c76438080b52",
+			},
+		},
+	}
 	locationsConcordance := UppConcordance{
 		ConceptUuid: testUuid,
 		Authority:   "ManagedLocation",
@@ -242,6 +258,9 @@ func TestConvertToUppConcordance(t *testing.T) {
 	handlesMultipleTmeIds := testStruct{testName: "handlesMultipleTmeIds", pathToFile: "../resources/multipleTmeIds.json", conceptUuid: testUuid, uppConcordance: multiConcordance, expectedError: nil}
 	handlesNoTmeIds := testStruct{testName: "handlesNoTmeIds", pathToFile: "../resources/noTmeIds.json", conceptUuid: testUuid, uppConcordance: emptyConcordance, expectedError: nil}
 	managedLocationIds := testStruct{testName: "managedLocationIds", pathToFile: "../resources/managedLocationIds.json", conceptUuid: testUuid, uppConcordance: locationsConcordance, expectedError: nil}
+	managedLocationDuplicateIds := testStruct{testName: "managedLocationDuplicateIds", pathToFile: "../resources/managedLocationDuplicateIds.json", conceptUuid: testUuid, uppConcordance: locationsConcordance, expectedError: nil}
+	managedLocationBlankId := testStruct{testName: "managedLocationBlankId", pathToFile: "../resources/managedLocationBlankId.json", conceptUuid: testUuid, uppConcordance: locationsConcordance, expectedError: nil}
+	managedLocationMutuallyExclusiveFields := testStruct{testName: "managedLocationMutuallyExclusiveFields", pathToFile: "../resources/managedLocationMutuallyExclusiveFields.json", conceptUuid: testUuid, uppConcordance: multiTmeFactsetConcordance, expectedError: nil}
 
 	invalidFactsetId := testStruct{
 		testName:       "invalidFactsetId",
@@ -298,6 +317,9 @@ func TestConvertToUppConcordance(t *testing.T) {
 		handlesNoFactsetIds,
 		noErrorOnNotAllowedConceptType,
 		managedLocationIds,
+		managedLocationDuplicateIds,
+		managedLocationBlankId,
+		managedLocationMutuallyExclusiveFields,
 	}
 
 	for _, scenario := range testScenarios {
@@ -311,7 +333,7 @@ func TestConvertToUppConcordance(t *testing.T) {
 			assert.Error(t, err, "Scenario: "+scenario.testName+"should have returned error")
 			assert.Contains(t, err.Error(), scenario.expectedError.Error(), "Scenario: "+scenario.testName+" returned unexpected output")
 		} else {
-			assert.Equal(t, err, scenario.expectedError, "Scenario: "+scenario.testName+" failed")
+			assert.Equal(t, scenario.expectedError, err, "Scenario: "+scenario.testName+" failed")
 		}
 	}
 }

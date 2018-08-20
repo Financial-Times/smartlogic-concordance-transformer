@@ -7,25 +7,22 @@
       ],
       "http://www.ft.com/ontology/managedlocation/TMEIdentifier": [
         {
-          "@value": "TnN0ZWluX0dMX0dCX0VOR19HX0Vzc2V4-R0w="
+          "@value": "ZyXwVuTsRqPoNmLkJiHgFeDcBa-0987654321"
         }
       ],
-      "http://www.ft.com/ontology/managedlocation/dbpediaId": [
+      "http://www.ft.com/ontology/TMEIdentifier": [
         {
-          "@type": "xsd:anyURI",
-          "@value": "http://dbpedia.org/resource/Essex"
+          "@value": "AbCdEfgHiJkLMnOpQrStUvWxYz-0123456789"
         }
       ],
-      "http://www.ft.com/ontology/managedlocation/geonamesId": [
+      "http://www.ft.com/ontology/managedlocation/factsetIdentifier": [
         {
-          "@type": "xsd:anyURI",
-          "@value": "http://sws.geonames.org/2649889/"
+          "@value": "023456-E"
         }
       ],
-      "http://www.ft.com/ontology/managedlocation/wikidataId": [
+      "http://www.ft.com/ontology/factsetIdentifier": [
         {
-          "@type": "xsd:anyURI",
-          "@value": "http://www.wikidata.org/entity/Q23240"
+          "@value": "000D63-E"
         }
       ],
       "sem:guid": [
