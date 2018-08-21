@@ -32,8 +32,9 @@ type ConceptML struct {
 }
 
 type ConceptEditorial struct {
-	TmeIdentifiersValue     []TmeId     `json:"http://www.ft.com/ontology/TMEIdentifier,omitempty"`
-	FactsetIdentifiersValue []FactsetId `json:"http://www.ft.com/ontology/factsetIdentifier,omitempty"`
+	TmeIdentifiersValue      []TmeId        `json:"http://www.ft.com/ontology/TMEIdentifier,omitempty"`
+	FactsetIdentifiersValue  []FactsetId    `json:"http://www.ft.com/ontology/factsetIdentifier,omitempty"`
+	WikidataIdentifiersValue []LocationType `json:"http://www.ft.com/ontology/wikidataIdentifier,omitempty"`
 }
 
 type TmeId struct {
@@ -121,7 +122,7 @@ func (c ConceptEditorial) GeonamesIdentifiers() []LocationType {
 }
 
 func (c ConceptEditorial) WikidataIdentifiers() []LocationType {
-	return nil
+	return c.WikidataIdentifiersValue
 }
 
 func (c ConceptEditorial) TmeIdentifiers() []TmeId {
