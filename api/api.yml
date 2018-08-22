@@ -34,7 +34,7 @@ paths:
             application/json:
               - uuid: c372ffba-7a7f-11e6-aca9-d6ece9a77557
                 concordances:
-                  - authority: FT-TME
+                  - authority: TME
                     uuid: a931079b-00b8-4d10-b893-2b94ddd93b43
         400:
           description: Invalid input - invalid JSON-LD or a missing uuid
