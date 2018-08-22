@@ -96,7 +96,7 @@ func TestTransformAndSendHandlers(t *testing.T) {
 		filePath:           "../resources/multipleTmeIds.json",
 		endpoint:           "/transform",
 		expectedStatusCode: 200,
-		expectedResult:     `{"authority":"SmartLogic","uuid":"20db1bd6-59f9-4404-adb5-3165a448f8b0","concordances":[{"authority":"FT-TME","authorityValue":"AbCdEfgHiJkLMnOpQrStUvWxYz-0123456789","uuid":"e9f4525a-401f-3b23-a68e-e48f314cdce6"},{"authority":"FT-TME","authorityValue":"ZyXwVuTsRqPoNmLkJiHgFeDcBa-0987654321","uuid":"83f63c7e-1641-3c7b-81e4-378ae3c6c2ad"},{"authority":"FT-TME","authorityValue":"abcdefghijklmnopqrstuvwxyz-0123456789","uuid":"e4bc4ac2-0637-3a27-86b1-9589fca6bf2c"},{"authority":"FT-TME","authorityValue":"ABCDEFGHIJKLMNOPQRSTUVWXYZ-0987654321","uuid":"e574b21d-9abc-3d82-a6c0-3e08c85181bf"}]}`,
+		expectedResult:     `{"authority":"SmartLogic","uuid":"20db1bd6-59f9-4404-adb5-3165a448f8b0","concordances":[{"authority":"TME","authorityValue":"AbCdEfgHiJkLMnOpQrStUvWxYz-0123456789","uuid":"e9f4525a-401f-3b23-a68e-e48f314cdce6"},{"authority":"TME","authorityValue":"ZyXwVuTsRqPoNmLkJiHgFeDcBa-0987654321","uuid":"83f63c7e-1641-3c7b-81e4-378ae3c6c2ad"},{"authority":"TME","authorityValue":"abcdefghijklmnopqrstuvwxyz-0123456789","uuid":"e4bc4ac2-0637-3a27-86b1-9589fca6bf2c"},{"authority":"TME","authorityValue":"ABCDEFGHIJKLMNOPQRSTUVWXYZ-0987654321","uuid":"e574b21d-9abc-3d82-a6c0-3e08c85181bf"}]}`,
 	}
 	transform_convertsFactsetsAndReturnsPayload := testStruct{
 		scenarioName:       "transform_convertsFactsetsAndReturnsPayload",
@@ -110,7 +110,7 @@ func TestTransformAndSendHandlers(t *testing.T) {
 		filePath:           "../resources/multipleTmeAndFactsetIds.json",
 		endpoint:           "/transform",
 		expectedStatusCode: 200,
-		expectedResult:     `{"authority":"SmartLogic","uuid":"20db1bd6-59f9-4404-adb5-3165a448f8b0","concordances":[{"authority":"FT-TME","authorityValue":"AbCdEfgHiJkLMnOpQrStUvWxYz-0123456789","uuid":"e9f4525a-401f-3b23-a68e-e48f314cdce6"},{"authority":"FT-TME","authorityValue":"ZyXwVuTsRqPoNmLkJiHgFeDcBa-0987654321","uuid":"83f63c7e-1641-3c7b-81e4-378ae3c6c2ad"},{"authority":"FT-TME","authorityValue":"abcdefghijklmnopqrstuvwxyz-0123456789","uuid":"e4bc4ac2-0637-3a27-86b1-9589fca6bf2c"},{"authority":"FACTSET","authorityValue":"000D63-E","uuid":"8d3aba95-02d9-3802-afc0-b99bb9b1139e"},{"authority":"FACTSET","authorityValue":"023456-E","uuid":"3bc0ab41-c01f-3a0b-aa78-c76438080b52"},{"authority":"FACTSET","authorityValue":"023411-E","uuid":"f777c5af-e0b2-34dc-9102-e346ca2d27aa"}]}`,
+		expectedResult:     `{"authority":"SmartLogic","uuid":"20db1bd6-59f9-4404-adb5-3165a448f8b0","concordances":[{"authority":"TME","authorityValue":"AbCdEfgHiJkLMnOpQrStUvWxYz-0123456789","uuid":"e9f4525a-401f-3b23-a68e-e48f314cdce6"},{"authority":"TME","authorityValue":"ZyXwVuTsRqPoNmLkJiHgFeDcBa-0987654321","uuid":"83f63c7e-1641-3c7b-81e4-378ae3c6c2ad"},{"authority":"TME","authorityValue":"abcdefghijklmnopqrstuvwxyz-0123456789","uuid":"e4bc4ac2-0637-3a27-86b1-9589fca6bf2c"},{"authority":"FACTSET","authorityValue":"000D63-E","uuid":"8d3aba95-02d9-3802-afc0-b99bb9b1139e"},{"authority":"FACTSET","authorityValue":"023456-E","uuid":"3bc0ab41-c01f-3a0b-aa78-c76438080b52"},{"authority":"FACTSET","authorityValue":"023411-E","uuid":"f777c5af-e0b2-34dc-9102-e346ca2d27aa"}]}`,
 	}
 	send_convertsAndForwardsPayloadWithConcordance := testStruct{
 		scenarioName:       "send_convertsAndForwardsPayloadWithConcordance",
