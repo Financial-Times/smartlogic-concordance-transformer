@@ -139,7 +139,7 @@ e.g
       "uuid": "2d3e16e0-61cb-4322-8aff-3b01c59f4daa",
       "concordances": [
           {
-              "authority": "FT-TME",
+              "authority": "TME",
               "uuid": "70f4732b-7f7d-30a1-9c29-0cceec23760e"
           },
           {

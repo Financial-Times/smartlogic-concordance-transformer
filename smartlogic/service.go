@@ -21,7 +21,7 @@ var uuidMatcher = regexp.MustCompile("^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a
 type status int
 
 const (
-	CONCORDANCE_AUTHORITY_TME              = "FT-TME"
+	CONCORDANCE_AUTHORITY_TME              = "TME"
 	CONCORDANCE_AUTHORITY_FACTSET          = "FACTSET"
 	CONCORDANCE_AUTHORITY_DBPEDIA          = "DBPedia"
 	CONCORDANCE_AUTHORITY_GEONAMES         = "Geonames"
