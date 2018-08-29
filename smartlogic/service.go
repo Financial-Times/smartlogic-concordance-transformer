@@ -26,7 +26,7 @@ const (
 	CONCORDANCE_AUTHORITY_DBPEDIA          = "DBPedia"
 	CONCORDANCE_AUTHORITY_GEONAMES         = "Geonames"
 	CONCORDANCE_AUTHORITY_WIKIDATA         = "Wikidata"
-	CONCORDANCE_AUTHORITY_SMARTLOGIC       = "SmartLogic"
+	CONCORDANCE_AUTHORITY_SMARTLOGIC       = "Smartlogic"
 	CONCORDANCE_AUTHORITY_MANAGED_LOCATION = "ManagedLocation"
 
 	THING_URI_PREFIX           = "http://www.ft.com/thing/"

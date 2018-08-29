@@ -1,9 +1,9 @@
 swagger: "2.0"
 info:
-  description: "API specification for the SmartLogic Concordance Transformer"
+  description: "API specification for the Smartlogic Concordance Transformer"
   
   version: "1.0.0"
-  title: "SmartLogic Concordance Transformer"
+  title: "Smartlogic Concordance Transformer"
 host: pub-prod-up.ft.com
 schemes:
   - https
