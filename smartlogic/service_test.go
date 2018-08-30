@@ -239,7 +239,7 @@ func TestConvertToUppConcordance(t *testing.T) {
 
 	editorialConcordance := UppConcordance{
 		ConceptUuid: testUuid,
-		Authority:   "SmartLogic",
+		Authority:   "Smartlogic",
 		ConcordedIds: []ConcordedId{
 			ConcordedId{
 				Authority:      CONCORDANCE_AUTHORITY_TME,
@@ -255,7 +255,7 @@ func TestConvertToUppConcordance(t *testing.T) {
 
 	editorialConcordanceTwoWikidata := UppConcordance{
 		ConceptUuid: testUuid,
-		Authority:   "SmartLogic",
+		Authority:   "Smartlogic",
 		ConcordedIds: []ConcordedId{
 			ConcordedId{
 				Authority:      CONCORDANCE_AUTHORITY_TME,
@@ -276,7 +276,7 @@ func TestConvertToUppConcordance(t *testing.T) {
 
 	noWikidataEditorialConcordance := UppConcordance{
 		ConceptUuid: testUuid,
-		Authority:   "SmartLogic",
+		Authority:   "Smartlogic",
 		ConcordedIds: []ConcordedId{
 			ConcordedId{
 				Authority:      CONCORDANCE_AUTHORITY_TME,
