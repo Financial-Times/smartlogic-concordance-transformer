@@ -65,14 +65,14 @@ func main() {
 	})
 	topic := app.String(cli.StringOpt{
 		Name:   "topic",
-		Value:  "SmartLogicConcepts",
+		Value:  "SmartlogicConcepts",
 		Desc:   "Kafka topic subscribed to",
 		EnvVar: "KAFKA_TOPIC",
 	})
 	groupName := app.String(cli.StringOpt{
 		Name:   "groupName",
 		Value:  "SmartlogicConcordanceSemantic",
-		Desc:   "Group name of connection to SmartLogicChangeEvents Topic",
+		Desc:   "Group name of connection to SmartlogicChangeEvents Topic",
 		EnvVar: "GROUP_NAME",
 	})
 	writerAddress := app.String(cli.StringOpt{

@@ -153,11 +153,11 @@ func TestConvertToUppConcordance(t *testing.T) {
 	emptyConcordance := UppConcordance{
 		ConceptUuid:  testUuid,
 		ConcordedIds: []ConcordedId{},
-		Authority:    "SmartLogic",
+		Authority:    "Smartlogic",
 	}
 	multiConcordance := UppConcordance{
 		ConceptUuid: testUuid,
-		Authority:   "SmartLogic",
+		Authority:   "Smartlogic",
 		ConcordedIds: []ConcordedId{
 			ConcordedId{
 				Authority:      CONCORDANCE_AUTHORITY_TME,
@@ -180,7 +180,7 @@ func TestConvertToUppConcordance(t *testing.T) {
 	}
 	multiFactsetConcordance := UppConcordance{
 		ConceptUuid: testUuid,
-		Authority:   "SmartLogic",
+		Authority:   "Smartlogic",
 		ConcordedIds: []ConcordedId{
 			ConcordedId{
 				Authority:      CONCORDANCE_AUTHORITY_FACTSET,
