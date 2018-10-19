@@ -23,7 +23,7 @@
       "http://www.ft.com/ontology/geonamesId": [
         {
           "@type": "xsd:anyURI",
-          "@value": "http://sws.geonames.org/2649889/"
+          "@value": ""
         }
       ],
       "http://www.ft.com/ontology/wikidataIdentifier": [

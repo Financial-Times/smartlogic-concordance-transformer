@@ -35,7 +35,7 @@ type ConceptEditorial struct {
 	TmeIdentifiersValue      []TmeId        `json:"http://www.ft.com/ontology/TMEIdentifier,omitempty"`
 	FactsetIdentifiersValue  []FactsetId    `json:"http://www.ft.com/ontology/factsetIdentifier,omitempty"`
 	WikidataIdentifiersValue []LocationType `json:"http://www.ft.com/ontology/wikidataIdentifier,omitempty"`
-	GeonamesIdentifiersValue []LocationType `json:"http://www.ft.com/ontology/geonamesIdentifier,omitempty"`
+	GeonamesIdentifiersValue []LocationType `json:"http://www.ft.com/ontology/geonamesId,omitempty"`
 }
 
 type TmeId struct {
