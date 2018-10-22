@@ -12,18 +12,17 @@ This service will listen to Kafka for a notification of a change made in Smartlo
 
 Download the source code, dependencies and test dependencies:
 
-        go get -u github.com/kardianos/govendor
+        go get -u github.com/golang/dep/cmd/dep
         go get -u github.com/Financial-Times/smartlogic-concordance-transformer
         cd $GOPATH/src/github.com/Financial-Times/smartlogic-concordance-transformer
-        govendor sync
+        dep ensure -v
         go build .
 
 ## Running locally
 
 1. Run the tests and install the binary:
 
-        govendor sync
-        govendor test -v -race
+        go test -v -race
         go install
 
 2. Run the binary (using the `help` flag to see the available optional arguments):
