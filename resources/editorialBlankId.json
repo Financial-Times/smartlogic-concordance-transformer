@@ -20,10 +20,10 @@
           "@value": " "
         }
       ],
-      "http://www.ft.com/ontology/geonamesId": [
+      "http://www.ft.com/ontology/geonamesIdentifier": [
         {
           "@type": "xsd:anyURI",
-          "@value": "http://sws.geonames.org/2649889/"
+          "@value": ""
         }
       ],
       "http://www.ft.com/ontology/wikidataIdentifier": [

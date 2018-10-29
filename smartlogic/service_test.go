@@ -245,7 +245,13 @@ func TestConvertToUppConcordance(t *testing.T) {
 				Authority:      CONCORDANCE_AUTHORITY_TME,
 				AuthorityValue: "TnN0ZWluX0dMX0dCX0VOR19HX0Vzc2V4-R0w=",
 				UUID:           "3f494231-9dc6-3181-8baa-dc9d1cad730f",
-			}, ConcordedId{
+			},
+			ConcordedId{
+				Authority:      CONCORDANCE_AUTHORITY_GEONAMES,
+				AuthorityValue: "http://sws.geonames.org/2649889/",
+				UUID:           "ed78ef90-a160-30d0-8a3b-472a966c5664",
+			},
+			ConcordedId{
 				Authority:      CONCORDANCE_AUTHORITY_WIKIDATA,
 				AuthorityValue: "http://www.wikidata.org/entity/Q23240",
 				UUID:           "76754d1e-11f6-3d4f-8e3a-59a5b4e6bdcd",
@@ -261,7 +267,13 @@ func TestConvertToUppConcordance(t *testing.T) {
 				Authority:      CONCORDANCE_AUTHORITY_TME,
 				AuthorityValue: "TnN0ZWluX0dMX0dCX0VOR19HX0Vzc2V4-R0w=",
 				UUID:           "3f494231-9dc6-3181-8baa-dc9d1cad730f",
-			}, ConcordedId{
+			},
+			ConcordedId{
+				Authority:      CONCORDANCE_AUTHORITY_GEONAMES,
+				AuthorityValue: "http://sws.geonames.org/2649889/",
+				UUID:           "ed78ef90-a160-30d0-8a3b-472a966c5664",
+			},
+			ConcordedId{
 				Authority:      CONCORDANCE_AUTHORITY_WIKIDATA,
 				AuthorityValue: "http://www.wikidata.org/entity/Q23240",
 				UUID:           "76754d1e-11f6-3d4f-8e3a-59a5b4e6bdcd",
@@ -282,6 +294,27 @@ func TestConvertToUppConcordance(t *testing.T) {
 				Authority:      CONCORDANCE_AUTHORITY_TME,
 				AuthorityValue: "TnN0ZWluX0dMX0dCX0VOR19HX0Vzc2V4-R0w=",
 				UUID:           "3f494231-9dc6-3181-8baa-dc9d1cad730f",
+			},
+		},
+	}
+
+	editorialGeonamesConcordance := UppConcordance{
+		ConceptUuid: testUuid,
+		Authority:   "Smartlogic",
+		ConcordedIds: []ConcordedId{
+			ConcordedId{
+				Authority:      CONCORDANCE_AUTHORITY_TME,
+				AuthorityValue: "TnN0ZWluX0dMX0dCX0VOR19HX0Vzc2V4-R0w=",
+				UUID:           "3f494231-9dc6-3181-8baa-dc9d1cad730f",
+			}, ConcordedId{
+				Authority:      CONCORDANCE_AUTHORITY_GEONAMES,
+				AuthorityValue: "http://sws.geonames.org/2649889/",
+				UUID:           "ed78ef90-a160-30d0-8a3b-472a966c5664",
+			},
+			ConcordedId{
+				Authority:      CONCORDANCE_AUTHORITY_WIKIDATA,
+				AuthorityValue: "http://www.wikidata.org/entity/Q23240",
+				UUID:           "76754d1e-11f6-3d4f-8e3a-59a5b4e6bdcd",
 			},
 		},
 	}
@@ -314,6 +347,7 @@ func TestConvertToUppConcordance(t *testing.T) {
 	editorialDuplicateIds := testStruct{testName: "editorialDuplicateIds", pathToFile: "../resources/editorialDuplicateIds.json", conceptUuid: testUuid, uppConcordance: editorialConcordance, expectedError: nil}
 	editorialAndManagedLocationWikidata := testStruct{testName: "editorialAndManagedLocationWikidata", pathToFile: "../resources/editorialAndManagedLocationWikidata.json", conceptUuid: testUuid, uppConcordance: editorialConcordance, expectedError: nil}
 	editorialTwoWikidataIds := testStruct{testName: "editorialTwoWikidataIds", pathToFile: "../resources/editorialTwoWikidata.json", conceptUuid: testUuid, uppConcordance: editorialConcordanceTwoWikidata, expectedError: nil}
+	editorialGeonamesId := testStruct{testName: "editorialGeonamesId", pathToFile: "../resources/editorialGeonames.json", conceptUuid: testUuid, uppConcordance: editorialGeonamesConcordance, expectedError: nil}
 
 	invalidFactsetId := testStruct{
 		testName:       "invalidFactsetId",
@@ -377,6 +411,7 @@ func TestConvertToUppConcordance(t *testing.T) {
 		editorialDuplicateIds,
 		editorialAndManagedLocationWikidata,
 		editorialTwoWikidataIds,
+		editorialGeonamesId,
 	}
 
 	for _, scenario := range testScenarios {
