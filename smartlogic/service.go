@@ -187,7 +187,7 @@ func appendTmeConcordances(concordances []ConcordedId, concept Concept, conceptU
 			return nil, err
 		}
 		if err != nil {
-			log.WithFields(log.Fields{"transaction_id": tid, "UUID": conceptUuid}).Error(err)
+			log.WithFields(log.Fields{"transaction_id": tid, "UUID": conceptUuid, "alert_tag": "ConceptLoadingInvalidConcordance"}).Error(err)
 			return nil, err
 		}
 		concordedId := ConcordedId{
@@ -221,7 +221,7 @@ func appendFactsetConcordances(concordances []ConcordedId, concept Concept, conc
 			return nil, err
 		}
 		if err != nil {
-			log.WithFields(log.Fields{"transaction_id": tid, "UUID": conceptUuid}).Error(err)
+			log.WithFields(log.Fields{"transaction_id": tid, "UUID": conceptUuid, "alert_tag": "ConceptLoadingInvalidConcordance"}).Error(err)
 			return nil, err
 		}
 		concordedId := ConcordedId{
