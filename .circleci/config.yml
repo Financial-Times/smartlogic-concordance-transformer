@@ -3,7 +3,7 @@ jobs:
   build:
     working_directory: /go/src/github.com/Financial-Times/smartlogic-concordance-transformer
     docker:
-      - image: circleci/golang:1.8
+      - image: circleci/golang:1.12
         environment:
           TEST_DIR: /tmp/test-results
       - image: dwmkerr/dynamodb
