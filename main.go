@@ -14,7 +14,7 @@ import (
 	"github.com/Financial-Times/kafka-client-go/kafka"
 	slc "github.com/Financial-Times/smartlogic-concordance-transformer/smartlogic"
 	"github.com/gorilla/mux"
-	"github.com/jawher/mow.cli"
+	cli "github.com/jawher/mow.cli"
 	_ "github.com/joho/godotenv/autoload"
 	log "github.com/sirupsen/logrus"
 )
@@ -101,7 +101,7 @@ func main() {
 
 		consumerConfig := kafka.DefaultConsumerConfig()
 		consumerConfig.Zookeeper.Logger = standardlog.New(ioutil.Discard, "", 0)
-		consumer, err := kafka.NewConsumer(*brokerConnectionString, *groupName, []string{*topic}, consumerConfig)
+		consumer, err := kafka.NewPerseverantConsumer(*brokerConnectionString, *groupName, []string{*topic}, consumerConfig, time.Minute, nil)
 		if err != nil {
 			log.WithError(err).Fatal("Cannot create Kafka client")
 		}
