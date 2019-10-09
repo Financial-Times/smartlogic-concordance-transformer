@@ -3,24 +3,20 @@ jobs:
   build:
     working_directory: /go/src/github.com/Financial-Times/smartlogic-concordance-transformer
     docker:
-      - image: circleci/golang:1.8
+      - image: golang:1
         environment:
           TEST_DIR: /tmp/test-results
-      - image: dwmkerr/dynamodb
     steps:
       - checkout
       - run:
-          name: Make go get work
-          command: sudo chown -R circleci:circleci /go/src
+          name: External Dependencies
+          command: |
+            GO111MODULE=off go get github.com/kardianos/govendor
+            GO111MODULE=off go get github.com/jstemmer/go-junit-report
+            GO111MODULE=off go get github.com/mattn/goveralls
       - run:
           name: Create test folder
           command: mkdir -p $TEST_DIR
-      - run:
-          name: External Dependancies
-          command: |
-            go get -u github.com/kardianos/govendor
-            go get -u github.com/jstemmer/go-junit-report
-            go get -u github.com/mattn/goveralls
       - run:
           name: Govendor Sync
           command: govendor sync -v
@@ -56,7 +52,7 @@ jobs:
   docker_build:
     working_directory: /smartlogic-concordance-transformer
     docker:
-      - image: docker:1.12.6-git
+      - image: docker:18
     steps:
       - checkout
       - setup_docker_engine
