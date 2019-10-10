@@ -16,7 +16,6 @@ require (
 	github.com/gorilla/mux v1.6.1-0.20180107155708-5bbbb5b2b572
 	github.com/hashicorp/go-version v0.0.0-20171129150820-4fe82ae3040f // indirect
 	github.com/jawher/mow.cli v1.0.4-0.20171111121841-3ff64ca21987
-	github.com/joho/godotenv v1.2.1-0.20171222233539-06e67b5ef3be
 	github.com/onsi/ginkgo v1.10.2 // indirect
 	github.com/onsi/gomega v1.7.0 // indirect
 	github.com/pborman/uuid v0.0.0-20171128162732-e53336930665

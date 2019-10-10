@@ -49,8 +49,6 @@ github.com/jawher/mow.cli v1.0.4-0.20171111121841-3ff64ca21987 h1:r+pKutOAt5+z98
 github.com/jawher/mow.cli v1.0.4-0.20171111121841-3ff64ca21987/go.mod h1:5hQj2V8g+qYmLUVWqu4Wuja1pI57M83EChYLVZ0sMKk=
 github.com/jcmturner/gofork v0.0.0-20190328161633-dc7c13fece03 h1:FUwcHNlEqkqLjLBdCp5PRlCFijNjvcYANOZXzCfXwCM=
 github.com/jcmturner/gofork v0.0.0-20190328161633-dc7c13fece03/go.mod h1:MK8+TM0La+2rjBD4jE12Kj1pCCxK7d2LK/UM3ncEo0o=
-github.com/joho/godotenv v1.2.1-0.20171222233539-06e67b5ef3be h1:wCNHMr1JGw2AeQ6hS/Flm/vxoMoEhgb3UiDEC3ZwuAQ=
-github.com/joho/godotenv v1.2.1-0.20171222233539-06e67b5ef3be/go.mod h1:7hK45KPybAkOC6peb+G5yklZfMxEjkZhHbwpqxOKXbg=
 github.com/onsi/ginkgo v1.6.0/go.mod h1:lLunBs/Ym6LB5Z9jYTR76FiuTmxDTDusOGeTQH+WWjE=
 github.com/onsi/ginkgo v1.10.2 h1:uqH7bpe+ERSiDa34FDOF7RikN6RzXgduUF8yarlZp94=
 github.com/onsi/ginkgo v1.10.2/go.mod h1:lLunBs/Ym6LB5Z9jYTR76FiuTmxDTDusOGeTQH+WWjE=
