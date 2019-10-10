@@ -48,8 +48,8 @@ paths:
           description: Service cannot connect to Kafka or the concordances-rw-neo4j service
   /transform/send:
     post:
-      summary: Transforms smartlogic payload into the upp representation of concordance and sends it to the concordance-rw-neo4j. 
-      description: Transforms smartlogic payload into the upp representation of concordance and sends it to the concordance-rw-neo4j. If no concordance exists, a delete request is sent instead (response outlined in concordance-rw-neo4j)
+      summary: Transforms smartlogic payload into the upp representation of concordance and sends it to the concordances-rw-neo4j. 
+      description: Transforms smartlogic payload into the upp representation of concordance and sends it to the concordances-rw-neo4j. If no concordance exists, a delete request is sent instead (response outlined in concordances-rw-neo4j)
       tags:
         - Internal API
       produces:

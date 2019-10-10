@@ -17,7 +17,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-const appDescription = "Service which listens to kafka for concordance updates, transforms smartlogic concordance json and sends updates to concordance-rw-neo4j"
+const appDescription = "Service which listens to kafka for concordance updates, transforms smartlogic concordance json and sends updates to concordances-rw-neo4j"
 
 var httpClient = http.Client{
 	Transport: &http.Transport{
@@ -75,7 +75,6 @@ func main() {
 	})
 	writerAddress := app.String(cli.StringOpt{
 		Name:   "writerAddress",
-		Value:  "http://localhost:8080/__concordance-rw-neo4j/",
 		Desc:   "Concordance rw address for routing requests",
 		EnvVar: "WRITER_ADDRESS",
 	})

@@ -6,16 +6,14 @@
 
 ## Introduction
 
-This service will listen to Kafka for a notification of a change made in Smartlogic, verify whether the change concerns concordance, convert the JSON-LD in the message to a normalised UPP view of a concordance and finally send the JSON to the concordances-rw-dynamo.
+This service will listen to Kafka for a notification of a change made in Smartlogic, verify whether the change concerns concordance, convert the JSON-LD in the message to a normalised UPP view of a concordance and finally send the JSON to the concordances-rw-neo4j.
 
 ## Installation
 
-Download the source code, dependencies and test dependencies:
+Download the source code and build the binary:
 
-        go get -u github.com/golang/dep/cmd/dep
-        go get -u github.com/Financial-Times/smartlogic-concordance-transformer
+        go get github.com/Financial-Times/smartlogic-concordance-transformer
         cd $GOPATH/src/github.com/Financial-Times/smartlogic-concordance-transformer
-        dep ensure -v
         go build .
 
 ## Running locally
@@ -27,17 +25,19 @@ Download the source code, dependencies and test dependencies:
 
 2. Run the binary (using the `help` flag to see the available optional arguments):
 
-        $GOPATH/bin/smartlogic-concordance-transformer [--help]
+        Usage: smartlogic-concordance-transformer [OPTIONS]
 
-Options:
-
-        --app-system-code="smartlogic-concordance-transformer"  System Code of the application ($APP_SYSTEM_CODE)
-        --app-name="smartlogic-concordance-transformer"         Application name ($APP_NAME)
-        --port="8080"                                           Port to listen on ($APP_PORT)
-        --kafka-address="http:localhost:9092"                   Kafka Address 
-        --kafka-topic="smartlogic-concepts"                     Kafka Topic for Smartlogic concordances
-        --kafka-group="smartlogic-concordance-transformer"      Kafka Group for this service 
-        --writer-endpoint="http://localhost:8080/"              Routing for the RW App                             
+        Service which listens to kafka for concordance updates, transforms smartlogic concordance json and sends updates to concordances-rw-neo4j
+                                        
+        Options:                         
+            --app-system-code          System Code of the application (env $APP_SYSTEM_CODE) (default "smartlogic-concordance-transformer")
+            --app-name                 Application name (env $APP_NAME) (default "Smartlogic Concordance Transformer")
+            --port                     Port to listen on (env $APP_PORT) (default "8080")
+            --logLevel                 Log level (env $LOG_LEVEL) (default "INFO")
+            --brokerConnectionString   Zookeeper connection string in the form host1:2181,host2:2181/chroot (env $BROKER_CONNECTION_STRING)
+            --topic                    Kafka topic subscribed to (env $KAFKA_TOPIC) (default "SmartlogicConcept")
+            --groupName                Group name of connection to the Kafka topic (env $GROUP_NAME) (default "SmartlogicConcordanceTransformer")
+            --writerAddress            Concordance rw address for routing requests (env $WRITER_ADDRESS)                         
         
         
 ## Build and deployment
@@ -49,7 +49,7 @@ Options:
 See the api/api.yml for the swagger definitions of the endpoints
 
 ### POST /transform
-This endpoint is for testing and help ongoing support. This endpoint only transforms the JSON-LD payload and returns the UPP source representation but doesn’t send it on down the pipeline to the concordance-rw-s3
+This endpoint is for testing and help ongoing support. This endpoint only transforms the JSON-LD payload and returns the UPP source representation but doesn’t send it on down the pipeline to the concordances-rw-neo4j
 
 Using curl:
 
@@ -153,7 +153,7 @@ Based on the following [google doc](https://docs.google.com/document/d/1-8Yv1ob6
 
 
 ### POST /transform/send
-Transforms smartlogic payload into the upp representation of concordance and sends result to concordances-rw-s3
+Transforms smartlogic payload into the upp representation of concordance and sends result to concordances-rw-neo4j
 
 Using curl:
 
@@ -245,12 +245,12 @@ Admin endpoints are:
 
 There are several checks performed:
 
-* Checks that a connection can be made to the concordances-rw-s3 service
+* Checks that a connection can be made to the concordances-rw-neo4j service
 * Due to limitation with currently kafka version the current kafka healthcheck will always return 200
 
 ### Logging
 
-* The application uses [logrus](https://github.com/Sirupsen/logrus); the log file is initialised in [main.go](main.go).
+* The application uses [logrus](https://github.com/sirupsen/logrus); the log file is initialised in [main.go](main.go).
 * Logging requires an `env` app parameter, for all environments other than `local` logs are written to file.
 * When running locally, logs are written to console. If you want to log locally to file, you need to pass in an env parameter that is != `local`.
 * NOTE: `/__build-info` and `/__gtg` endpoints are not logged as they are called every second from varnish/vulcand and this information is not needed in logs/splunk.
