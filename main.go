@@ -1,6 +1,8 @@
 package main
 
 import (
+	"io/ioutil"
+	standardlog "log"
 	"net"
 	"net/http"
 	"os"
@@ -8,18 +10,14 @@ import (
 	"syscall"
 	"time"
 
-	"io/ioutil"
-	standardlog "log"
-
 	"github.com/Financial-Times/kafka-client-go/kafka"
 	slc "github.com/Financial-Times/smartlogic-concordance-transformer/smartlogic"
 	"github.com/gorilla/mux"
-	"github.com/jawher/mow.cli"
-	_ "github.com/joho/godotenv/autoload"
+	cli "github.com/jawher/mow.cli"
 	log "github.com/sirupsen/logrus"
 )
 
-const appDescription = "Service which listens to kafka for concordance updates, transforms smartlogic concordance json and sends updates to concordance-rw-neo4j"
+const appDescription = "Service which listens to kafka for concordance updates, transforms smartlogic concordance json and sends updates to concordances-rw-neo4j"
 
 var httpClient = http.Client{
 	Transport: &http.Transport{
@@ -65,43 +63,42 @@ func main() {
 	})
 	topic := app.String(cli.StringOpt{
 		Name:   "topic",
-		Value:  "SmartlogicConcepts",
+		Value:  "SmartlogicConcept",
 		Desc:   "Kafka topic subscribed to",
 		EnvVar: "KAFKA_TOPIC",
 	})
 	groupName := app.String(cli.StringOpt{
 		Name:   "groupName",
-		Value:  "SmartlogicConcordanceSemantic",
-		Desc:   "Group name of connection to SmartlogicChangeEvents Topic",
+		Value:  "SmartlogicConcordanceTransformer",
+		Desc:   "Group name of connection to the Kafka topic",
 		EnvVar: "GROUP_NAME",
 	})
 	writerAddress := app.String(cli.StringOpt{
 		Name:   "writerAddress",
-		Value:  "http://localhost:8080/__concordance-rw-neo4j/",
 		Desc:   "Concordance rw address for routing requests",
 		EnvVar: "WRITER_ADDRESS",
 	})
 
-	lvl, err := log.ParseLevel(*logLevel)
-	if err != nil {
-		log.Fatalf("Cannot parse log level: %s", *logLevel)
-	}
-	log.SetLevel(lvl)
-	log.SetFormatter(&log.JSONFormatter{})
-
-	log.WithFields(log.Fields{
-		"WRITER_ADDRESS":           *writerAddress,
-		"KAFKA_TOPIC":              *topic,
-		"GROUP_NAME":               *groupName,
-		"BROKER_CONNECTION_STRING": *brokerConnectionString,
-	}).Infof("[Startup] smartlogic-concordance-transformer is starting")
-
 	app.Action = func() {
+		lvl, err := log.ParseLevel(*logLevel)
+		if err != nil {
+			log.Fatalf("Cannot parse log level: %s", *logLevel)
+		}
+		log.SetLevel(lvl)
+		log.SetFormatter(&log.JSONFormatter{})
+
+		log.WithFields(log.Fields{
+			"WRITER_ADDRESS":           *writerAddress,
+			"KAFKA_TOPIC":              *topic,
+			"GROUP_NAME":               *groupName,
+			"BROKER_CONNECTION_STRING": *brokerConnectionString,
+		}).Infof("[Startup] smartlogic-concordance-transformer is starting")
+
 		log.Infof("System code: %s, App Name: %s, Port: %s", *appSystemCode, *appName, *port)
 
 		consumerConfig := kafka.DefaultConsumerConfig()
 		consumerConfig.Zookeeper.Logger = standardlog.New(ioutil.Discard, "", 0)
-		consumer, err := kafka.NewConsumer(*brokerConnectionString, *groupName, []string{*topic}, consumerConfig)
+		consumer, err := kafka.NewPerseverantConsumer(*brokerConnectionString, *groupName, []string{*topic}, consumerConfig, time.Minute, nil)
 		if err != nil {
 			log.WithError(err).Fatal("Cannot create Kafka client")
 		}
@@ -134,7 +131,7 @@ func main() {
 }
 
 func waitForSignal() {
-	ch := make(chan os.Signal)
+	ch := make(chan os.Signal, 1)
 	signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
 	<-ch
 }
