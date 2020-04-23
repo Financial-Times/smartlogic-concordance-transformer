@@ -1,0 +1,7 @@
+# Values used for the deployed application.
+replicaCount: 1
+service:
+  name: smartlogic-concordance-transformer
+eksCluster: true
+env:
+  LOG_LEVEL: info
