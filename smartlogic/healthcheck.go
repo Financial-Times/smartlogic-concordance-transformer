@@ -10,9 +10,8 @@ import (
 	"github.com/Financial-Times/http-handlers-go/httphandlers"
 	"github.com/Financial-Times/service-status-go/gtg"
 	serviceStatus "github.com/Financial-Times/service-status-go/httphandlers"
-	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
-	"github.com/rcrowley/go-metrics"
+	metrics "github.com/rcrowley/go-metrics"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -40,11 +39,10 @@ func (h *SmartlogicConcordanceTransformerHandler) RegisterAdminHandlers(router *
 		Timeout: 10 * time.Second,
 	}
 
-	router.Path("/__health").Handler(handlers.MethodHandler{"GET": http.HandlerFunc(fthealth.Handler(&timedHC))})
-	gtgHandler := serviceStatus.NewGoodToGoHandler(gtg.StatusChecker(h.gtg))
-	router.Path("/__gtg").Handler(handlers.MethodHandler{"GET": http.HandlerFunc(gtgHandler)})
+	http.HandleFunc("/__health", fthealth.Handler(&timedHC))
+	http.HandleFunc(serviceStatus.GTGPath, serviceStatus.NewGoodToGoHandler(gtg.StatusChecker(h.gtg)))
+	http.HandleFunc(serviceStatus.BuildInfoPath, serviceStatus.BuildInfoHandler)
 
-	http.HandleFunc("/__build-info", serviceStatus.BuildInfoHandler)
 	http.Handle("/", monitoringRouter)
 }
 
