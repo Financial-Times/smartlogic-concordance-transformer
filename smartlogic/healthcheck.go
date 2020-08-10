@@ -16,7 +16,7 @@ import (
 )
 
 const (
-	deweyURL       = "https://dewey.ft.com/smartlogic-concordance-transform.html"
+	panicGuideURL  = "https://runbooks.ftops.tech/smartlogic-concordance-transform"
 	businessImpact = "Editorial updates of concordance records in smartlogic will not be ingested into UPP"
 )
 
@@ -72,7 +72,7 @@ func (h *SmartlogicConcordanceTransformerHandler) kafkaHealthCheck() fthealth.Ch
 	return fthealth.Check{
 		BusinessImpact:   businessImpact,
 		Name:             "Check connectivity to Kafka",
-		PanicGuide:       deweyURL,
+		PanicGuide:       panicGuideURL,
 		Severity:         3,
 		TechnicalSummary: `Check that kafka and zookeeper are healthy in this cluster; if so restart this service`,
 		Checker:          h.checkKafkaConnectivity,
@@ -83,7 +83,7 @@ func (h *SmartlogicConcordanceTransformerHandler) concordanceRwNeo4jHealthCheck(
 	return fthealth.Check{
 		BusinessImpact:   businessImpact,
 		Name:             "Check connectivity to concordance reader/writer ",
-		PanicGuide:       deweyURL,
+		PanicGuide:       panicGuideURL,
 		Severity:         3,
 		TechnicalSummary: `Check health of concordances-rw-neo4j`,
 		Checker:          h.checkConcordanceRwConnectivity,

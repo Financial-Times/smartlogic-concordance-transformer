@@ -34,7 +34,7 @@ func main() {
 
 	appSystemCode := app.String(cli.StringOpt{
 		Name:   "app-system-code",
-		Value:  "smartlogic-concordance-transformer",
+		Value:  "smartlogic-concordance-transform",
 		Desc:   "System Code of the application",
 		EnvVar: "APP_SYSTEM_CODE",
 	})
