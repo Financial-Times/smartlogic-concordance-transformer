@@ -10,14 +10,13 @@ import (
 	"github.com/Financial-Times/http-handlers-go/httphandlers"
 	"github.com/Financial-Times/service-status-go/gtg"
 	serviceStatus "github.com/Financial-Times/service-status-go/httphandlers"
-	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
-	"github.com/rcrowley/go-metrics"
+	metrics "github.com/rcrowley/go-metrics"
 	log "github.com/sirupsen/logrus"
 )
 
 const (
-	deweyURL       = "https://dewey.ft.com/smartlogic-concordance-transform.html"
+	panicGuideURL  = "https://runbooks.ftops.tech/smartlogic-concordance-transform"
 	businessImpact = "Editorial updates of concordance records in smartlogic will not be ingested into UPP"
 )
 
@@ -40,11 +39,10 @@ func (h *SmartlogicConcordanceTransformerHandler) RegisterAdminHandlers(router *
 		Timeout: 10 * time.Second,
 	}
 
-	router.Path("/__health").Handler(handlers.MethodHandler{"GET": http.HandlerFunc(fthealth.Handler(&timedHC))})
-	gtgHandler := serviceStatus.NewGoodToGoHandler(gtg.StatusChecker(h.gtg))
-	router.Path("/__gtg").Handler(handlers.MethodHandler{"GET": http.HandlerFunc(gtgHandler)})
+	http.HandleFunc("/__health", fthealth.Handler(&timedHC))
+	http.HandleFunc(serviceStatus.GTGPath, serviceStatus.NewGoodToGoHandler(gtg.StatusChecker(h.gtg)))
+	http.HandleFunc(serviceStatus.BuildInfoPath, serviceStatus.BuildInfoHandler)
 
-	http.HandleFunc("/__build-info", serviceStatus.BuildInfoHandler)
 	http.Handle("/", monitoringRouter)
 }
 
@@ -74,7 +72,7 @@ func (h *SmartlogicConcordanceTransformerHandler) kafkaHealthCheck() fthealth.Ch
 	return fthealth.Check{
 		BusinessImpact:   businessImpact,
 		Name:             "Check connectivity to Kafka",
-		PanicGuide:       deweyURL,
+		PanicGuide:       panicGuideURL,
 		Severity:         3,
 		TechnicalSummary: `Check that kafka and zookeeper are healthy in this cluster; if so restart this service`,
 		Checker:          h.checkKafkaConnectivity,
@@ -85,7 +83,7 @@ func (h *SmartlogicConcordanceTransformerHandler) concordanceRwNeo4jHealthCheck(
 	return fthealth.Check{
 		BusinessImpact:   businessImpact,
 		Name:             "Check connectivity to concordance reader/writer ",
-		PanicGuide:       deweyURL,
+		PanicGuide:       panicGuideURL,
 		Severity:         3,
 		TechnicalSummary: `Check health of concordances-rw-neo4j`,
 		Checker:          h.checkConcordanceRwConnectivity,

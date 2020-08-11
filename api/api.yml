@@ -109,7 +109,7 @@ paths:
                   lastUpdated: "2017-01-16T10:26:47.222805121Z"
                   name: "Smart Logic Concordance Transformer Healthcheck"
                   ok: true
-                  panicGuide: "https://dewey.ft.com/smartlogic-concordance-transformer.html"
+                  panicGuide: "https://runbooks.ftops.tech/smartlogic-concordance-transform"
                   severity: 1
                   technicalSummary: "TODO"
               description: TODO

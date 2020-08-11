@@ -12,7 +12,7 @@ import (
 
 	"github.com/pborman/uuid"
 
-	"github.com/Financial-Times/uuid-utils-go"
+	uuidutils "github.com/Financial-Times/uuid-utils-go"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -349,13 +349,16 @@ func (ts *TransformerService) makeWriteRequest(uuid string, uppConcordance UppCo
 	if err != nil {
 		log.WithError(err).WithFields(log.Fields{"transaction_id": tid, "UUID": uuid}).Error("Service Unavailable: Get request to writer resulted in error")
 		return SERVICE_UNAVAILABLE, err
-	} else if resp.StatusCode != 200 && resp.StatusCode != 201 && resp.StatusCode != 304 {
+	}
+
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 && resp.StatusCode != 201 && resp.StatusCode != 304 {
 		err := errors.New("Internal Error: Get request to writer returned unexpected status: " + strconv.Itoa(resp.StatusCode))
 		log.WithFields(log.Fields{"transaction_id": tid, "UUID": uuid, "status": resp.StatusCode}).Error(err)
 		return INTERNAL_ERROR, err
 	}
 
-	defer resp.Body.Close()
 	return VALID_CONCEPT, nil
 }
 
@@ -370,16 +373,18 @@ func (ts *TransformerService) makeDeleteRequest(uuid string, tid string) (status
 	request.Header.Set("X-Request-Id", tid)
 
 	resp, err := ts.httpClient.Do(request)
-
 	if err != nil {
 		log.WithError(err).WithFields(log.Fields{"transaction_id": tid, "UUID": uuid}).Error("Service Unavailable: Delete request to writer resulted in error")
 		return SERVICE_UNAVAILABLE, err
-	} else if resp.StatusCode != 204 && resp.StatusCode != 404 {
+	}
+
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 204 && resp.StatusCode != 404 {
 		err := errors.New("Internal Error: Delete request to writer returned unexpected status: " + strconv.Itoa(resp.StatusCode))
 		log.WithFields(log.Fields{"transaction_id": tid, "UUID": uuid, "status": resp.StatusCode}).Error(err)
 		return INTERNAL_ERROR, err
 	}
-	defer resp.Body.Close()
 	if resp.StatusCode == 204 {
 		return NO_CONTENT, nil
 	}

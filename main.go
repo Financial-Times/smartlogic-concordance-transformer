@@ -3,7 +3,6 @@ package main
 import (
 	"io/ioutil"
 	standardlog "log"
-	"net"
 	"net/http"
 	"os"
 	"os/signal"
@@ -20,12 +19,9 @@ import (
 const appDescription = "Service which listens to kafka for concordance updates, transforms smartlogic concordance json and sends updates to concordances-rw-neo4j"
 
 var httpClient = http.Client{
+	Timeout: 15 * time.Second,
 	Transport: &http.Transport{
 		MaxIdleConnsPerHost: 128,
-		Dial: (&net.Dialer{
-			Timeout:   30 * time.Second,
-			KeepAlive: 30 * time.Second,
-		}).Dial,
 	},
 }
 
@@ -34,7 +30,7 @@ func main() {
 
 	appSystemCode := app.String(cli.StringOpt{
 		Name:   "app-system-code",
-		Value:  "smartlogic-concordance-transformer",
+		Value:  "smartlogic-concordance-transform",
 		Desc:   "System Code of the application",
 		EnvVar: "APP_SYSTEM_CODE",
 	})
