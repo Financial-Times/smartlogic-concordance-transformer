@@ -101,8 +101,8 @@ There is no key rotation procedure for this system.
 
 Look for the pods in the cluster health endpoint and click to see pod health and checks:
 
-- <https://upp-prod-publish-eu.upp.ft.com/__health/>
-- <https://upp-prod-publish-us.upp.ft.com/__health/>
+- EU cluster: <https://upp-prod-publish-eu.upp.ft.com/__health/__pods-health?service-name=smartlogic-concordance-transformer>
+- US cluster: <https://upp-prod-publish-us.upp.ft.com/__health/__pods-health?service-name=smartlogic-concordance-transformer>
 
 ## First Line Troubleshooting
 
