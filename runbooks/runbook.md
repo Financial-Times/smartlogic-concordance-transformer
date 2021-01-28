@@ -53,6 +53,12 @@ No
 
 No
 
+## Dependencies
+
+- concordances-rw-neo4j
+- upp-kafka
+- upp-zookeeper
+
 ## Failover Architecture Type
 
 ActivePassive
