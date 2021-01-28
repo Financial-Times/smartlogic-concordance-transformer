@@ -63,7 +63,7 @@ FullyAutomated
 
 ## Failback Process Type
 
-FullyAutomated
+Manual
 
 ## Failover Details
 
