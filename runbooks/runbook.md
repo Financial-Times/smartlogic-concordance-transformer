@@ -1,6 +1,6 @@
 # UPP - Smartlogic Concordance Transformer
 
-This service will listen to Kafka for a notification of a change made in Smartlogic, verify whether the change concerns concordance, convert the JSON-LD in the message to a normalised UPP view of a concordance and finally send the JSON to the concordance-rw-dynamodb.
+This service listens for changes made in Smartlogic and persists the resulting concordance changes in the Cloud Neo4j using "concordances-rw-neo4j".
 
 ## Code
 
