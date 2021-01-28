@@ -8,7 +8,7 @@ smartlogic-concordance-transform
 
 ## Primary URL
 
-<https://github.com/Financial-Times/smartlogic-concordance-transformer>
+<https://upp-prod-publish-glb.upp.ft.com/__smartlogic-concordance-transformer/>
 
 ## Service Tier
 
