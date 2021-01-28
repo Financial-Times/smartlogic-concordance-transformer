@@ -40,7 +40,7 @@ AWS
 
 ## Architecture
 
-This service will listen to Kafka for a notification of a change made in Smartlogic, verify whether the change concerns concordance, convert the JSON-LD in the message to a normalised UPP view of a concordance and finally send the JSON to the concordance-rw-dynamodb.
+This service will listen to the "SmartlogicConcept" Kafka topic for a notification of a change made in Smartlogic, verify whether the change concerns concordance, convert the JSON-LD in the message to a normalised UPP view of a concordance and finally send the JSON to the "concordances-rw-neo4j" service.
 
 Checkout the application project repository for further details:
 <https://github.com/Financial-Times/smartlogic-concordance-transformer>
