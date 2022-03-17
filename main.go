@@ -10,10 +10,12 @@ import (
 	"time"
 
 	"github.com/Financial-Times/kafka-client-go/kafka"
-	slc "github.com/Financial-Times/smartlogic-concordance-transformer/smartlogic"
 	"github.com/gorilla/mux"
+	"github.com/ivan-p-nikolov/jeager-service-example/fttracing"
 	cli "github.com/jawher/mow.cli"
 	log "github.com/sirupsen/logrus"
+
+	slc "github.com/Financial-Times/smartlogic-concordance-transformer/smartlogic"
 )
 
 const appDescription = "Service which listens to kafka for concordance updates, transforms smartlogic concordance json and sends updates to concordances-rw-neo4j"
@@ -92,6 +94,12 @@ func main() {
 
 		log.Infof("System code: %s, App Name: %s, Port: %s", *appSystemCode, *appName, *port)
 
+		shutdown, err := fttracing.InitTracing(*appName)
+		if err != nil {
+			log.WithError(err).Warn("failed to init tracing")
+		} else {
+			defer shutdown()
+		}
 		consumerConfig := kafka.DefaultConsumerConfig()
 		consumerConfig.Zookeeper.Logger = standardlog.New(ioutil.Discard, "", 0)
 		consumer, err := kafka.NewPerseverantConsumer(*brokerConnectionString, *groupName, []string{*topic}, consumerConfig, time.Minute, nil)
@@ -104,7 +112,7 @@ func main() {
 		handler := slc.NewHandler(transformer, consumer)
 		handler.RegisterHandlers(router)
 		handler.RegisterAdminHandlers(router, *appSystemCode, *appName, appDescription)
-
+		fttracing.AddTelemetry(router, *appName)
 		go func() {
 			if err := http.ListenAndServe(":"+*port, nil); err != nil {
 				log.WithError(err).Fatal("Unable to start server")
