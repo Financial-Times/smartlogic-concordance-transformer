@@ -6,37 +6,45 @@ import (
 
 	"fmt"
 
-	"github.com/Financial-Times/kafka-client-go/kafka"
-	"github.com/Financial-Times/transactionid-utils-go"
+	"github.com/Financial-Times/go-logger/v2"
+	"github.com/Financial-Times/kafka-client-go/v3"
+	transactionidutils "github.com/Financial-Times/transactionid-utils-go"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
-	log "github.com/sirupsen/logrus"
 )
 
-type SmartlogicConcordanceTransformerHandler struct {
-	transformer TransformerService
-	consumer    kafka.Consumer
+type messageConsumer interface {
+	ConnectivityCheck() error
+	MonitorCheck() error
 }
 
-func NewHandler(transformer TransformerService, consumer kafka.Consumer) SmartlogicConcordanceTransformerHandler {
-	return SmartlogicConcordanceTransformerHandler{
+type ConcordanceTransformerHandler struct {
+	transformer TransformerService
+	consumer    messageConsumer
+	log         *logger.UPPLogger
+}
+
+func NewHandler(transformer TransformerService, consumer messageConsumer, log *logger.UPPLogger) ConcordanceTransformerHandler {
+	return ConcordanceTransformerHandler{
 		transformer: transformer,
 		consumer:    consumer,
+		log:         log,
 	}
 }
 
-func (h *SmartlogicConcordanceTransformerHandler) ProcessKafkaMessage(msg kafka.FTMessage) error {
+func (h *ConcordanceTransformerHandler) ProcessKafkaMessage(msg kafka.FTMessage) {
 	var tid string
 	if msg.Headers["X-Request-Id"] == "" {
 		tid = transactionidutils.NewTransactionID()
 	} else {
 		tid = msg.Headers["X-Request-Id"]
 	}
-	return h.transformer.handleConcordanceEvent(msg.Body, tid)
+
+	_ = h.transformer.handleConcordanceEvent(msg.Body, tid)
 }
 
-func (h *SmartlogicConcordanceTransformerHandler) RegisterHandlers(router *mux.Router) {
-	log.Info("Registering handlers")
+func (h *ConcordanceTransformerHandler) RegisterHandlers(router *mux.Router) {
+	h.log.Info("Registering handlers")
 	transformAndWrite := handlers.MethodHandler{
 		"POST": http.HandlerFunc(h.SendHandler),
 	}
@@ -47,95 +55,108 @@ func (h *SmartlogicConcordanceTransformerHandler) RegisterHandlers(router *mux.R
 	router.Handle("/transform", transformAndReturn)
 }
 
-func (h *SmartlogicConcordanceTransformerHandler) TransformHandler(rw http.ResponseWriter, req *http.Request) {
+func (h *ConcordanceTransformerHandler) TransformHandler(rw http.ResponseWriter, req *http.Request) {
 	tid := transactionidutils.GetTransactionIDFromRequest(req)
 	rw.Header().Set("Content-Type", "application/json")
 	rw.Header().Set("X-Request-Id", tid)
 
-	var smartLogicConcept = SmartlogicConcept{}
+	var smartLogicConcept = ConceptData{}
 	err := json.NewDecoder(req.Body).Decode(&smartLogicConcept)
 
 	if err != nil {
-		log.WithError(err).WithField("transaction_id", tid).Error("Error whilst processing request body")
+		h.log.WithError(err).WithField("transaction_id", tid).Error("Error whilst processing request body")
 		rw.WriteHeader(http.StatusBadRequest)
-		rw.Write([]byte("{\"message\":\"Error whilst processing request body: " + err.Error() + "\"}"))
+		_, err := rw.Write([]byte("{\"message\":\"Error whilst processing request body: " + err.Error() + "\"}"))
+		if err != nil {
+			h.log.WithError(err).Info("Failed to send response from TransformHandler")
+		}
 		return
 	}
 
-	log.WithField("transaction_id", tid).Debug("Processing concordance transformation")
-	updateStatus, conceptUuid, uppConcordance, err := convertToUppConcordance(smartLogicConcept, tid)
+	h.log.WithField("transaction_id", tid).Debug("Processing concordance transformation")
+	updateStatus, conceptUUID, uppConcordance, err := convertToUppConcordance(smartLogicConcept, tid, h.log)
 
 	if err != nil {
 		writeResponse(rw, updateStatus, err)
 		return
 	}
-	defer req.Body.Close()
 
-	json.NewEncoder(rw).Encode(uppConcordance)
-	log.WithFields(log.Fields{"transaction_id": tid, "UUID": conceptUuid, "status": http.StatusOK}).Info("Smartlogic payload successfully transformed")
-	return
+	if err := json.NewEncoder(rw).Encode(uppConcordance); err != nil {
+		h.log.WithError(err).Error("Could not encode transformed concordance response")
+		return
+	}
+	h.log.WithFields(map[string]interface{}{"transaction_id": tid, "UUID": conceptUUID, "status": http.StatusOK}).Info("Smartlogic payload successfully transformed")
 }
 
-func (h *SmartlogicConcordanceTransformerHandler) SendHandler(rw http.ResponseWriter, req *http.Request) {
+func (h *ConcordanceTransformerHandler) SendHandler(rw http.ResponseWriter, req *http.Request) {
 	tid := transactionidutils.GetTransactionIDFromRequest(req)
 	rw.Header().Set("Content-Type", "application/json")
 	rw.Header().Set("X-Request-Id", tid)
 
-	var smartLogicConcept = SmartlogicConcept{}
+	var smartLogicConcept = ConceptData{}
 	err := json.NewDecoder(req.Body).Decode(&smartLogicConcept)
 
 	if err != nil {
-		log.WithError(err).WithField("transaction_id", tid).Error("Error whilst processing request body")
+		h.log.WithError(err).WithField("transaction_id", tid).Error("Error whilst processing request body")
 		rw.WriteHeader(http.StatusBadRequest)
-		rw.Write([]byte("{\"message\":\"Error whilst processing request body:" + err.Error() + "\"}"))
+		_, err := rw.Write([]byte("{\"message\":\"Error whilst processing request body:" + err.Error() + "\"}"))
+		if err != nil {
+			h.log.WithError(err).Errorf("Failed to send response from SendHandler")
+		}
 		return
 	}
 
-	log.WithField("transaction_id", tid).Debug("Processing concordance transformation")
-	updateStatus, conceptUuid, uppConcordance, err := convertToUppConcordance(smartLogicConcept, tid)
+	h.log.WithField("transaction_id", tid).Debug("Processing concordance transformation")
+	updateStatus, conceptUUID, uppConcordance, err := convertToUppConcordance(smartLogicConcept, tid, h.log)
 
 	if err != nil {
 		writeResponse(rw, updateStatus, err)
 	}
 
-	updateStatus, err = h.transformer.makeRelevantRequest(conceptUuid, uppConcordance, tid)
+	updateStatus, err = h.transformer.makeRelevantRequest(conceptUUID, uppConcordance, tid)
 
 	if err != nil {
 		writeResponse(rw, updateStatus, err)
 		return
 	}
-	defer req.Body.Close()
 
-	var logMsg string
-	if updateStatus == VALID_CONCEPT {
-		logMsg = "Concordance record forwarded to writer"
-		rw.WriteHeader(http.StatusOK)
-		rw.Write([]byte("{\"message\":\"" + logMsg + "\"}"))
-		return
-	} else if updateStatus == NO_CONTENT {
-		logMsg = "Concordance record successfuly deleted"
-		rw.Write([]byte("{\"message\":\"" + logMsg + "\"}"))
-	} else if updateStatus == NOT_FOUND {
-		logMsg = "Concordance record not found"
-		rw.Write([]byte("{\"message\":\"" + logMsg + "\"}"))
+	var message string
+	switch updateStatus {
+	case ValidConcept:
+		message = "Concordance record forwarded to writer"
+	case NoContent:
+		message = "Concordance record successfully deleted"
+	case NotFound:
+		message = "Concordance record not found"
 	}
-	log.WithFields(log.Fields{"transaction_id": tid, "UUID": conceptUuid, "status": http.StatusOK}).Info(logMsg)
 
-	return
+	if _, err = rw.Write([]byte("{\"message\":\"" + message + "\"}")); err != nil {
+		h.log.
+			WithError(err).
+			WithField("response_message", message).
+			Info("Failed to send response")
+		return
+	}
+
+	h.log.
+		WithTransactionID(tid).
+		WithUUID(conceptUUID).
+		WithField("status", http.StatusOK).
+		Info(message)
 }
 
 func writeResponse(rw http.ResponseWriter, updateStatus status, err error) {
 	switch updateStatus {
-	case SYNTACTICALLY_INCORRECT:
+	case SyntacticallyIncorrect:
 		writeJSONError(rw, err.Error(), http.StatusBadRequest)
 		return
-	case SEMANTICALLY_INCORRECT:
+	case SemanticallyIncorrect:
 		writeJSONError(rw, err.Error(), http.StatusUnprocessableEntity)
 		return
-	case SERVICE_UNAVAILABLE:
+	case ServiceUnavailable:
 		writeJSONError(rw, err.Error(), http.StatusServiceUnavailable)
 		return
-	case INTERNAL_ERROR:
+	case InternalError:
 		writeJSONError(rw, err.Error(), http.StatusInternalServerError)
 		return
 	default:
@@ -146,5 +167,5 @@ func writeResponse(rw http.ResponseWriter, updateStatus status, err error) {
 
 func writeJSONError(w http.ResponseWriter, errorMsg string, statusCode int) {
 	w.WriteHeader(statusCode)
-	fmt.Fprintln(w, fmt.Sprintf("{\"message\": \"%s\"}", errorMsg))
+	_, _ = w.Write([]byte(fmt.Sprintf("{\"message\": \"%s\"}", errorMsg)))
 }

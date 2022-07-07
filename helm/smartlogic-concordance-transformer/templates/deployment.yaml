@@ -39,11 +39,13 @@ spec:
           value: "SmartlogicConcordanceTransformer"
         - name: WRITER_ADDRESS
           value: "http://concordances-rw-neo4j:8080/"
-        - name: BROKER_CONNECTION_STRING
+        - name: KAFKA_LAG_TOLERANCE
+          value: "{{ .Values.env.KAFKA_LAG_TOLERANCE }}"
+        - name: KAFKA_ADDR
           valueFrom:
             configMapKeyRef:
               name: global-config
-              key: zookeeper.url
+              key: msk.kafka.broker.url
         ports:
         - containerPort: 8080
         livenessProbe:

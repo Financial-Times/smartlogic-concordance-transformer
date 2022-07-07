@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-type SmartlogicConcept struct {
+type ConceptData struct {
 	Concepts []Concept `json:"@graph"`
 }
 
@@ -16,44 +16,44 @@ type Concept struct {
 }
 
 type Concepter interface {
-	TmeIdentifiers() []TmeId
-	FactsetIdentifiers() []FactsetId
+	TmeIdentifiers() []TmeID
+	FactsetIdentifiers() []FactsetID
 	DbpediaIdentifiers() []LocationType
 	GeonamesIdentifiers() []LocationType
 	WikidataIdentifiers() []LocationType
 }
 
 type ConceptML struct {
-	TmeIdentifiersValue      []TmeId        `json:"http://www.ft.com/ontology/managedlocation/TMEIdentifier,omitempty"`
-	FactsetIdentifiersValue  []FactsetId    `json:"http://www.ft.com/ontology/managedlocation/factsetIdentifier,omitempty"`
+	TmeIdentifiersValue      []TmeID        `json:"http://www.ft.com/ontology/managedlocation/TMEIdentifier,omitempty"`
+	FactsetIdentifiersValue  []FactsetID    `json:"http://www.ft.com/ontology/managedlocation/factsetIdentifier,omitempty"`
 	DbpediaIdentifiersValue  []LocationType `json:"http://www.ft.com/ontology/managedlocation/dbpediaId,omitempty"`
 	GeonamesIdentifiersValue []LocationType `json:"http://www.ft.com/ontology/managedlocation/geonamesId,omitempty"`
 	WikidataIdentifiersValue []LocationType `json:"http://www.ft.com/ontology/managedlocation/wikidataId,omitempty"`
 }
 
 type ConceptEditorial struct {
-	TmeIdentifiersValue      []TmeId        `json:"http://www.ft.com/ontology/TMEIdentifier,omitempty"`
-	FactsetIdentifiersValue  []FactsetId    `json:"http://www.ft.com/ontology/factsetIdentifier,omitempty"`
+	TmeIdentifiersValue      []TmeID        `json:"http://www.ft.com/ontology/TMEIdentifier,omitempty"`
+	FactsetIdentifiersValue  []FactsetID    `json:"http://www.ft.com/ontology/factsetIdentifier,omitempty"`
 	WikidataIdentifiersValue []LocationType `json:"http://www.ft.com/ontology/wikidataIdentifier,omitempty"`
 	GeonamesIdentifiersValue []LocationType `json:"http://www.ft.com/ontology/geonamesIdentifier,omitempty"`
 }
 
-type TmeId struct {
+type TmeID struct {
 	Value string `json:"@value"`
 }
 
-type FactsetId struct {
+type FactsetID struct {
 	Language string `json:"@language"`
 	Value    string `json:"@value"`
 }
 
 type UppConcordance struct {
 	Authority    string        `json:"authority"`
-	ConceptUuid  string        `json:"uuid"`
-	ConcordedIds []ConcordedId `json:"concordances"`
+	ConceptUUID  string        `json:"uuid"`
+	ConcordedIds []ConcordedID `json:"concordances"`
 }
 
-type ConcordedId struct {
+type ConcordedID struct {
 	Authority      string `json:"authority"`
 	AuthorityValue string `json:"authorityValue,omitempty"`
 	UUID           string `json:"uuid"`
@@ -94,11 +94,11 @@ func (c *Concept) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func (c Concept) TmeIdentifiers() []TmeId {
+func (c Concept) TmeIdentifiers() []TmeID {
 	return c.currentConcept.TmeIdentifiers()
 }
 
-func (c Concept) FactsetIdentifiers() []FactsetId {
+func (c Concept) FactsetIdentifiers() []FactsetID {
 	return c.currentConcept.FactsetIdentifiers()
 }
 
@@ -126,19 +126,19 @@ func (c ConceptEditorial) WikidataIdentifiers() []LocationType {
 	return c.WikidataIdentifiersValue
 }
 
-func (c ConceptEditorial) TmeIdentifiers() []TmeId {
+func (c ConceptEditorial) TmeIdentifiers() []TmeID {
 	return c.TmeIdentifiersValue
 }
 
-func (c ConceptEditorial) FactsetIdentifiers() []FactsetId {
+func (c ConceptEditorial) FactsetIdentifiers() []FactsetID {
 	return c.FactsetIdentifiersValue
 }
 
-func (c ConceptML) TmeIdentifiers() []TmeId {
+func (c ConceptML) TmeIdentifiers() []TmeID {
 	return c.TmeIdentifiersValue
 }
 
-func (c ConceptML) FactsetIdentifiers() []FactsetId {
+func (c ConceptML) FactsetIdentifiers() []FactsetID {
 	return c.FactsetIdentifiersValue
 }
 

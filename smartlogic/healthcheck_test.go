@@ -11,16 +11,15 @@ import (
 
 func TestAdminHandler_Healthy(t *testing.T) {
 	r := mux.NewRouter()
-	mockClient := mockHttpClient{resp: "", statusCode: 200}
-	defaultTransformer := NewTransformerService(TOPIC, WRITER_ADDRESS, &mockClient)
-	h := NewHandler(defaultTransformer, mockConsumer{})
+	mockClient := mockHTTPClient{resp: "", statusCode: 200}
+	defaultTransformer := NewTransformerService(TOPIC, WriterAddress, &mockClient, createLogger())
+	h := NewHandler(defaultTransformer, mockConsumer{}, createLogger())
 	h.RegisterAdminHandlers(r, "appy-mcappface", "Appy-McAppface", "My first app")
 
 	type testStruct struct {
 		endpoint           string
 		expectedStatusCode int
 		expectedBody       string
-		expectedError      string
 	}
 
 	buildInfoChecker := testStruct{endpoint: "/__build-info", expectedStatusCode: 200, expectedBody: "Version  is not a semantic version"}
@@ -35,5 +34,4 @@ func TestAdminHandler_Healthy(t *testing.T) {
 		assert.Equal(t, scenario.expectedStatusCode, rec.Code)
 		assert.Contains(t, rec.Body.String(), scenario.expectedBody)
 	}
-
 }

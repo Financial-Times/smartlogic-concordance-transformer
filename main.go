@@ -1,19 +1,17 @@
 package main
 
 import (
-	"io/ioutil"
-	standardlog "log"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
 
-	"github.com/Financial-Times/kafka-client-go/kafka"
+	"github.com/Financial-Times/go-logger/v2"
+	"github.com/Financial-Times/kafka-client-go/v3"
 	slc "github.com/Financial-Times/smartlogic-concordance-transformer/smartlogic"
 	"github.com/gorilla/mux"
 	cli "github.com/jawher/mow.cli"
-	log "github.com/sirupsen/logrus"
 )
 
 const appDescription = "Service which listens to kafka for concordance updates, transforms smartlogic concordance json and sends updates to concordances-rw-neo4j"
@@ -52,11 +50,6 @@ func main() {
 		Desc:   "Log level",
 		EnvVar: "LOG_LEVEL",
 	})
-	brokerConnectionString := app.String(cli.StringOpt{
-		Name:   "brokerConnectionString",
-		Desc:   "Zookeeper connection string in the form host1:2181,host2:2181/chroot",
-		EnvVar: "BROKER_CONNECTION_STRING",
-	})
 	topic := app.String(cli.StringOpt{
 		Name:   "topic",
 		Value:  "SmartlogicConcept",
@@ -74,34 +67,44 @@ func main() {
 		Desc:   "Concordance rw address for routing requests",
 		EnvVar: "WRITER_ADDRESS",
 	})
+	kafkaAddress := app.String(cli.StringOpt{
+		Name:   "kafkaAddress",
+		Value:  "kafka:9092",
+		Desc:   "Address used to connect to Kafka",
+		EnvVar: "KAFKA_ADDR",
+	})
+	consumerLagTolerance := app.Int(cli.IntOpt{
+		Name:   "consumerLagTolerance",
+		Value:  120,
+		Desc:   "Kafka lag tolerance",
+		EnvVar: "KAFKA_LAG_TOLERANCE",
+	})
+
+	log := logger.NewUPPLogger(*appName, *logLevel)
 
 	app.Action = func() {
-		lvl, err := log.ParseLevel(*logLevel)
-		if err != nil {
-			log.Fatalf("Cannot parse log level: %s", *logLevel)
-		}
-		log.SetLevel(lvl)
-		log.SetFormatter(&log.JSONFormatter{})
-
-		log.WithFields(log.Fields{
-			"WRITER_ADDRESS":           *writerAddress,
-			"KAFKA_TOPIC":              *topic,
-			"GROUP_NAME":               *groupName,
-			"BROKER_CONNECTION_STRING": *brokerConnectionString,
-		}).Infof("[Startup] smartlogic-concordance-transformer is starting")
+		log.WithFields(map[string]interface{}{
+			"KAFKA_ADDRESS": *kafkaAddress,
+			"KAFKA_TOPIC":   *topic,
+			"GROUP_NAME":    *groupName,
+		}).Infof("[Startup] %s is starting", *appName)
 
 		log.Infof("System code: %s, App Name: %s, Port: %s", *appSystemCode, *appName, *port)
 
-		consumerConfig := kafka.DefaultConsumerConfig()
-		consumerConfig.Zookeeper.Logger = standardlog.New(ioutil.Discard, "", 0)
-		consumer, err := kafka.NewPerseverantConsumer(*brokerConnectionString, *groupName, []string{*topic}, consumerConfig, time.Minute, nil)
-		if err != nil {
-			log.WithError(err).Fatal("Cannot create Kafka client")
+		consumerConfig := kafka.ConsumerConfig{
+			BrokersConnectionString: *kafkaAddress,
+			ConsumerGroup:           *groupName,
+			ConnectionRetryInterval: time.Minute,
 		}
+		topics := []*kafka.Topic{
+			kafka.NewTopic(*topic, kafka.WithLagTolerance(int64(*consumerLagTolerance))),
+		}
+		consumer := kafka.NewConsumer(consumerConfig, topics, log)
+
+		transformer := slc.NewTransformerService(*topic, *writerAddress, &httpClient, log)
+		handler := slc.NewHandler(transformer, consumer, log)
 
 		router := mux.NewRouter()
-		transformer := slc.NewTransformerService(*topic, *writerAddress, &httpClient)
-		handler := slc.NewHandler(transformer, consumer)
 		handler.RegisterHandlers(router)
 		handler.RegisterAdminHandlers(router, *appSystemCode, *appName, appDescription)
 
@@ -111,16 +114,20 @@ func main() {
 			}
 		}()
 
-		consumer.StartListening(handler.ProcessKafkaMessage)
+		go consumer.Start(handler.ProcessKafkaMessage)
+		defer func(consumer *kafka.Consumer) {
+			log.Info("Shutting down Kafka consumer")
+			err := consumer.Close()
+			if err != nil {
+				log.WithError(err).Error("Could not close kafka consumer")
+			}
+		}(consumer)
 
 		waitForSignal()
-		log.Info("Shutting down Kafka consumer")
-		consumer.Shutdown()
 		log.Info("Stopping application")
 	}
 
-	runErr := app.Run(os.Args)
-	if runErr != nil {
+	if runErr := app.Run(os.Args); runErr != nil {
 		log.Errorf("App could not start, error=[%s]\n", runErr)
 		return
 	}
