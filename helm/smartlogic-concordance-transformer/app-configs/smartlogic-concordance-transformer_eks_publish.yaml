@@ -4,3 +4,4 @@ service:
   name: smartlogic-concordance-transformer
 env:
   LOG_LEVEL: info
+  KAFKA_LAG_TOLERANCE: 120

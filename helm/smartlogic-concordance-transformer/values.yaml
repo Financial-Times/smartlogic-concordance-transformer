@@ -9,6 +9,7 @@ image:
   repository: coco/smartlogic-concordance-transformer
   pullPolicy: IfNotPresent
 env:
+  KAFKA_LAG_TOLERANCE: 120
   app:
     port: "8080"
 resources:

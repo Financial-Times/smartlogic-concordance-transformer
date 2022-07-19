@@ -246,11 +246,3 @@ Admin endpoints are:
 There are several checks performed:
 
 * Checks that a connection can be made to the concordances-rw-neo4j service
-* Due to limitation with currently kafka version the current kafka healthcheck will always return 200
-
-### Logging
-
-* The application uses [logrus](https://github.com/sirupsen/logrus); the log file is initialised in [main.go](main.go).
-* Logging requires an `env` app parameter, for all environments other than `local` logs are written to file.
-* When running locally, logs are written to console. If you want to log locally to file, you need to pass in an env parameter that is != `local`.
-* NOTE: `/__build-info` and `/__gtg` endpoints are not logged as they are called every second from varnish/vulcand and this information is not needed in logs/splunk.

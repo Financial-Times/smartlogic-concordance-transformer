@@ -18,22 +18,6 @@ Bronze
 
 Production
 
-## Delivered By
-
-content
-
-## Supported By
-
-content
-
-## Known About By
-
-- elitsa.pavlova
-- kalin.arsov
-- ivan.nikolov
-- marina.chompalova
-- miroslav.gatsanoga
-
 ## Host Platform
 
 AWS
@@ -52,12 +36,6 @@ No
 ## Contains Sensitive Data
 
 No
-
-## Dependencies
-
-- concordances-rw-neo4j
-- upp-kafka
-- upp-zookeeper
 
 ## Failover Architecture Type
 
@@ -93,7 +71,7 @@ Manual
 
 ## Release Details
 
-The release is triggered by making a Github release which is then picked up by a Jenkins multibranch pipeline. The Jenkins pipeline should be manually started in order for it to deploy the helm package to the Kubernetes clusters.
+The release is triggered by making a GitHub release which is then picked up by a Jenkins multibranch pipeline. The Jenkins pipeline should be manually started in order for it to deploy the helm package to the Kubernetes clusters.
 
 ## Key Management Process Type
 
