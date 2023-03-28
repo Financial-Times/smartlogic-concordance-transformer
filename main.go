@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/Financial-Times/go-logger/v2"
-	"github.com/Financial-Times/kafka-client-go/v3"
+	"github.com/Financial-Times/kafka-client-go/v4"
 	slc "github.com/Financial-Times/smartlogic-concordance-transformer/smartlogic"
 	"github.com/gorilla/mux"
 	cli "github.com/jawher/mow.cli"
@@ -79,6 +79,11 @@ func main() {
 		Desc:   "Kafka lag tolerance",
 		EnvVar: "KAFKA_LAG_TOLERANCE",
 	})
+	kafkaClusterArn := app.String(cli.StringOpt{
+		Name:   "kafka-cluster-arn",
+		Desc:   "MSK cluster ARN.",
+		EnvVar: "KAFKA_CLUSTER_ARN",
+	})
 
 	log := logger.NewUPPLogger(*appName, *logLevel)
 
@@ -94,12 +99,15 @@ func main() {
 		consumerConfig := kafka.ConsumerConfig{
 			BrokersConnectionString: *kafkaAddress,
 			ConsumerGroup:           *groupName,
-			ConnectionRetryInterval: time.Minute,
+			ClusterArn:              kafkaClusterArn,
 		}
 		topics := []*kafka.Topic{
 			kafka.NewTopic(*topic, kafka.WithLagTolerance(int64(*consumerLagTolerance))),
 		}
-		consumer := kafka.NewConsumer(consumerConfig, topics, log)
+		consumer, err := kafka.NewConsumer(consumerConfig, topics, log)
+		if err != nil {
+			log.WithError(err).Fatal("Failed to create Kafka consumer")
+		}
 
 		transformer := slc.NewTransformerService(*topic, *writerAddress, &httpClient, log)
 		handler := slc.NewHandler(transformer, consumer, log)
