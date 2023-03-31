@@ -2,6 +2,7 @@
 replicaCount: 1
 service:
   name: smartlogic-concordance-transformer
+  accountName: eksctl-smartlogic-concordance-transf-serviceaccount
 env:
   LOG_LEVEL: info
   KAFKA_LAG_TOLERANCE: 120
