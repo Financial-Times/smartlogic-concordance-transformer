@@ -1,12 +1,12 @@
 module github.com/Financial-Times/smartlogic-concordance-transformer
 
-go 1.19
+go 1.22
 
 require (
 	github.com/Financial-Times/go-fthealth v0.0.0-20171204124831-1b007e2b37b7
 	github.com/Financial-Times/go-logger/v2 v2.0.1
 	github.com/Financial-Times/http-handlers-go v0.0.0-20170809121007-229ac16f1d9e
-	github.com/Financial-Times/kafka-client-go/v4 v4.2.0
+	github.com/Financial-Times/kafka-client-go/v4 v4.2.2
 	github.com/Financial-Times/service-status-go v0.0.0-20160323111542-3f5199736a3d
 	github.com/Financial-Times/transactionid-utils-go v0.2.0
 	github.com/Financial-Times/uuid-utils-go v0.0.0-20180307110105-a9db2d975242
@@ -15,12 +15,12 @@ require (
 	github.com/jawher/mow.cli v1.0.4-0.20171111121841-3ff64ca21987
 	github.com/pborman/uuid v0.0.0-20171128162732-e53336930665
 	github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475
-	github.com/stretchr/testify v1.8.1
+	github.com/stretchr/testify v1.8.4
 )
 
 require (
-	github.com/Shopify/sarama v1.38.1 // indirect
-	github.com/aws/aws-sdk-go-v2 v1.17.3 // indirect
+	github.com/IBM/sarama v1.40.1 // indirect
+	github.com/aws/aws-sdk-go-v2 v1.17.8 // indirect
 	github.com/aws/aws-sdk-go-v2/config v1.18.11 // indirect
 	github.com/aws/aws-sdk-go-v2/credentials v1.13.11 // indirect
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.12.21 // indirect
@@ -47,13 +47,13 @@ require (
 	github.com/jcmturner/gofork v1.7.6 // indirect
 	github.com/jcmturner/gokrb5/v8 v8.4.3 // indirect
 	github.com/jcmturner/rpc/v2 v2.0.3 // indirect
-	github.com/klauspost/compress v1.15.14 // indirect
+	github.com/klauspost/compress v1.16.6 // indirect
 	github.com/pierrec/lz4/v4 v4.1.17 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/sirupsen/logrus v1.8.1 // indirect
 	github.com/willf/bitset v1.1.4-0.20170905002639-1a37ad96e8c1 // indirect
-	golang.org/x/crypto v0.0.0-20220722155217-630584e8d5aa // indirect
-	golang.org/x/net v0.5.0 // indirect
-	golang.org/x/sys v0.4.0 // indirect
+	golang.org/x/crypto v0.11.0 // indirect
+	golang.org/x/net v0.12.0 // indirect
+	golang.org/x/sys v0.10.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
